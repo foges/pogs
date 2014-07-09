@@ -31,37 +31,76 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <h1>
+<a name="pogs" class="anchor" href="#pogs"><span class="octicon octicon-link"></span></a>POGS</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>POGS is a solver for convex optimization problems in <em>graph form</em> using <a href="http://www.stanford.edu/%7Eboyd/papers/block_splitting.html" title="Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers -- S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein">Alternating Direction Method of Multipliers</a> (ADMM). The algorithm is described in <a href="http://www.stanford.edu/%7Eboyd/papers/block_splitting.html" title="Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd">this paper</a>. </p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<hr><p>A graph form problem can be expressed as</p>
+
+<pre><code>minimize        f(y) + g(x)
+subject to      y = Ax
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>where <code>f</code> and <code>g</code> are convex and can take on the values <code>R \cup {∞}</code>. The solver requires that the <a href="http://www.stanford.edu/%7Eboyd/papers/prox_algs.html" title="Proximal Algorithms -- N. Parikh and S. Boyd">proximal operators</a> of <code>f</code> and <code>g</code> are known and that <code>f</code> and <code>g</code> are separable, meaning that they can be written as</p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<pre><code>f(y) = sum_{i=1}^m f_i(y_i)
+g(x) = sum_{i=1}^n g_i(x_i)
+</code></pre>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>The following functions are currently supported</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<ul>
+<li><code>f(x) = |x|</code></li>
+<li><code>f(x) = x log(x)</code></li>
+<li><code>f(x) = e^x</code></li>
+<li><code>f(x) = huber(x)</code></li>
+<li><code>f(x) = x</code></li>
+<li><code>f(x) = I(0 &lt;= x &lt;= 1)</code></li>
+<li><code>f(x) = I(x = 0)</code></li>
+<li><code>f(x) = I(x &gt;= 0)</code></li>
+<li><code>f(x) = I(x &lt;= 0)</code></li>
+<li><code>f(x) = log(1 + e^x)</code></li>
+<li><code>f(x) = max(0, -x)</code></li>
+<li><code>f(x) = max(0, x)</code></li>
+<li><code>f(x) = -log(x)</code></li>
+<li><code>f(x) = 1/x</code></li>
+<li><code>f(x) = (1/2) x^2</code></li>
+<li><code>f(x) = 0</code></li>
+</ul><p>where <code>I(.)</code> is the indicator function, taking on the value 0 if the condition is satisfied and infinity otherwise. More functions can be added by modifying the proximal operator header file: <code>&lt;pogs&gt;/src/prox_lib.h</code>.</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<h1>
+<a name="languages--frameworks" class="anchor" href="#languages--frameworks"><span class="octicon octicon-link"></span></a>Languages / Frameworks</h1>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>Three different implementations of the solver are either planned or already supported:</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<ol>
+<li>MATLAB: A MATLAB implementation along with examples can be found in the <code>&lt;pogs&gt;/matlab</code> directory.</li>
+<li>C++/BLAS/OpenMP: A CPU version can be found in the file <code>&lt;pogs&gt;/src/pogs.cpp</code>. POGS must be linked to a BLAS library (such as the Apple Accelerate Framework or ATLAS).</li>
+<li>C++/cuBLAS/CUDA: The GPU version is located in the file <code>&lt;pogs&gt;/src/pogs.cu</code>.</li>
+</ol><h1>
+<a name="problem-classes" class="anchor" href="#problem-classes"><span class="octicon octicon-link"></span></a>Problem Classes</h1>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<p>Among others, the solver can be used for the following classes of (linearly constrained) problems</p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<ul>
+<li>Least Squares</li>
+<li>Lasso, Ridge Regression, Logistic Regression, Huber Fitting and Elastic Net Regulariation </li>
+<li>Linear Programs and Quadratic Programs</li>
+<li>Analytic Centering</li>
+</ul><h1>
+<a name="references" class="anchor" href="#references"><span class="octicon octicon-link"></span></a>References</h1>
+
+<ol>
+<li><a href="http://www.stanford.edu/%7Eboyd/papers/block_splitting.html" title="Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd">Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd</a></li>
+<li><a href="http://www.stanford.edu/%7Eboyd/papers/block_splitting.html" title="Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers -- S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein">Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers -- S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein</a></li>
+<li><a href="http://www.stanford.edu/%7Eboyd/papers/prox_algs.html" title="Proximal Algorithms -- N. Parikh and S. Boyd">Proximal Algorithms -- N. Parikh and S. Boyd</a></li>
+</ol><h2>
+<a name="author" class="anchor" href="#author"><span class="octicon octicon-link"></span></a>Author</h2>
+
+<p>Chris Fougner (<a href="mailto:fougner@stanford.edu">fougner@stanford.edu</a>)</p>
+
+<p>Acknowledgement: Much of this is based on work by Neal Parikh.</p>
       </section>
     </div>
 
