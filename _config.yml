@@ -22,7 +22,7 @@ sections: [
 
 # Keep as an empty string if served up at the root. If served up at a specific
 # path (e.g. on GitHub pages) leave off the trailing slash, e.g. /my-project
-baseurl: ''
+baseurl: '/pogs'
 
 # Dates are not included in permalinks
 permalink: none
@@ -37,8 +37,8 @@ future: true
 exclude: ['bin', 'README.md']
 
 # Use the redcarpet Markdown renderer
-markdown: redcarpet
-redcarpet:
+markdown: kramdown
+kramdown:
     extensions: [
         'no_intra_emphasis',
         'fenced_code_blocks',
