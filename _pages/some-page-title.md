@@ -1,1 +1,8 @@
-/Users/chris/code/pogs_pages/_posts/2014-07-09-some-page-title.md
+---
+layout: page
+title: "Some Page Title"
+category: ref
+date: 2014-07-09 23:58:57
+---
+
+
