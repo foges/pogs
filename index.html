@@ -7,7 +7,9 @@
     <meta name="description" content="Pogs : Proximal Operator Graph Solver" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
+    <script type="text/javascript"
+            src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>   
     <title>Pogs</title>
   </head>
 
@@ -67,12 +69,15 @@ g(x) = sum_{i=1}^n g_i(x_i)
 <li><code>f(x) = 1/x</code></li>
 <li><code>f(x) = (1/2) x^2</code></li>
 <li><code>f(x) = 0</code></li>
+
 </ul><p>where <code>I(.)</code> is the indicator function, taking on the value 0 if the condition is satisfied and infinity otherwise. More functions can be added by modifying the proximal operator header file: <code>&lt;pogs&gt;/src/prox_lib.h</code>.</p>
 
 <h1>
 <a name="languages--frameworks" class="anchor" href="#languages--frameworks"><span class="octicon octicon-link"></span></a>Languages / Frameworks</h1>
 
 <p>Three different implementations of the solver are either planned or already supported:</p>
+
+\\[ \frac{1}{n^{2}} \\]
 
 <ol>
 <li>MATLAB: A MATLAB implementation along with examples can be found in the <code>&lt;pogs&gt;/matlab</code> directory.</li>
