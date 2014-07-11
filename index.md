@@ -17,7 +17,7 @@ POGS is a solver for convex optimization of the form
 	\\end{aligned}
 \\]
 
-where \\(f\\) and \\(g\\) are convex and can take on the values \\(\\mathbf{R} \\cup \\{\\infty\\}\\). This formulation is known as _graph form_. The solver is based on [ADMM](http://foges.github.io/pogs/ref/admm) meaning that it can solve _very large problems extremely quickly_. It is written in C++, supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU (CUDA) version.
+where \\(f\\) and \\(g\\) are convex and can take on the values \\(\\mathbf{R} \\cup \\{\\infty\\}\\). This formulation is known as _graph form_. The solver is based on [ADMM](http://foges.github.io/pogs/ref/admm) meaning that it can solve _very large problems extremely quickly_, albeit to modest accuracy. It is written in C++, supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU (CUDA) version.
 
 
 ### Problem Classes
@@ -32,18 +32,18 @@ In particular, POGS can very efficiently solve problems that involve different o
 
 ### Problem Structure
 
-POGS can solve any convex problem where the objective \\(f + g\\) is separable, meaning that it an be written as
+POGS can solve any convex problem where the objective \\(f + g\\) is separable, meaning that it can be written as
 
 \\[
   f(y) + g(x) = \\sum\_{i=1}^m f\_i(y\_i) + \\sum\_{j=1}^n g\_j(x\_j),
 \\]
 
-where \\(f\_i : \\mathbf{R} \\to \\mathbf{R}\\)  and \\(g\_j : \\mathbf{R} \\to \\mathbf{R}\\). Each term \\(f_i\\) (resp. \\(g_i\\)), is assumed to be of the form
+where \\(f\_i : \\mathbf{R} \\to \\mathbf{R}\\)  and \\(g\_j : \\mathbf{R} \\to \\mathbf{R}\\). Each term \\(f_i\\) (resp. \\(g_j\\)), is assumed to be of the form
 \\[
   c \\, h(a \\, x - b) + d \\, x + e \\, x ^ 2,
 \\]
 
-where \\(a, b, d \\in \\mathbf{R}\\), \\(c, d \\in \\mathbf{R}\_+\\) and \\(h : \\mathbf{R} \\to \\mathbf{R} \\cup \\{ \\infty \\}\\). Currently \\(h\\) can be one of 12 functions or 4 constraints
+where \\(a, b, d \\in \\mathbf{R}\\), \\(c, e \\in \\mathbf{R}\_+\\) and \\(h : \\mathbf{R} \\to \\mathbf{R} \\cup \\{ \\infty \\}\\). Currently \\(h\\) can be one of 12 functions or 4 constraints
 
 
 \\[
@@ -66,17 +66,6 @@ Three different implementations are available
   3. MATLAB: A MATLAB implementation along with examples can be found in the `<pogs>/matlab` directory. The code is heavily documented and primarily intended for pedagogical purposes.
 
 Wrappers for MATLAB and R can be found in the directories `<pogs>/src/interface_matlab` and `<pogs>/src/interface_r` respectively. See [MATLAB Setup](http://foges.github.io/pogs/stp/matlab) or [R Setup](http://foges.github.io/pogs/stp/r) for instructions.
-
-### References
-1. [Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd][block_splitting]
-2. [Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers -- S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein][admm_distr_stats]
-3. [Proximal Algorithms -- N. Parikh and S. Boyd][prox_algs]
-
-[block_splitting]: http://www.stanford.edu/~boyd/papers/block_splitting.html "Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd"
-
-[admm_distr_stats]: http://www.stanford.edu/~boyd/papers/block_splitting.html "Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers -- S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein"
-
-[prox_algs]: http://www.stanford.edu/~boyd/papers/prox_algs.html "Proximal Algorithms -- N. Parikh and S. Boyd"
 
 
 ### Author
