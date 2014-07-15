@@ -38,13 +38,17 @@ exclude: ['bin', 'README.md']
 # Use the redcarpet Markdown renderer
 markdown: kramdown
 kramdown:
-    extensions: [
-        'no_intra_emphasis',
-        'fenced_code_blocks',
-        'autolink',
-        'strikethrough',
-        'superscript',
-        'with_toc_data',
-        'tables',
-        'hardwrap'
-    ]
+  use_coderay: true
+
+
+# kramdown:
+#     extensions: [
+#         'no_intra_emphasis',
+#         'fenced_code_blocks',
+#         'autolink',
+#         'strikethrough',
+#         'superscript',
+#         'with_toc_data',
+#         'tables',
+#         'hardwrap'
+#     ]
