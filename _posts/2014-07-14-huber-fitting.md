@@ -85,7 +85,7 @@ This example can be found in the file `<pogs>/examples/r/huber_fit.R`.
 
 ### C++ Code
 
-~~~ c
+~~~ cpp
 #include <random>
 #include <vector>
 
@@ -125,6 +125,6 @@ int main() {
   Pogs(&pogs_data);
 }
 ~~~
-{: .language-c}
 
 This example can be found in the file `<pogs>/examples/cpp/huber_fit.cpp`.
+
