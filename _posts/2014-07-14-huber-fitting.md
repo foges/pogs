@@ -85,7 +85,7 @@ This example can be found in the file `<pogs>/examples/r/huber_fit.R`.
 
 ### C++ Code
 
-~~~ cpp
+~~~ c
 #include <random>
 #include <vector>
 
