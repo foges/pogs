@@ -39,6 +39,9 @@ exclude: ['bin', 'README.md']
 markdown: kramdown
 kramdown:
   use_coderay: true
+  coderay:
+    coderay_line_numbers: nil
+    coderay_css: class
 
 
 # kramdown:
