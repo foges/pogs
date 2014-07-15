@@ -69,7 +69,7 @@ This example can be found in the file `<pogs>/examples/matlab/lp_eq.m`.
 
 ~~~ r
 # Generate Data
-A = matrix(rnorm(100 * 10), 100, 10)
+A = matrix(runif(100 * 10), 100, 10)
 b = A %*% runif(10)
 c = runif(10);
 
@@ -87,7 +87,49 @@ This example can be found in the file `<pogs>/examples/r/lp_eq.m`.
 ### C++ Code
 
 ~~~ cpp
+#include <random>
+#include <vector>
 
+#include "pogs.h"
+
+int main() {
+  // Generate Data
+  size_t m = 100, n = 10;
+  std::vector<double> A((m + 1) * n);
+  std::vector<double> b(m);
+  std::vector<double> x(n);
+  std::vector<double> y(m + 1);
+
+  std::default_random_engine generator;
+  std::uniform_real_distribution<T> u_dist(0.0, 1.0);
+
+  for (unsigned int i = 0; i < (m + 1) * n; ++i)
+    A[i] = u_dist(generator);
+
+  for (unsigned int i = 0; i < n; ++i)
+    v[i] = u_dist(generator);
+
+  for (unsigned int i = 0; i < m; ++i)
+    for (unsigned int j = 0; j < n; ++j)
+      b[i] += A[i * n + j] * v[j];
+
+  // Populate f and g
+  PogsData<double, double*> pogs_data(A.data(), m + 1, n);
+  pogs_data.x = x.data();
+  pogs_data.y = y.data();
+
+  pogs_data.f.reserve(m + 1);
+  for (unsigned int i = 0; i < m; ++i)
+    pogs_data.f.emplace_back(kIndEq0, 1.0, b[i]);
+  pogs_data.f.emplace_back(kIdentity);
+
+  pogs_data.g.reserve(n);
+  for (unsigned int i = 0; i < n; ++i)
+    pogs_data.g.emplace_back(kIndGe0);
+
+  // Solve
+  Pogs(&pogs_data);
+}
 ~~~
 
 This example can be found in the file `<pogs>/examples/cpp/lp_eq.m`.

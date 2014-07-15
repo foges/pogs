@@ -62,7 +62,7 @@ g.h = kZero;
 x = pogs(A, f, g);
 ~~~
 
-This example can be found in the file `<pogs>/examples/matlab/huber_fit.m`.
+A similar example can be found in the file `<pogs>/examples/matlab/huber_fit.m`.
 
 
 ### R Code
@@ -80,7 +80,7 @@ g = list(h = kZero())
 solution = pogs(A, f, g)
 ~~~
 
-This example can be found in the file `<pogs>/examples/r/huber_fit.R`.
+A similar example can be found in the file `<pogs>/examples/r/huber_fit.R`.
 
 
 ### C++ Code
@@ -126,5 +126,5 @@ int main() {
 }
 ~~~
 
-This example can be found in the file `<pogs>/examples/cpp/huber_fit.cpp`.
+A similar example can be found in the file `<pogs>/examples/cpp/huber_fit.cpp`.
 
