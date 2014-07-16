@@ -51,7 +51,7 @@ where \\(a, b, d \\in \\mathbf{R}\\), \\(c, e \\in \\mathbf{R}\_+\\) and \\(h : 
     &h(x) = |x|,       &h(x) &= x \\log(x),     &h(x) &= e^x,          &h(x) &= \\text{huber}(x),&\\\\\\
     &h(x) = x,         &h(x) &= \\log(1 + e^x), &h(x) &= \\max(0, -x), &h(x) &= \\max(0, x), &\\\\\\
     &h(x) = -\\log(x), &h(x) &= 1/x,            &h(x) &=(1/2)x^2,      &h(x) &= 0, &\\\\\\
-    &h(x) = I(x = 0),  &h(x) &= I(0 \\leq x),   &h(x) &= I(x \\geq 0), &h(x) &= I(0 \\leq x \\leq 0), &
+    &h(x) = I(x = 0),  &h(x) &= I(0 \\leq x),   &h(x) &= I(x \\geq 0), &h(x) &= I(0 \\leq x \\leq 1), &
   \\end{aligned}
 \\]
 
@@ -71,5 +71,5 @@ Wrappers for MATLAB and R can be found in the directories `<pogs>/src/interface_
 ### Author
 Chris Fougner (fougner@stanford.edu)
 
-Acknowledgement: POGS is partially based on work by Neal Parikh.
+Acknowledgement: POGS is partially based on work by Neal Parikh. In particular the term _graph form_ and many of the derivations are taken from ["Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd"](http://www.stanford.edu/~boyd/papers/block_splitting.html).
 

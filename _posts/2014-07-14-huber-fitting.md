@@ -5,7 +5,7 @@ category: egs
 date: 2014-07-14 17:37:51
 ---
 
-Consider the Robust Regression problem
+Consider the robust regression problem
 
 \\[
   \\text{minimize} ~\\sum\_{i=1}^m\\text{huber}(a\_i^T x - b\_i),
