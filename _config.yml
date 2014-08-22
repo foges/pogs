@@ -43,7 +43,7 @@ kramdown:
     coderay_line_numbers: nil
     coderay_css: class
 
-pygments: false
+highlighter: false
 
 
 # kramdown:

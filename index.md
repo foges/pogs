@@ -6,7 +6,7 @@ title: "POGS"
 POGS
 ====
 
-POGS is a solver for convex optimization of the form
+POGS (Proximal Operator Graph Solver) is a solver for convex optimization of the form
 
 \\[
 	\\begin{aligned}
@@ -17,8 +17,23 @@ POGS is a solver for convex optimization of the form
 	\\end{aligned}
 \\]
 
-where \\(f\\) and \\(g\\) are convex and can take on the values \\(\\mathbf{R} \\cup \\{\\infty\\}\\). This formulation is known as _graph form_. The solver is based on [ADMM](http://foges.github.io/pogs/ref/admm) meaning that it can solve _very large problems extremely quickly_, albeit to modest accuracy. It is written in C++, supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU (CUDA) version.
+where \\(f\\) and \\(g\\) are convex and can take on the values \\(\\mathbf{R} \\cup \\{\\infty\\}\\). This formulation is known as _graph form_, and was proposed by Neal Parikh in ["Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd"](http://www.stanford.edu/~boyd/papers/block_splitting.html). The solver is based on [ADMM](http://foges.github.io/pogs/ref/admm) meaning that it can solve _very large problems extremely quickly_, albeit to modest accuracy. By leveraging the power of GPUs, POGS solves a large range of problems much faster than specialized state of the art solvers. Examples include 
 
+\\[
+  \\begin{aligned}
+     & \\text{Problem} & \\text{Dimensions of } A && \\text{Time} \\\\ \\hline
+     & \\text{Lasso} & 10,000 \\times 100,000 && \\text{21 sec} \\\\\\
+     & \\text{Linear Program} & 10,000 \\times 100,000 && \\text{18 sec} \\\\\\
+     & \\text{Logistic Regression} & 1,000,000 \\times 2,000 && \\text{21 sec} \\\\\\
+     & \\text{Linear SVM} & 1,000,000 \\times 2,000 && \\text{16 sec} \\\\\\
+  \\end{aligned}
+\\]
+
+In each instance the matrix \\( A \\) was dense and a single Nvidia K40 GPU was used.
+
+The underlying algorithm is taken from Neal's paper, and by adding pre-conditioning, an adaptive scheme for parameter selection and better stopping critera, we were able to make POGS significantly more robust. The improvements will be discussed in an upcoming paper.
+
+POGS is written in C++ and is fully open source (GPL). It supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU version (this requires a dedicated CUDA-capable GPU).
 
 ### Problem Classes
 
