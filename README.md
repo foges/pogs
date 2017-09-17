@@ -62,8 +62,11 @@ References
 
 [prox_algs]: http://www.stanford.edu/~boyd/papers/prox_algs.html "Proximal Algorithms -- N. Parikh and S. Boyd"
 
+License
+=======
+POGS is licensed with BSD-3.
 
 Authors
-------
+=======
 Chris Fougner, with input from Stephen Boyd. The basic algorithm is from ["Block Splitting for Distributed Optimization -- N. Parikh and S. Boyd"][block_splitting].
 
