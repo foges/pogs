@@ -33,7 +33,7 @@ In each instance the matrix \\( A \\) was dense and a single Nvidia K40 GPU was 
 
 The underlying algorithm is taken from Neal's paper, and by adding pre-conditioning, an adaptive scheme for parameter selection and better stopping critera, we were able to make POGS significantly more robust. The improvements will be discussed in an upcoming paper.
 
-POGS is written in C++ and is fully open source (GPL). It supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU version (this requires a dedicated CUDA-capable GPU).
+POGS is written in C++ and is fully open source (BSD-3). It supports both single and double precision arithmetic and comes with wrappers for MATLAB and R. Higher performance can be achieved by using the GPU version (this requires a dedicated CUDA-capable GPU).
 
 ### Problem Classes
 
