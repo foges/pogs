@@ -29,7 +29,7 @@ ifeq ($(OS), Darwin)
         DEVICEOPTS := -m64
     endif
     CUDA_LIB := $(CUDA_HOME)/lib
-    R_FRAMEWORK := -F$(R_HOME)/.. -framework R
+    R_FRAMEWORK := -F/Library/Frameworks -framework R
     RPATH := -rpath $(CUDA_LIB)
 endif
 
