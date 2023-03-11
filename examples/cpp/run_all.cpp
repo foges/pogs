@@ -34,6 +34,10 @@ int main() {
   t = Svm<real_t>(1000, 200);
   printf("Solver Time: %e sec\n", t);
 
+  printf("\nQuantile Regression.\n");
+  t = QuantileRegression<real_t>(200, 2000);
+  printf("Solver Time: %e sec\n", t);
+
   return 0;
 }
 

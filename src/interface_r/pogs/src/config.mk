@@ -4,7 +4,8 @@ TARGET=cpu
 # set R_HOME, R_INC, and R_LIB to the the R install dir,
 # the R header dir, and the R shared library dir on your system
 R_HOME := $(shell R RHOME)
-R_INC := $(R_HOME)/include
+R_INC := -I$(R_HOME)/include \
+    -I/usr/share/R/include  # Debian
 R_LIB := $(R_HOME)/lib
 
 # replace these three lines with
@@ -29,7 +30,7 @@ ifeq ($(OS), Darwin)
         DEVICEOPTS := -m64
     endif
     CUDA_LIB := $(CUDA_HOME)/lib
-    R_FRAMEWORK := -F$(R_HOME)/.. -framework R
+    R_FRAMEWORK := -F$(R_HOME)/.. -F/Library/Frameworks -framework R
     RPATH := -rpath $(CUDA_LIB)
 endif
 
@@ -38,7 +39,7 @@ endif
 ################################################################################
 
 #compiler/preprocessor options
-HDR=-Iinclude -I"$(R_INC)"
+HDR=-Iinclude $(R_INC)
 
 #linker options
 CXXFLAGS+=$(DEVICEOPTS)  -DPOGS_SINGLE=0
