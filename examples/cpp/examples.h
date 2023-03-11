@@ -24,5 +24,8 @@ double NonNegL2(size_t m, size_t n);
 template <typename T>
 double Svm(size_t m, size_t n);
 
+template <typename T>
+double QuantileRegression(size_t m, size_t n);
+
 #endif  // EXAMPLES_H_
 

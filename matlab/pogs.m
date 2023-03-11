@@ -352,9 +352,9 @@ d = ones(m, 1);
 e = ones(n, 1);
 
 if m > n
-  e = 1 ./ norms(A, nrm, 1)';
+  e = 1 ./ vecnorm(A, nrm, 1)';
 else
-  d = 1 ./ norms(A, nrm, 2);
+  d = 1 ./ vecnorm(A, nrm, 2);
 end
 
 A = bsxfun(@times, bsxfun(@times, A, d), e');
