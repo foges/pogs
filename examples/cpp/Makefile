@@ -1,3 +1,5 @@
+# To build with openmp set IFLAGS=-fopenmp
+
 # User Vars
 POGSROOT=../../src
 

@@ -1,5 +1,4 @@
-# Instructions
-# 1. To build with openmp set IFLAGS=-fopenmp
+# To build with openmp set IFLAGS=-fopenmp
 
 # Bulid directory
 OBJDIR=build

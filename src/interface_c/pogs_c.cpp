@@ -45,9 +45,9 @@ int Pogs(size_t m, size_t n, const T *A,
   *optval = pogs_data.GetOptval();
   *final_iter = pogs_data.GetFinalIter();
 
-  memcpy(x, pogs_data.GetX(), n);
-  memcpy(y, pogs_data.GetY(), m);
-  memcpy(l, pogs_data.GetLambda(), m);
+  memcpy(x, pogs_data.GetX(), n * sizeof(T));
+  memcpy(y, pogs_data.GetY(), m * sizeof(T));
+  memcpy(l, pogs_data.GetLambda(), m * sizeof(T));
 
   return err;
 }
