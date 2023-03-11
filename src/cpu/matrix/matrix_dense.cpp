@@ -68,6 +68,10 @@ MatrixDense<T>::~MatrixDense() {
   CpuData<T> *info = reinterpret_cast<CpuData<T>*>(this->_info);
   delete info;
   this->_info = 0;
+  if (this->_data) {
+    delete _data;
+    this->_data = 0;
+  }
 }
 
 template <typename T>
