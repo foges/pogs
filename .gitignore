@@ -19,6 +19,9 @@ test_qr
 # Planning and development
 _claude/
 
+# Benchmark results
+python/benchmarks/results/
+
 # Python
 __pycache__/
 *.pyc
