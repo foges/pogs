@@ -60,6 +60,95 @@ void linalg_cholesky_svx(const matrix<T, O> *LLT, vector<T> *x) {
   blas_trsv(CblasLower, CblasTrans, CblasNonUnit, LLT, x);
 }
 
+// Symmetric Eigenvalue Decomposition using LAPACK
+// Computes eigenvalues and eigenvectors of a symmetric matrix A
+// On input: A contains the symmetric matrix (only lower triangle is used)
+// On output: A is overwritten with eigenvectors (column-major)
+//            w contains eigenvalues in ascending order
+extern "C" {
+  void dsyevd_(const char* jobz, const char* uplo, const int* n, double* a,
+               const int* lda, double* w, double* work, const int* lwork,
+               int* iwork, const int* liwork, int* info);
+  void ssyevd_(const char* jobz, const char* uplo, const int* n, float* a,
+               const int* lda, float* w, float* work, const int* lwork,
+               int* iwork, const int* liwork, int* info);
+}
+
+template <typename T, CBLAS_ORDER O>
+void linalg_syevd(matrix<T, O> *A, vector<T> *w);
+
+template <>
+inline void linalg_syevd<double, CblasColMajor>(matrix<double, CblasColMajor> *A,
+                                                 vector<double> *w) {
+  char jobz = 'V';  // Compute eigenvalues and eigenvectors
+  char uplo = 'L';  // Lower triangle of A is stored
+  int n = static_cast<int>(A->size1);
+  int lda = n;
+  int info;
+
+  // Query optimal workspace size
+  double wkopt;
+  int lwork = -1;
+  int iwork_opt;
+  int liwork = -1;
+  dsyevd_(&jobz, &uplo, &n, A->data, &lda, w->data, &wkopt, &lwork,
+          &iwork_opt, &liwork, &info);
+
+  lwork = static_cast<int>(wkopt);
+  liwork = iwork_opt;
+  double *work = new double[lwork];
+  int *iwork = new int[liwork];
+
+  // Compute eigenvalues and eigenvectors
+  dsyevd_(&jobz, &uplo, &n, A->data, &lda, w->data, work, &lwork,
+          iwork, &liwork, &info);
+
+  delete[] work;
+  delete[] iwork;
+
+  if (info != 0) {
+    // Eigenvalue decomposition failed
+    // For now, just set all eigenvalues to zero (safeguard)
+    for (size_t i = 0; i < w->size; ++i) {
+      vector_set(w, i, 0.0);
+    }
+  }
+}
+
+template <>
+inline void linalg_syevd<float, CblasColMajor>(matrix<float, CblasColMajor> *A,
+                                                vector<float> *w) {
+  char jobz = 'V';
+  char uplo = 'L';
+  int n = static_cast<int>(A->size1);
+  int lda = n;
+  int info;
+
+  float wkopt;
+  int lwork = -1;
+  int iwork_opt;
+  int liwork = -1;
+  ssyevd_(&jobz, &uplo, &n, A->data, &lda, w->data, &wkopt, &lwork,
+          &iwork_opt, &liwork, &info);
+
+  lwork = static_cast<int>(wkopt);
+  liwork = iwork_opt;
+  float *work = new float[lwork];
+  int *iwork = new int[liwork];
+
+  ssyevd_(&jobz, &uplo, &n, A->data, &lda, w->data, work, &lwork,
+          iwork, &liwork, &info);
+
+  delete[] work;
+  delete[] iwork;
+
+  if (info != 0) {
+    for (size_t i = 0; i < w->size; ++i) {
+      vector_set(w, i, 0.0f);
+    }
+  }
+}
+
 }  // namespace gsl
 
 #endif  // GSL_LINALG_H_

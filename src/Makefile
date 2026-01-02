@@ -47,6 +47,8 @@ CPU_MTX_OBJ=\
 CPU_PRJ_OBJ=\
 	$(OBJDIR)/cpu/projector/projector_cgls.o \
 	$(OBJDIR)/cpu/projector/projector_direct_dense.o
+CPU_C_OBJ=\
+	$(OBJDIR)/cpu/interface_c/pogs_c.o
 CPU_OBJ=$(OBJDIR)/cpu/pogs.o
 
 # GPU Specific headers and object files.
@@ -76,11 +78,11 @@ GPU_OBJ=$(OBJDIR)/gpu/pogs.o
 
 
 # Set vpath for build
-VPATH=cpu cpu/matrix cpu/projector gpu gpu/matrix gpu/projector
+VPATH=cpu cpu/matrix cpu/projector cpu/interface_c interface_c gpu gpu/matrix gpu/projector
 
 
 # Build all
-cpu: $(CPU_OBJ) $(CPU_MTX_OBJ) $(CPU_PRJ_OBJ)
+cpu: $(CPU_OBJ) $(CPU_MTX_OBJ) $(CPU_PRJ_OBJ) $(CPU_C_OBJ)
 	ar cr $(OBJDIR)/pogs.a $^
 
 gpu: $(OBJDIR)/pogs_link.o $(GPU_OBJ) $(GPU_MTX_OBJ) $(GPU_PRJ_OBJ)
@@ -93,12 +95,15 @@ $(OBJDIR):
 
 # Directories CPU
 $(OBJDIR)/cpu: $(OBJDIR)
-	mkdir -p $@ 
+	mkdir -p $@
 
 $(OBJDIR)/cpu/matrix: $(OBJDIR)/cpu
-	mkdir -p $@ 
+	mkdir -p $@
 
 $(OBJDIR)/cpu/projector: $(OBJDIR)/cpu
+	mkdir -p $@
+
+$(OBJDIR)/cpu/interface_c: $(OBJDIR)/cpu
 	mkdir -p $@ 
 
 # Directories GPU
@@ -124,6 +129,9 @@ $(OBJDIR)/cpu/projector/%.o: %.cpp $(CPU_HDR) | $(OBJDIR)/cpu/projector
 
 $(OBJDIR)/cpu/%.o: %.cpp $(CPU_HDR) | $(OBJDIR)/cpu
 	$(CXX) -Iinclude -Icpu/include $< $(CXXFLAGS) $(IFLAGS) -c -o $@
+
+$(OBJDIR)/cpu/interface_c/%.o: interface_c/%.cpp | $(OBJDIR)/cpu/interface_c
+	$(CXX) -Iinclude -Icpu/include -Iinterface_c $< $(CXXFLAGS) $(IFLAGS) -c -o $@
 
 # POGS GPU objects
 $(OBJDIR)/pogs_link.o: $(GPU_OBJ) $(GPU_MTX_OBJ) $(GPU_PRJ_OBJ) | $(OBJDIR)

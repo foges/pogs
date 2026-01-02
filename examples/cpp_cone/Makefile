@@ -24,7 +24,7 @@ endif
 # CPU
 cpu: run_all.cpp examples.h $(EXSRC)
 	$(MAKE) cpu -C $(POGSROOT) IFLAGS=$(IFLAGS)
-	$(CXX) $(CXXFLAGS) -o run $(EXSRC) $<	$(POGSROOT)/build/pogs.a $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -I$(POGSROOT)/cpu/include -o run $(EXSRC) $<	$(POGSROOT)/build/pogs.a $(LDFLAGS)
 
 # GPU
 gpu: run_all.cpp examples.h $(EXSRC)

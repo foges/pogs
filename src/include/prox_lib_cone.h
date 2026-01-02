@@ -89,6 +89,12 @@ __DEVICE__ void ProjectExpDualCone(const CONE_IDX *idx, T *v) {
 }
 
 // CPU code.
+#ifndef __CUDACC__
+#include "gsl/gsl_linalg.h"
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_vector.h"
+#endif
+
 namespace {
 template <typename T, typename F>
 void ApplyCpu(const F& f, const ConeConstraintRaw& cone_constr, T *v) {
@@ -136,7 +142,91 @@ inline void ProxConeSocCpu(const ConeConstraintRaw& cone_constr, T *v) {
 
 template <typename T>
 inline void ProxConeSdpCpu(const ConeConstraintRaw& cone_constr, T *v) {
+#ifndef __CUDACC__
+  using namespace gsl;
+
+  // Compute matrix dimension n from vectorized size n(n+1)/2
+  CONE_IDX vec_size = cone_constr.size;
+  CONE_IDX n = static_cast<CONE_IDX>((-1.0 + std::sqrt(1.0 + 8.0 * vec_size)) / 2.0);
+
+  // Verify size is consistent
+  if (n * (n + 1) / 2 != vec_size) {
+    // Invalid size for symmetric matrix
+    return;
+  }
+
+  // Allocate matrix and eigenvalue storage
+  T* A_data = new T[n * n];
+  T* w_data = new T[n];
+
+  // Build symmetric matrix from vectorized lower triangular form
+  // Vectorization format: column-major lower triangle
+  // For 3x3: [a11, a21, a31, a22, a32, a33]
+  CONE_IDX vec_idx = 0;
+  for (CONE_IDX col = 0; col < n; ++col) {
+    for (CONE_IDX row = col; row < n; ++row) {
+      T val = v[cone_constr.idx[vec_idx]];
+      // Store in column-major full matrix
+      A_data[col * n + row] = val;  // Lower triangle
+      A_data[row * n + col] = val;  // Upper triangle (symmetric)
+      ++vec_idx;
+    }
+  }
+
+  // Create GSL matrix and vector views
+  matrix<T, CblasColMajor> A;
+  A.size1 = n;
+  A.size2 = n;
+  A.tda = n;
+  A.data = A_data;
+
+  vector<T> w;
+  w.size = n;
+  w.stride = 1;
+  w.data = w_data;
+
+  // Compute eigenvalue decomposition
+  // After this: A contains eigenvectors (columns), w contains eigenvalues
+  linalg_syevd(&A, &w);
+
+  // Project eigenvalues to non-negative orthant
+  for (CONE_IDX i = 0; i < n; ++i) {
+    if (w_data[i] < static_cast<T>(0)) {
+      w_data[i] = static_cast<T>(0);
+    }
+  }
+
+  // Reconstruct matrix: X = V * diag(w) * V^T
+  // Allocate temporary storage for result
+  T* X_data = new T[n * n];
+
+  // Compute X[i,j] = sum_k V[i,k] * w[k] * V[j,k]
+  for (CONE_IDX i = 0; i < n; ++i) {
+    for (CONE_IDX j = 0; j < n; ++j) {
+      T sum = static_cast<T>(0);
+      for (CONE_IDX k = 0; k < n; ++k) {
+        // V is stored column-major: V[i,k] = A_data[k*n + i]
+        sum += A_data[k * n + i] * w_data[k] * A_data[k * n + j];
+      }
+      X_data[j * n + i] = sum;
+    }
+  }
+
+  // Extract lower triangular part back to vectorized form
+  vec_idx = 0;
+  for (CONE_IDX col = 0; col < n; ++col) {
+    for (CONE_IDX row = col; row < n; ++row) {
+      v[cone_constr.idx[vec_idx]] = X_data[col * n + row];
+      ++vec_idx;
+    }
+  }
+
+  delete[] X_data;
+  delete[] A_data;
+  delete[] w_data;
+#else
   assert(false && "SDP Not implemented on CPU");
+#endif
 }
 
 
