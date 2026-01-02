@@ -26,36 +26,37 @@ const unsigned int kNormEstMaxIter = 50u;
 ///////////////////////// Helper Functions /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// Modern C++20: No need for std::unary_function (removed in C++17)
 template <typename T>
-struct ReciprF : std::unary_function<T, T> {
+struct ReciprF {
   T alpha;
   ReciprF() : alpha(1) { }
   ReciprF(T alpha) : alpha(alpha) { }
-  T operator()(T x) { return alpha / x; }
+  T operator()(T x) const { return alpha / x; }
 };
 
 template <typename T>
-struct AbsF : std::unary_function<T, T> {
-  inline double Abs(double x) { return fabs(x); }
-  inline float Abs(float x) { return fabsf(x); }
-  T operator()(T x) { return Abs(x); }
+struct AbsF {
+  inline double Abs(double x) const { return fabs(x); }
+  inline float Abs(float x) const { return fabsf(x); }
+  T operator()(T x) const { return Abs(x); }
 };
 
 template <typename T>
-struct IdentityF : std::unary_function<T, T> {
-  T operator()(T x) { return x; }
+struct IdentityF {
+  T operator()(T x) const { return x; }
 };
 
 template <typename T>
-struct SquareF: std::unary_function<T, T> {
-  T operator()(T x) { return x * x; }
+struct SquareF {
+  T operator()(T x) const { return x * x; }
 };
 
 template <typename T>
-struct SqrtF : std::unary_function<T, T> {
-  inline double Sqrt(double x) { return sqrt(x); }
-  inline float Sqrt(float x) { return sqrtf(x); }
-  T operator()(T x) { return Sqrt(x); }
+struct SqrtF {
+  inline double Sqrt(double x) const { return sqrt(x); }
+  inline float Sqrt(float x) const { return sqrtf(x); }
+  T operator()(T x) const { return Sqrt(x); }
 };
 
 template <typename T, typename F>

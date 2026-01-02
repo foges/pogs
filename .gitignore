@@ -2,6 +2,7 @@
 *.o
 *.a
 *.dSYM/
+build/
 src/build/
 
 # Executables
@@ -14,6 +15,9 @@ examples/cpp_cone/test_*
 anderson_benchmark
 test_anderson
 test_qr
+
+# Planning and development
+_claude/
 
 # Python
 __pycache__/
