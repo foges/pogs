@@ -64,11 +64,16 @@ TEST_CASE("Lasso regression (small)", "[solver][integration]") {
     std::vector<FunctionObj<double>> f(m);
     std::vector<FunctionObj<double>> g(n);
 
-    // f_i(y_i) = 0.5 * y_i^2 - b_i * y_i
+    // f_i(y_i) = 0.5 * (y_i - b_i)^2
+    // FunctionObj computes: c * h(a*x - b) + d*x + e*x^2
+    // With kSquare, h(x) = 0.5*x^2, so we want c=1, a=1, b=b_data[i]
     for (size_t i = 0; i < m; ++i) {
         f[i].h = kSquare;
-        f[i].c = 0.5;
-        f[i].d = -b_data[i];
+        f[i].a = 1.0;
+        f[i].b = b_data[i];  // offset: 0.5*(y - b)^2
+        f[i].c = 1.0;
+        f[i].d = 0.0;
+        f[i].e = 0.0;
     }
 
     // g_j(x_j) = lambda * |x_j|
@@ -129,18 +134,24 @@ TEST_CASE("Ridge regression (small)", "[solver][integration]") {
     std::vector<FunctionObj<double>> f(m);
     std::vector<FunctionObj<double>> g(n);
 
-    // f_i(y_i) = y_i^2 - 2*b_i*y_i
+    // f_i(y_i) = (y_i - b_i)^2
+    // FunctionObj computes: c * h(a*x - b) + d*x + e*x^2
+    // With kSquare, h(x) = 0.5*x^2, so c=2 gives (y - b)^2
     for (size_t i = 0; i < m; ++i) {
         f[i].h = kSquare;
-        f[i].c = 1.0;
-        f[i].d = -2.0 * b_data[i];
+        f[i].a = 1.0;
+        f[i].b = b_data[i];
+        f[i].c = 2.0;  // 2 * 0.5 * (y-b)^2 = (y-b)^2
+        f[i].d = 0.0;
+        f[i].e = 0.0;
     }
 
     // g_j(x_j) = lambda * x_j^2
+    // c * h(x) = lambda * 0.5 * x^2, so use c = 2*lambda for lambda*x^2
     double lambda = 0.1;
     for (size_t j = 0; j < n; ++j) {
         g[j].h = kSquare;
-        g[j].c = lambda;
+        g[j].c = 2.0 * lambda;  // 2*lambda * 0.5 * x^2 = lambda * x^2
     }
 
     pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
@@ -174,11 +185,16 @@ TEST_CASE("Non-negative least squares", "[solver][integration]") {
     std::vector<FunctionObj<double>> f(m);
     std::vector<FunctionObj<double>> g(n);
 
-    // f_i(y_i) = y_i^2 - 2*b_i*y_i
+    // f_i(y_i) = (y_i - b_i)^2
+    // FunctionObj computes: c * h(a*x - b) + d*x + e*x^2
+    // With kSquare, h(x) = 0.5*x^2, so c=2 gives (y - b)^2
     for (size_t i = 0; i < m; ++i) {
         f[i].h = kSquare;
-        f[i].c = 1.0;
-        f[i].d = -2.0 * b_data[i];
+        f[i].a = 1.0;
+        f[i].b = b_data[i];
+        f[i].c = 2.0;  // 2 * 0.5 * (y-b)^2 = (y-b)^2
+        f[i].d = 0.0;
+        f[i].e = 0.0;
     }
 
     // g_j(x_j) = I(x_j >= 0)

@@ -16,7 +16,7 @@ namespace pogs {
 
 namespace {
 
-int kMaxIter = 100;
+int kMaxIter = 500;
 bool kCglsQuiet = true;
 
 template<typename T>
@@ -83,8 +83,13 @@ int ProjectorCgls<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
   GpuData<T> *info = reinterpret_cast<GpuData<T>*>(this->_info);
   cublasHandle_t hdl = info->handle;
 
-  // Set initial x and y.
-  cudaMemset(x, 0, _A.Cols() * sizeof(T));
+  // Use x as an initial guess for the projected x. Convert to delta x.
+  cml::vector<T> x_vec = cml::vector_view_array(x, _A.Cols());
+  const cml::vector<T> x0_vec = cml::vector_view_array(x0, _A.Cols());
+  cml::blas_axpy(hdl, static_cast<T>(-1.), &x0_vec, &x_vec);
+  cudaDeviceSynchronize();
+
+  // Set initial y.
   cudaMemcpy(y, y0, _A.Rows() * sizeof(T), cudaMemcpyDeviceToDevice);
 
   // y := y0 - Ax0;
@@ -96,8 +101,6 @@ int ProjectorCgls<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
   cudaDeviceSynchronize();
 
   // x := x + x0
-  cml::vector<T> x_vec = cml::vector_view_array(x, _A.Cols());
-  const cml::vector<T> x0_vec = cml::vector_view_array(x0, _A.Cols());
   cml::blas_axpy(hdl, static_cast<T>(1.), &x0_vec, &x_vec);
   cudaDeviceSynchronize();
 
@@ -125,4 +128,3 @@ template class ProjectorCgls<float, MatrixSparse<float> >;
 #endif
 
 }  // namespace pogs
-

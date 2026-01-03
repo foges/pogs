@@ -135,6 +135,18 @@ int PogsConeD(enum ORD ord, size_t m, size_t n, const double *A,
               unsigned int verbose, int adaptive_rho, int gap_stop,
               double *x, double *y, double *l, double *optval, unsigned int *final_iter);
 
+// Cone form solver interface with quadratic objective
+//   minimize    0.5 x^T P x + c^T x
+//   subject to  b - A*x ∈ K_y,  x ∈ K_x
+int PogsConeQD(enum ORD ord, size_t m, size_t n, const double *A,
+               const double *b, const double *c, const double *P,
+               const struct ConeConstraintC *cones_x, size_t num_cones_x,
+               const struct ConeConstraintC *cones_y, size_t num_cones_y,
+               double rho, double abs_tol, double rel_tol, unsigned int max_iter,
+               unsigned int verbose, int adaptive_rho, int gap_stop,
+               double *x, double *y, double *l, double *optval,
+               unsigned int *final_iter);
+
 int PogsConeS(enum ORD ord, size_t m, size_t n, const float *A,
               const float *b, const float *c,
               const struct ConeConstraintC *cones_x, size_t num_cones_x,
@@ -143,9 +155,58 @@ int PogsConeS(enum ORD ord, size_t m, size_t n, const float *A,
               unsigned int verbose, int adaptive_rho, int gap_stop,
               float *x, float *y, float *l, float *optval, unsigned int *final_iter);
 
+int PogsConeQS(enum ORD ord, size_t m, size_t n, const float *A,
+               const float *b, const float *c, const float *P,
+               const struct ConeConstraintC *cones_x, size_t num_cones_x,
+               const struct ConeConstraintC *cones_y, size_t num_cones_y,
+               float rho, float abs_tol, float rel_tol, unsigned int max_iter,
+               unsigned int verbose, int adaptive_rho, int gap_stop,
+               float *x, float *y, float *l, float *optval,
+               unsigned int *final_iter);
+
+// Cone form solver interface using direct projection (dense A).
+int PogsConeDirectD(enum ORD ord, size_t m, size_t n, const double *A,
+                    const double *b, const double *c,
+                    const struct ConeConstraintC *cones_x, size_t num_cones_x,
+                    const struct ConeConstraintC *cones_y, size_t num_cones_y,
+                    double rho, double abs_tol, double rel_tol,
+                    unsigned int max_iter, unsigned int verbose,
+                    int adaptive_rho, int gap_stop,
+                    double *x, double *y, double *l, double *optval,
+                    unsigned int *final_iter);
+
+int PogsConeDirectQD(enum ORD ord, size_t m, size_t n, const double *A,
+                     const double *b, const double *c, const double *P,
+                     const struct ConeConstraintC *cones_x, size_t num_cones_x,
+                     const struct ConeConstraintC *cones_y, size_t num_cones_y,
+                     double rho, double abs_tol, double rel_tol,
+                     unsigned int max_iter, unsigned int verbose,
+                     int adaptive_rho, int gap_stop,
+                     double *x, double *y, double *l, double *optval,
+                     unsigned int *final_iter);
+
+int PogsConeDirectS(enum ORD ord, size_t m, size_t n, const float *A,
+                    const float *b, const float *c,
+                    const struct ConeConstraintC *cones_x, size_t num_cones_x,
+                    const struct ConeConstraintC *cones_y, size_t num_cones_y,
+                    float rho, float abs_tol, float rel_tol,
+                    unsigned int max_iter, unsigned int verbose,
+                    int adaptive_rho, int gap_stop,
+                    float *x, float *y, float *l, float *optval,
+                    unsigned int *final_iter);
+
+int PogsConeDirectQS(enum ORD ord, size_t m, size_t n, const float *A,
+                     const float *b, const float *c, const float *P,
+                     const struct ConeConstraintC *cones_x, size_t num_cones_x,
+                     const struct ConeConstraintC *cones_y, size_t num_cones_y,
+                     float rho, float abs_tol, float rel_tol,
+                     unsigned int max_iter, unsigned int verbose,
+                     int adaptive_rho, int gap_stop,
+                     float *x, float *y, float *l, float *optval,
+                     unsigned int *final_iter);
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif  // POGS_C_H
-

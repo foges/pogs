@@ -43,9 +43,9 @@ def generate_maxcut(n=20, seed=None):
 
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SDP-MaxCut (n={n})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "n": n,
         "matrix_size": n
     }
@@ -94,9 +94,9 @@ def generate_matrix_completion(n=30, m=20, seed=None):
 
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SDP-MatrixCompletion (n={n}, m={m})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "n": n,
         "m": m
     }

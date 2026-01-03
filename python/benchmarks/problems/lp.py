@@ -52,9 +52,9 @@ def generate(m=100, n=200, density=1.0, seed=None):
     ]
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"LP (m={m}, n={n}, density={density:.2f})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "m": m,
         "n": n,
         "density": density

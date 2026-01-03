@@ -45,9 +45,9 @@ def generate(n_assets=50, gamma=1.0, seed=None):
     ]
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"Portfolio (n={n_assets}, gamma={gamma:.1f})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "n_assets": n_assets,
         "gamma": gamma
     }

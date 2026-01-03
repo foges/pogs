@@ -40,18 +40,23 @@ def test_lp_simple():
     #
     # In standard form:
     #   c = [1, 0]
-    #   A = [1, 1]
-    #   b = [2]
-    #   K_y = {zero cone} (equality constraint)
-    #   K_x = {R^2_+} (non-negative)
+    #   A = [[ 1,  1],
+    #        [-1,  0],
+    #        [ 0, -1]]
+    #   b = [2, 0, 0]
+    #   K_y = {zero cone} x {R^2_+}
 
     c = np.array([1.0, 0.0])
-    A = np.array([[1.0, 1.0]])
-    b = np.array([2.0])
+    A = np.array([
+        [1.0, 1.0],
+        [-1.0, 0.0],
+        [0.0, -1.0],
+    ])
+    b = np.array([2.0, 0.0, 0.0])
 
     dims = {
         'f': 1,  # One equality constraint (zero cone)
-        'l': 0,  # No inequality constraints
+        'l': 2,  # x >= 0 encoded via b - A x in non-negative cone
     }
 
     # Note: In POGS cone form, we have:
@@ -59,18 +64,22 @@ def test_lp_simple():
     #   subject to b - A*x in K_y, x in K_x
     #
     # For this problem:
-    #   - The constraint x[0] + x[1] = 2 becomes: 2 - [1,1]*x in {zero}
-    #   - The constraint x >= 0 would be: x in R^2_+
+    #   - The equality constraint is: 2 - [1,1]*x in {zero}
+    #   - The non-negativity constraints are: 0 - [-I]*x in {R^2_+}
     #
-    # But the standard conic form doesn't put constraints on x directly.
-    # We need to reformulate. Actually, the standard conic form is:
-    #   minimize c^T*x subject to Ax + s = b, s in K
-    # which is equivalent to: minimize c^T*x subject to b - Ax in K
+    # The standard conic form is:
+    #   minimize c^T*x subject to b - Ax in K
 
     print("Solving with POGS...")
     print()
 
-    result = solve_cone_problem(c, A, b, dims, verbose=5)
+    result = solve_cone_problem(
+        c, A, b, dims,
+        abs_tol=1e-6,
+        rel_tol=1e-6,
+        max_iter=50000,
+        verbose=5
+    )
 
     print()
     print("Result:")
@@ -151,7 +160,13 @@ def test_lp_with_inequalities():
     print("Solving with POGS...")
     print()
 
-    result = solve_cone_problem(c, A, b, dims, verbose=5)
+    result = solve_cone_problem(
+        c, A, b, dims,
+        abs_tol=1e-6,
+        rel_tol=1e-6,
+        max_iter=50000,
+        verbose=5
+    )
 
     print()
     print("Result:")

@@ -1,9 +1,13 @@
 #include "pogs.h"
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
+#include <limits>
+#include <memory>
 #include <numeric>
 
+#include "anderson.h"
 #include "equil_helper.h"
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_vector.h"
@@ -38,7 +42,10 @@ PogsImplementation<T, M, P>::PogsImplementation(const M &A)
       _verbose(kVerbose),
       _adaptive_rho(kAdaptiveRho),
       _gap_stop(kGapStop),
-      _init_x(false), _init_lambda(false) {
+      _init_x(false), _init_lambda(false),
+      _use_anderson(false),
+      _anderson_mem(5u),
+      _anderson_start(10u) {
   _x = new T[_A.Cols()]();
   _y = new T[_A.Rows()]();
   _mu = new T[_A.Cols()]();
@@ -87,7 +94,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   const T kDeltaMin       = static_cast<T>(1.05);
   const T kGamma          = static_cast<T>(1.01);
   const T kTau            = static_cast<T>(0.8);
-  const T kAlpha          = static_cast<T>(1.7);
   const T kRhoMin         = static_cast<T>(1e-4);
   const T kRhoMax         = static_cast<T>(1e4);
   const T kKappa          = static_cast<T>(0.9);
@@ -97,7 +103,9 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   const T kProjTolMin     = static_cast<T>(1e-2);
   const T kProjTolPow     = static_cast<T>(2);
   const T kProjTolIni     = static_cast<T>(1e-5);
-  const bool kUseExactTol = false;
+  const bool kUseExactTol = objective->UseExactTol();
+  const T kAlpha          = kUseExactTol ? static_cast<T>(1.0)
+                                         : static_cast<T>(1.7);
 
   // Initialize Projector P and Matrix A.
   if (!_done_init)
@@ -193,13 +201,38 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   unsigned int k = 0u, kd = 0u, ku = 0u;
   bool converged = false;
   T nrm_r, nrm_s, gap, eps_gap, eps_pri, eps_dua;
+  const bool profile = _verbose > 3;
+  double time_prox = 0.0;
+  double time_proj = 0.0;
+  double time_res = 0.0;
+
+  // Anderson acceleration for primal variable z.
+  // We accelerate only the primal fixed-point iteration, not the dual.
+  // This is more stable than accelerating the combined primal-dual state.
+  std::unique_ptr<AndersonAccelerator<T>> anderson;
+  gsl::vector<T> z_acc;
+  T prev_nrm_r = std::numeric_limits<T>::max();  // For safeguarding
+  if (_use_anderson && _anderson_mem > 0) {
+    anderson = std::make_unique<AndersonAccelerator<T>>(m + n, _anderson_mem);
+    z_acc = gsl::vector_calloc<T>(m + n);
+    if (_verbose > 0) {
+      Printf("Anderson acceleration enabled: mem=%u, start=%u\n",
+             _anderson_mem, _anderson_start);
+    }
+  }
 
   for (;; ++k) {
     gsl::vector_memcpy(&zprev, &z);
 
     // Evaluate Proximal Operators
     gsl::blas_axpy(-kOne, &zt, &z);
-    objective->prox(x.data, y.data, x12.data, y12.data, _rho);
+    if (profile) {
+      double t = timer<double>();
+      objective->prox(x.data, y.data, x12.data, y12.data, _rho);
+      time_prox += timer<double>() - t;
+    } else {
+      objective->prox(x.data, y.data, x12.data, y12.data, _rho);
+    }
 
     // Compute gap, optval, and tolerances.
     gsl::blas_axpy(-kOne, &z12, &z);
@@ -215,37 +248,75 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
     gsl::blas_axpy(kAlpha, &z12, &ztemp);
     gsl::blas_axpy(kOne - kAlpha, &zprev, &ztemp);
 
+    // Warm start projection with previous x iterate.
+    gsl::vector_memcpy(&x, &xprev);
+
     // Project onto y = Ax.
     T proj_tol = kProjTolMin / std::pow(static_cast<T>(k + 1), kProjTolPow);
     proj_tol = std::max(proj_tol, kProjTolMax);
-    _P.Project(xtemp.data, ytemp.data, kOne, x.data, y.data, proj_tol);
-
-    // Calculate residuals.
-    gsl::vector_memcpy(&ztemp, &zprev);
-    gsl::blas_axpy(-kOne, &z, &ztemp);
-    nrm_s = _rho * (_nrmA * gsl::blas_nrm2(&ytemp) + gsl::blas_nrm2(&xtemp));
-
-    gsl::vector_memcpy(&ztemp, &z12);
-    gsl::blas_axpy(-kOne, &z, &ztemp);
-    nrm_r = _nrmA * gsl::blas_nrm2(&xtemp) + gsl::blas_nrm2(&ytemp);
-
-    // Calculate exact residuals only if necessary.
-    bool exact = false;
-    if ((nrm_r < 10 * eps_pri && nrm_s < 10 * eps_dua) || kUseExactTol) {
-      gsl::vector_memcpy(&ztemp, &z12);
-      _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
-      nrm_r = gsl::blas_nrm2(&ytemp);
-      gsl::vector_memcpy(&ztemp, &z12);
-      gsl::blas_axpy(kOne, &zt, &ztemp);
-      gsl::blas_axpy(-kOne, &zprev, &ztemp);
-      _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
-      nrm_s = _rho * gsl::blas_nrm2(&xtemp);
-      exact = true;
+    if (profile) {
+      double t = timer<double>();
+      _P.Project(xtemp.data, ytemp.data, kOne, x.data, y.data, proj_tol);
+      time_proj += timer<double>() - t;
+    } else {
+      _P.Project(xtemp.data, ytemp.data, kOne, x.data, y.data, proj_tol);
     }
 
-    // Evaluate stopping criteria.
-    converged = exact && nrm_r < eps_pri && nrm_s < eps_dua &&
-        (!_gap_stop || gap < eps_gap);
+    // Calculate residuals.
+    if (profile) {
+      double t = timer<double>();
+      gsl::vector_memcpy(&ztemp, &zprev);
+      gsl::blas_axpy(-kOne, &z, &ztemp);
+      nrm_s = _rho * (_nrmA * gsl::blas_nrm2(&ytemp) + gsl::blas_nrm2(&xtemp));
+
+      gsl::vector_memcpy(&ztemp, &z12);
+      gsl::blas_axpy(-kOne, &z, &ztemp);
+      nrm_r = _nrmA * gsl::blas_nrm2(&xtemp) + gsl::blas_nrm2(&ytemp);
+
+      // Calculate exact residuals only if necessary.
+      bool exact = false;
+      if ((nrm_r < 10 * eps_pri && nrm_s < 10 * eps_dua) || kUseExactTol) {
+        gsl::vector_memcpy(&ztemp, &z12);
+        _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
+        nrm_r = gsl::blas_nrm2(&ytemp);
+        gsl::vector_memcpy(&ztemp, &z12);
+        gsl::blas_axpy(kOne, &zt, &ztemp);
+        gsl::blas_axpy(-kOne, &zprev, &ztemp);
+        _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
+        nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        exact = true;
+      }
+      time_res += timer<double>() - t;
+      // Evaluate stopping criteria.
+      converged = exact && nrm_r < eps_pri && nrm_s < eps_dua &&
+          (!_gap_stop || gap < eps_gap);
+    } else {
+      gsl::vector_memcpy(&ztemp, &zprev);
+      gsl::blas_axpy(-kOne, &z, &ztemp);
+      nrm_s = _rho * (_nrmA * gsl::blas_nrm2(&ytemp) + gsl::blas_nrm2(&xtemp));
+
+      gsl::vector_memcpy(&ztemp, &z12);
+      gsl::blas_axpy(-kOne, &z, &ztemp);
+      nrm_r = _nrmA * gsl::blas_nrm2(&xtemp) + gsl::blas_nrm2(&ytemp);
+
+      // Calculate exact residuals only if necessary.
+      bool exact = false;
+      if ((nrm_r < 10 * eps_pri && nrm_s < 10 * eps_dua) || kUseExactTol) {
+        gsl::vector_memcpy(&ztemp, &z12);
+        _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
+        nrm_r = gsl::blas_nrm2(&ytemp);
+        gsl::vector_memcpy(&ztemp, &z12);
+        gsl::blas_axpy(kOne, &zt, &ztemp);
+        gsl::blas_axpy(-kOne, &zprev, &ztemp);
+        _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
+        nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        exact = true;
+      }
+
+      // Evaluate stopping criteria.
+      converged = exact && nrm_r < eps_pri && nrm_s < eps_dua &&
+          (!_gap_stop || gap < eps_gap);
+    }
     if ((_verbose > 2 && k % 10  == 0) ||
         (_verbose > 1 && k % 100 == 0) ||
         (_verbose > 1 && converged)) {
@@ -274,6 +345,7 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
           gsl::blas_scal(1 / delta, &zt);
           delta = kGamma * delta;
           ku = k;
+          if (anderson) anderson->Reset();  // Reset Anderson on rho change
           if (_verbose > 3)
             Printf("+ rho %e\n", _rho);
         }
@@ -284,6 +356,7 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
           gsl::blas_scal(delta, &zt);
           delta = kGamma * delta;
           kd = k;
+          if (anderson) anderson->Reset();  // Reset Anderson on rho change
           if (_verbose > 3)
             Printf("- rho %e\n", _rho);
         }
@@ -293,6 +366,49 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
         delta = kDeltaMin;
       }
     }
+
+    // Apply Anderson acceleration to primal variable z only.
+    // Use residual-based safeguarding: only accept if residual decreases.
+    if (anderson && k >= _anderson_start) {
+      // Apply Anderson to the primal iterate z
+      if (anderson->Apply(z.data, zprev.data, z_acc.data)) {
+        // Compute norm of acceleration step
+        T acc_step = kZero;
+        for (size_t i = 0; i < m + n; ++i) {
+          T diff = z_acc.data[i] - z.data[i];
+          acc_step += diff * diff;
+        }
+        acc_step = std::sqrt(acc_step);
+
+        // Compute norm of regular ADMM step
+        T admm_step = kZero;
+        for (size_t i = 0; i < m + n; ++i) {
+          T diff = z.data[i] - zprev.data[i];
+          admm_step += diff * diff;
+        }
+        admm_step = std::sqrt(admm_step);
+
+        // Type-I safeguarding: accept if acceleration step is smaller than ADMM step
+        // This ensures we don't overshoot. Use a relaxation factor of 2.0.
+        const T kSafetyFactor = static_cast<T>(2.0);
+        if (acc_step < kSafetyFactor * admm_step + _abs_tol) {
+          // Accept accelerated iterate
+          gsl::vector_memcpy(&z, &z_acc);
+          if (_verbose > 3) {
+            Printf("Anderson: accepted (acc_step=%.2e, admm_step=%.2e)\n",
+                   acc_step, admm_step);
+          }
+        } else {
+          if (_verbose > 3) {
+            Printf("Anderson: rejected (acc_step=%.2e > %.1f*admm_step=%.2e)\n",
+                   acc_step, kSafetyFactor, kSafetyFactor * admm_step);
+          }
+        }
+      }
+    }
+
+    // Track residual for potential future safeguarding
+    prev_nrm_r = nrm_r;
   }
 
   // Get optimal value
@@ -324,6 +440,12 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
         "|x'u + y'l| / (abs_tol sqrt(m + n) / rel_tol + |x,u| |y,l|)  = %.2e\n"
         __HBAR__, _rel_tol * nrm_r / eps_pri, _rel_tol * nrm_s / eps_dua,
         _rel_tol * gap / eps_gap);
+    if (profile) {
+      const double iters = static_cast<double>(_final_iter + 1u);
+      Printf("Timing breakdown (per-iter avg): prox = %3.2e s, "
+             "proj = %3.2e s, residual = %3.2e s\n",
+             time_prox / iters, time_proj / iters, time_res / iters);
+    }
   }
 
   // Scale x, y, lambda and mu for output.
@@ -350,6 +472,9 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   gsl::vector_free(&z12);
   gsl::vector_free(&zprev);
   gsl::vector_free(&ztemp);
+  if (_use_anderson && _anderson_mem > 0) {
+    gsl::vector_free(&z_acc);
+  }
 
   return status;
 }
@@ -426,23 +551,73 @@ class PogsObjectiveCone : public PogsObjective<T> {
  private:
   T c_scale;
   std::vector<T> b, c;
+  std::vector<T> P;
   const std::vector<ConeConstraintRaw> &Kx, &Ky;
+  mutable std::vector<T> L;
+  mutable T rho_cached;
+  mutable bool factorized;
  public:
   PogsObjectiveCone(const std::vector<T>& b,
                     const std::vector<T>& c,
+                    const std::vector<T>& P,
                     const std::vector<ConeConstraintRaw>& Kx,
                     const std::vector<ConeConstraintRaw>& Ky)
-      : b(b), c(c), Kx(Kx), Ky(Ky) { }
+      : c_scale(static_cast<T>(1)),
+        b(b),
+        c(c),
+        P(P),
+        Kx(Kx),
+        Ky(Ky),
+        rho_cached(std::numeric_limits<T>::quiet_NaN()),
+        factorized(false) {
+    if (!this->P.empty()) {
+      L.resize(this->P.size());
+    }
+  }
 
   T evaluate(const T *x, const T*) const {
-    return std::inner_product(c.begin(), c.end(), x, static_cast<T>(0)) /
-        c_scale;
+    T val = std::inner_product(c.begin(), c.end(), x, static_cast<T>(0));
+    if (!P.empty()) {
+      const size_t n = c.size();
+      T quad = static_cast<T>(0);
+      for (size_t i = 0; i < n; ++i) {
+        const T xi = x[i];
+        const T *row = &P[i * n];
+        for (size_t j = 0; j < n; ++j) {
+          quad += xi * row[j] * x[j];
+        }
+      }
+      val += static_cast<T>(0.5) * quad;
+    }
+    return val / c_scale;
   }
 
   void prox(const T *x_in, const T *y_in, T *x_out, T *y_out, T rho) const {
-    memcpy(x_out, x_in, c.size() * sizeof(T));
-    auto x_updater = [rho](T ci, T xi) { return xi - ci / rho; };
-    std::transform(c.begin(), c.end(), x_out, x_out, x_updater);
+    if (P.empty()) {
+      memcpy(x_out, x_in, c.size() * sizeof(T));
+      auto x_updater = [rho](T ci, T xi) { return xi - ci / rho; };
+      std::transform(c.begin(), c.end(), x_out, x_out, x_updater);
+    } else {
+      const size_t n = c.size();
+      if (!factorized || rho != rho_cached) {
+        memcpy(L.data(), P.data(), P.size() * sizeof(T));
+        for (size_t i = 0; i < n; ++i) {
+          L[i * n + i] += rho;
+        }
+        gsl::matrix<T, CblasRowMajor> L_mat =
+            gsl::matrix_view_array<T, CblasRowMajor>(L.data(), n, n);
+        gsl::linalg_cholesky_decomp(&L_mat);
+        rho_cached = rho;
+        factorized = true;
+      }
+      for (size_t i = 0; i < n; ++i) {
+        x_out[i] = rho * x_in[i] - c[i];
+      }
+      gsl::matrix<T, CblasRowMajor> L_mat =
+          gsl::matrix_view_array<T, CblasRowMajor>(L.data(), n, n);
+      gsl::vector<T> x_vec = gsl::vector_view_array(x_out, n);
+      gsl::linalg_cholesky_svx(&L_mat, &x_vec);
+    }
 
     memcpy(y_out, y_in, b.size() * sizeof(T));
     std::transform(b.begin(), b.end(), y_out, y_out, std::minus<T>());
@@ -456,14 +631,35 @@ class PogsObjectiveCone : public PogsObjective<T> {
   void scale(const T *d, const T *e) {
     std::transform(c.begin(), c.end(), e, c.begin(), std::multiplies<T>());
     std::transform(b.begin(), b.end(), d, b.begin(), std::multiplies<T>());
+    if (!P.empty()) {
+      const size_t n = c.size();
+      for (size_t i = 0; i < n; ++i) {
+        const T ei = e[i];
+        T *row = &P[i * n];
+        for (size_t j = 0; j < n; ++j) {
+          row[j] *= ei * e[j];
+        }
+      }
+      factorized = false;
+    }
 
     T sum_sq = 0;
     for (T ci : c) {
       sum_sq += ci * ci;
     }
-    c_scale = 1 / std::sqrt(sum_sq);
-    for (T &ci : c) {
-      ci *= c_scale;
+    if (sum_sq > static_cast<T>(0)) {
+      c_scale = 1 / std::sqrt(sum_sq);
+      for (T &ci : c) {
+        ci *= c_scale;
+      }
+      if (!P.empty()) {
+        for (T &pi : P) {
+          pi *= c_scale;
+        }
+        factorized = false;
+      }
+    } else {
+      c_scale = static_cast<T>(1);
     }
   }
 
@@ -492,6 +688,8 @@ class PogsObjectiveCone : public PogsObjective<T> {
         d[cone.idx[i]] = sum / cone.size;
     }
   }
+
+  bool UseExactTol() const { return true; }
 };
 
 void MakeRawCone(const std::vector<ConeConstraint> &K,
@@ -530,9 +728,28 @@ PogsCone<T, M, P>::~PogsCone() {
 template <typename T, typename M, typename P>
 PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
                                     const std::vector<T>& c) {
+  return Solve(b, c, std::vector<T>());
+}
+
+template <typename T, typename M, typename P>
+PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
+                                    const std::vector<T>& c,
+                                    const std::vector<T>& P_mat) {
   if (!valid_cones)
     return POGS_INVALID_CONE;
-  PogsObjectiveCone<T> pogs_obj(b, c, Kx, Ky);
+  if (!P_mat.empty()) {
+    const size_t n = c.size();
+    if (P_mat.size() != n * n) {
+      Printf("ERROR: Quadratic objective matrix has wrong size.\n");
+      return POGS_ERROR;
+    }
+    if (!this->Kx.empty()) {
+      Printf("ERROR: Quadratic objectives with Kx constraints are not supported.\n");
+      return POGS_ERROR;
+    }
+  }
+  this->SetUseAnderson(false);
+  PogsObjectiveCone<T> pogs_obj(b, c, P_mat, Kx, Ky);
   return this->PogsImplementation<T, M, P>::Solve(&pogs_obj);
 }
 
@@ -571,4 +788,3 @@ template class PogsCone<float, MatrixSparse<float>,
 #endif
 
 }  // namespace pogs
-

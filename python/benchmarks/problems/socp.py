@@ -42,9 +42,9 @@ def generate_robust_ls(m=100, n=50, seed=None):
     ]
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SOCP-RobustLS (m={m}, n={n})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "m": m,
         "n": n
     }
@@ -88,9 +88,9 @@ def generate_portfolio_robust(n_assets=50, seed=None):
     ]
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SOCP-Portfolio (n={n_assets})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "n_assets": n_assets
     }
 

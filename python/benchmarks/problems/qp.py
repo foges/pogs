@@ -44,9 +44,9 @@ def generate(n=100, m=50, seed=None):
     constraints = [A @ x <= b]
     problem = cp.Problem(objective, constraints)
 
-    # Add metadata
+    # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"QP (n={n}, m={m})"
-    problem.size_metrics = {
+    problem._custom_size_metrics = {
         "n": n,
         "m": m
     }

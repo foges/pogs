@@ -28,6 +28,11 @@ except ImportError as e:
     print("  pip install cvxpy numpy scipy")
     sys.exit(1)
 
+try:
+    import pogs_cvxpy  # Register POGS with CVXPY
+except Exception:
+    pass
+
 from benchmark_utils import (
     benchmark_solver,
     save_results,

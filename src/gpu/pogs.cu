@@ -94,7 +94,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   const T kDeltaMin       = static_cast<T>(1.05);
   const T kGamma          = static_cast<T>(1.01);
   const T kTau            = static_cast<T>(0.8);
-  const T kAlpha          = static_cast<T>(1.7);
   const T kRhoMin         = static_cast<T>(1e-4);
   const T kRhoMax         = static_cast<T>(1e4);
   const T kKappa          = static_cast<T>(0.9);
@@ -104,7 +103,9 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   const T kProjTolMin     = static_cast<T>(1e-2);
   const T kProjTolPow     = static_cast<T>(2);
   const T kProjTolIni     = static_cast<T>(1e-5);
-  const bool kUseExactTol = false;
+  const bool kUseExactTol = objective->UseExactTol();
+  const T kAlpha          = kUseExactTol ? static_cast<T>(1.0)
+                                         : static_cast<T>(1.7);
 
   // Initialize Projector P and Matrix A.
   if (!_done_init)
@@ -235,6 +236,10 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
     cml::vector_memcpy(&ztemp, &zt);
     cml::blas_axpy(hdl, kAlpha, &z12, &ztemp);
     cml::blas_axpy(hdl, kOne - kAlpha, &zprev, &ztemp);
+    CUDA_CHECK_ERR();
+
+    // Warm start projection with previous x iterate.
+    cml::vector_memcpy(&x, &xprev);
     CUDA_CHECK_ERR();
 
     // Project onto y = Ax.
@@ -487,7 +492,6 @@ class PogsObjectiveCone : public PogsObjective<T> {
   thrust::device_vector<T> b, c;
   const std::vector<ConeConstraintRaw> &Kx, &Ky;
   std::vector<cudaStream_t> streams_x, streams_y;
-
  public:
   PogsObjectiveCone(const std::vector<T>& b,
                     const std::vector<T>& c,
@@ -546,12 +550,16 @@ class PogsObjectiveCone : public PogsObjective<T> {
     thrust::transform(b.begin(), b.end(), thrust::device_pointer_cast(d),
         b.begin(), thrust::multiplies<T>());
 
-    c_scale = 1 / std::sqrt(thrust::transform_reduce(c.begin(), c.end(),
-        Square<T>(), static_cast<T>(0), thrust::plus<T>()));
-
-    thrust::transform(c.begin(), c.end(),
-        thrust::constant_iterator<T>(c_scale), c.begin(),
-        thrust::multiplies<T>());
+    T sum_sq = thrust::transform_reduce(c.begin(), c.end(),
+        Square<T>(), static_cast<T>(0), thrust::plus<T>());
+    if (sum_sq > static_cast<T>(0)) {
+      c_scale = 1 / std::sqrt(sum_sq);
+      thrust::transform(c.begin(), c.end(),
+          thrust::constant_iterator<T>(c_scale), c.begin(),
+          thrust::multiplies<T>());
+    } else {
+      c_scale = static_cast<T>(1);
+    }
   }
 
   // Average the e_i in Kx
@@ -589,6 +597,8 @@ class PogsObjectiveCone : public PogsObjective<T> {
       CUDA_CHECK_ERR();
     }
   }
+
+  bool UseExactTol() const { return true; }
 };
 
 void MakeRawCone(const std::vector<ConeConstraint> &K,
@@ -631,8 +641,20 @@ PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
                                     const std::vector<T>& c) {
   if (!valid_cones)
     return POGS_INVALID_CONE;
+  this->SetUseAnderson(false);
   PogsObjectiveCone<T> pogs_obj(b, c, Kx, Ky);
   return this->PogsImplementation<T, M, P>::Solve(&pogs_obj);
+}
+
+template <typename T, typename M, typename P>
+PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
+                                    const std::vector<T>& c,
+                                    const std::vector<T>& P_mat) {
+  if (!P_mat.empty()) {
+    Printf("ERROR: Quadratic objectives are not supported in GPU mode.\n");
+    return POGS_ERROR;
+  }
+  return Solve(b, c);
 }
 
 // Explicit template instantiation.
@@ -670,4 +692,3 @@ template class PogsCone<float, MatrixSparse<float>,
 #endif
 
 }  // namespace pogs
-

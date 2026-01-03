@@ -38,13 +38,33 @@ int main() {
                            1.0, 1e-6, 1e-6, 10000, 0, 1, 1,
                            x, y, l, &optval, &final_iter);
 
-    printf("Solution:\\n");
+    printf("Solution (LP):\\n");
     printf("  x = [%.6f, %.6f]\\n", x[0], x[1]);
     printf("  optimal value = %.6f\\n", optval);
     printf("  status = %s\\n", status == 0 ? "Success" : "Failed");
     printf("  iterations = %u\\n", final_iter);
 
-    return status;
+    // Quadratic objective test: min 0.5||x||^2 + x1 s.t. x1 + x2 = 1
+    double b_qp[] = {1.0};
+    double c_qp[] = {1.0, 0.0};
+    double P_qp[] = {1.0, 0.0, 0.0, 1.0};
+
+    double x_qp[2], y_qp[1], l_qp[1];
+    double optval_qp;
+    unsigned int final_iter_qp;
+
+    int status_qp = PogsConeQD(ROW_MAJ, 1, 2, A, b_qp, c_qp, P_qp,
+                               NULL, 0, &cone_y, 1,
+                               1.0, 1e-6, 1e-6, 10000, 0, 1, 1,
+                               x_qp, y_qp, l_qp, &optval_qp, &final_iter_qp);
+
+    printf("Solution (QP):\\n");
+    printf("  x = [%.6f, %.6f]\\n", x_qp[0], x_qp[1]);
+    printf("  optimal value = %.6f\\n", optval_qp);
+    printf("  status = %s\\n", status_qp == 0 ? "Success" : "Failed");
+    printf("  iterations = %u\\n", final_iter_qp);
+
+    return (status == 0 && status_qp == 0) ? 0 : 1;
 }
 """
 

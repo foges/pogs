@@ -7,7 +7,20 @@ DEBUG=#-DDEBUG
 
 # C++ Flags
 CXX=g++
-CXXFLAGS=$(IFLAGS) -g  -Wall -std=c++11 -fPIC # -Wconversion
+CXXFLAGS=$(IFLAGS) -g  -Wall -std=c++14 -fPIC # -Wconversion
+
+# Shared library settings
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SHARED_EXT=dylib
+	SHARED_LDFLAGS=-dynamiclib -Wl,-install_name,@rpath/libpogs_cpu.$(SHARED_EXT)
+	SHARED_SYS_LIBS=-framework Accelerate
+else
+	SHARED_EXT=so
+	SHARED_LDFLAGS=-shared -Wl,-soname,libpogs_cpu.$(SHARED_EXT)
+	SHARED_SYS_LIBS=-lblas -llapack
+endif
+SHARED_LIB=$(OBJDIR)/libpogs_cpu.$(SHARED_EXT)
 
 # CUDA Flags
 CUXX=nvcc
@@ -84,6 +97,7 @@ VPATH=cpu cpu/matrix cpu/projector cpu/interface_c interface_c gpu gpu/matrix gp
 # Build all
 cpu: $(CPU_OBJ) $(CPU_MTX_OBJ) $(CPU_PRJ_OBJ) $(CPU_C_OBJ)
 	ar cr $(OBJDIR)/pogs.a $^
+	$(CXX) $(SHARED_LDFLAGS) -o $(SHARED_LIB) $^ $(SHARED_SYS_LIBS)
 
 gpu: $(OBJDIR)/pogs_link.o $(GPU_OBJ) $(GPU_MTX_OBJ) $(GPU_PRJ_OBJ)
 	ar cr $(OBJDIR)/pogs.a $^
@@ -151,4 +165,3 @@ $(OBJDIR)/gpu/%.o: %.cu $(GPU_HDR) | $(OBJDIR)/gpu
 
 clean:
 	rm -rf pogs.a build/ *.dSYM
-

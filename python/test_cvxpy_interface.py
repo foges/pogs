@@ -17,6 +17,12 @@ except ImportError as e:
     print("Please install cvxpy: pip install cvxpy")
     sys.exit(1)
 
+SOLVER_OPTS = {
+    "max_iter": 50000,
+    "abs_tol": 1e-6,
+    "rel_tol": 1e-6,
+}
+
 
 def test_lp():
     """Test simple LP problem."""
@@ -39,7 +45,7 @@ def test_lp():
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True)
+    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -68,7 +74,7 @@ def test_lp_ineq():
     print("  subject to  -x[0] - x[1] <= 0")
     print("               x[0] - x[1] <= 0")
     print("               x[1] <= 2")
-    print("Expected: x ≈ [0, 0], optimal value = 0")
+    print("Expected: x ≈ [-2, 2], optimal value ≈ -2")
     print()
 
     x = cp.Variable(2)
@@ -81,7 +87,7 @@ def test_lp_ineq():
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True)
+    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -91,14 +97,22 @@ def test_lp_ineq():
     print()
 
     assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
-    assert abs(prob.value) < 1e-3, f"Expected optimal value ~0, got {prob.value}"
+    assert abs(prob.value + 2.0) < 1e-3, (
+        f"Expected optimal value ~-2, got {prob.value}"
+    )
+    assert abs(x.value[0] + 2.0) < 1e-3, (
+        f"Expected x[0] ~-2, got {x.value[0]}"
+    )
+    assert abs(x.value[1] - 2.0) < 1e-3, (
+        f"Expected x[1] ~2, got {x.value[1]}"
+    )
 
     print("✓ Test passed!")
     return True
 
 
 def test_qp():
-    """Test quadratic program (converted to SOCP)."""
+    """Test quadratic program."""
     print("=" * 70)
     print("Test 3: Quadratic Program")
     print("=" * 70)
@@ -117,7 +131,7 @@ def test_qp():
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True)
+    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -153,7 +167,7 @@ def test_soc():
 
     try:
         # Solve with POGS
-        result = prob.solve(solver='POGS', verbose=True)
+        result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
 
         print()
         print("Result:")
@@ -192,7 +206,7 @@ def test_simple_feasibility():
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True)
+    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")

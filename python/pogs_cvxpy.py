@@ -5,10 +5,22 @@ Allows CVXPY to use POGS as a backend solver for cone programs.
 """
 
 import numpy as np
+import time
 import subprocess
 import os
 import sys
 import tempfile
+
+_pogs_dir = os.path.dirname(__file__)
+if _pogs_dir not in sys.path:
+    sys.path.insert(0, _pogs_dir)
+
+try:
+    from pogs_cone import solve_cone as solve_cone_ctypes
+    _CTYPES_AVAILABLE = True
+except Exception:
+    solve_cone_ctypes = None
+    _CTYPES_AVAILABLE = False
 
 
 class PogsError(Exception):
@@ -27,8 +39,10 @@ CONE_EXP_DUAL = 6
 
 
 def solve_cone_problem(c, A, b, dims,
-                       rho=1.0, abs_tol=1e-4, rel_tol=1e-3,
-                       max_iter=10000, verbose=0):
+                       rho=None, abs_tol=1e-4, rel_tol=1e-3,
+                       max_iter=10000, verbose=0, adaptive_rho=True,
+                       use_direct=None, prefer_ctypes=True, P=None,
+                       rho_mode=None, rho_scale=1.0):
     """
     Solve a cone problem using POGS.
 
@@ -53,8 +67,9 @@ def solve_cone_problem(c, A, b, dims,
         - 's': list of ints, dimensions of SDP cones
         - 'ep': int, number of primal exponential cones
         - 'ed': int, number of dual exponential cones
-    rho : float
-        Initial penalty parameter
+    rho : float or None
+        Initial penalty parameter. If None, automatically selected based on
+        problem scaling (recommended for general problems).
     abs_tol : float
         Absolute tolerance
     rel_tol : float
@@ -63,6 +78,16 @@ def solve_cone_problem(c, A, b, dims,
         Maximum iterations
     verbose : int
         Verbosity level
+    use_direct : bool or None
+        Use direct projection (dense A). If None, choose automatically.
+    prefer_ctypes : bool
+        Prefer ctypes-based interface when available.
+    P : array_like or sparse matrix, optional
+        Quadratic objective matrix for 0.5 * x^T P x + c^T x.
+    rho_mode : str or None
+        Rho selection mode when rho is None: 'auto', 'ratio', or 'ratio_normA'.
+    rho_scale : float
+        Multiplier applied to auto-selected rho.
 
     Returns
     -------
@@ -70,14 +95,69 @@ def solve_cone_problem(c, A, b, dims,
         Solution dictionary with keys 'x', 'y', 's', 'z', 'status', 'num_iters'
     """
 
-    # Convert to numpy arrays
+    # Convert to numpy arrays (handle sparse matrices from CVXPY)
     c = np.asarray(c, dtype=np.float64).flatten()
     b = np.asarray(b, dtype=np.float64).flatten()
+
+    # Handle sparse matrices
+    try:
+        import scipy.sparse as sp
+        if sp.issparse(A):
+            A = A.toarray()
+        if P is not None and sp.issparse(P):
+            P = P.toarray()
+    except ImportError:
+        pass
     A = np.asarray(A, dtype=np.float64)
+    if P is not None:
+        P = np.asarray(P, dtype=np.float64)
 
     m, n = A.shape
+
+    # Automatic rho selection based on problem scaling.
+    # Use a tighter heuristic for non-separable cones (SOC/SDP/EXP) to avoid
+    # overly large rho values that slow convergence.
+    if rho is None:
+        norm_c = np.linalg.norm(c)
+        norm_b = np.linalg.norm(b)
+        has_nonsep_cone = bool(dims.get('q')) or bool(dims.get('s')) \
+            or dims.get('ep', 0) > 0 or dims.get('ed', 0) > 0
+        mode = rho_mode or 'auto'
+        if mode == 'auto':
+            mode = 'ratio_normA' if has_nonsep_cone else 'ratio'
+        if mode == 'ratio_normA':
+            norm_A = np.linalg.norm(A, 'fro')
+            if norm_b > 1e-10 and norm_c > 1e-10 and norm_A > 1e-10:
+                rho = norm_c / (norm_b * norm_A)
+                rho = max(1e-4, min(1e1, rho))
+            else:
+                rho = 1.0
+            if verbose > 0:
+                print(f"Auto rho (ratio_normA): ||c||={norm_c:.2e}, "
+                      f"||b||={norm_b:.2e}, ||A||={norm_A:.2e} -> rho={rho:.2e}")
+        elif mode == 'ratio':
+            if norm_b > 1e-10 and norm_c > 1e-10:
+                rho = norm_c / norm_b
+                rho = max(1e-3, min(1e3, rho))
+            else:
+                rho = 1.0
+            if verbose > 0:
+                print(f"Auto rho (ratio): ||c||={norm_c:.2e}, ||b||={norm_b:.2e} "
+                      f"-> rho={rho:.2e}")
+        else:
+            raise ValueError(f"Unknown rho_mode: {rho_mode}")
+        if rho_scale not in (None, 1.0):
+            rho *= rho_scale
+            if verbose > 0:
+                print(f"Auto rho scaled by {rho_scale:.2e} -> rho={rho:.2e}")
     assert c.shape == (n,), f"c has wrong shape: {c.shape} vs ({n},)"
     assert b.shape == (m,), f"b has wrong shape: {b.shape} vs ({m},)"
+    if P is not None:
+        assert P.shape == (n, n), f"P has wrong shape: {P.shape} vs ({n}, {n})"
+
+    if use_direct is None:
+        min_dim = min(m, n)
+        use_direct = (m * n <= 1_000_000 and min_dim <= 1000)
 
     # Build cone constraints for y (dual variables)
     # Format: list of (cone_type, [indices])
@@ -129,17 +209,54 @@ def solve_cone_problem(c, A, b, dims,
     # This matches the standard conic form used by most solvers
     cones_x = []
 
+    if _CTYPES_AVAILABLE and prefer_ctypes:
+        t0 = time.perf_counter()
+        result = solve_cone_ctypes(
+            A, b, c,
+            cones_x, cones_y,
+            rho=rho,
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            adaptive_rho=adaptive_rho,
+            gap_stop=True,
+            use_direct=use_direct,
+            P=P,
+        )
+        solve_time = time.perf_counter() - t0
+        parsed = {
+            'status': result.get('status', 0),
+            'num_iters': result.get('iterations', 0),
+            'optval': result.get('optval', 0),
+            'x': result.get('x'),
+            'y': result.get('y'),
+            'z': result.get('l'),
+            'solve_time': solve_time,
+        }
+        if parsed['y'] is not None:
+            parsed['s'] = b - parsed['y']
+        return parsed
+
     # Generate C code to call POGS
-    c_code = _generate_c_code(c, A, b, cones_x, cones_y,
-                             rho, abs_tol, rel_tol, max_iter, verbose)
+    c_code = _generate_c_code(c, A, b, cones_x, cones_y, P,
+                              rho, abs_tol, rel_tol, max_iter, verbose,
+                              adaptive_rho, use_direct)
 
     # Compile and run
+    t0 = time.perf_counter()
     result = _compile_and_run(c_code)
+    result['solve_time'] = time.perf_counter() - t0
+    if 'y' in result:
+        # Slack for conic form: b - y, where y ~ Ax
+        result['s'] = b - result['y']
 
     return result
 
 
-def _generate_c_code(c, A, b, cones_x, cones_y, rho, abs_tol, rel_tol, max_iter, verbose):
+def _generate_c_code(c, A, b, cones_x, cones_y, P,
+                     rho, abs_tol, rel_tol, max_iter, verbose, adaptive_rho,
+                     use_direct):
     """Generate C code to solve the problem."""
 
     m, n = A.shape
@@ -176,6 +293,17 @@ int main() {
     code += f"    double c[{n}] = {{\n        "
     code += ", ".join([f"{c[i]:.16e}" for i in range(n)])
     code += "\n    };\n\n"
+    if P is not None:
+        code += f"    // Matrix P ({n} x {n})\n"
+        code += f"    double P[{n * n}] = {{\n"
+        for i in range(n):
+            code += "        "
+            for j in range(n):
+                code += f"{P[i, j]:.16e}"
+                if i < n - 1 or j < n - 1:
+                    code += ", "
+            code += "\n"
+        code += "    };\n\n"
 
     # Add cone constraints for x
     if cones_x:
@@ -212,15 +340,29 @@ int main() {
     code += f"    unsigned int final_iter;\n\n"
 
     # Call solver
+    if use_direct:
+        solver_base = "PogsConeDirect"
+    else:
+        solver_base = "PogsCone"
     code += "    // Solve problem\n"
-    code += f"    int status = PogsConeD(\n"
-    code += f"        ROW_MAJ, {m}, {n}, A, b, c,\n"
-    code += f"        cones_x, {len(cones_x) if cones_x else 0},\n"
-    code += f"        cones_y, {len(cones_y)},\n"
-    code += f"        {rho}, {abs_tol}, {rel_tol}, {max_iter}, {verbose},\n"
-    code += f"        1, 1,  // adaptive_rho, gap_stop\n"
-    code += f"        x, y, l, &optval, &final_iter\n"
-    code += f"    );\n\n"
+    if P is None:
+        code += f"    int status = {solver_base}D(\n"
+        code += f"        ROW_MAJ, {m}, {n}, A, b, c,\n"
+        code += f"        cones_x, {len(cones_x) if cones_x else 0},\n"
+        code += f"        cones_y, {len(cones_y)},\n"
+        code += f"        {rho}, {abs_tol}, {rel_tol}, {max_iter}, {verbose},\n"
+        code += f"        {1 if adaptive_rho else 0}, 1,  // adaptive_rho, gap_stop\n"
+        code += f"        x, y, l, &optval, &final_iter\n"
+        code += f"    );\n\n"
+    else:
+        code += f"    int status = {solver_base}QD(\n"
+        code += f"        ROW_MAJ, {m}, {n}, A, b, c, P,\n"
+        code += f"        cones_x, {len(cones_x) if cones_x else 0},\n"
+        code += f"        cones_y, {len(cones_y)},\n"
+        code += f"        {rho}, {abs_tol}, {rel_tol}, {max_iter}, {verbose},\n"
+        code += f"        {1 if adaptive_rho else 0}, 1,  // adaptive_rho, gap_stop\n"
+        code += f"        x, y, l, &optval, &final_iter\n"
+        code += f"    );\n\n"
 
     # Output results
     code += "    // Output results in machine-readable format\n"
@@ -308,9 +450,6 @@ def _compile_and_run(c_code):
                 elif key == 'L':
                     parsed['z'] = np.array([float(v) for v in value.split(',')])  # dual variable
 
-        # Set s (slack) equal to y for conic solvers
-        parsed['s'] = parsed['y']
-
         return parsed
 
     finally:
@@ -340,6 +479,15 @@ try:
 
         def name(self):
             return "POGS"
+
+        @staticmethod
+        def cite():
+            """Return citation string for POGS."""
+            return "@article{fougner2018pogs,\n  title={POGS: Proximal Operator Graph Solver},\n  author={Fougner, Christopher and Boyd, Stephen},\n  year={2018}\n}"
+
+        def supports_quad_obj(self) -> bool:
+            """Report quadratic objective support."""
+            return True
 
         def import_solver(self):
             """Check that POGS is available."""
@@ -380,15 +528,34 @@ try:
             c = data['c']
             A = data['A']
             b = data['b']
-            dims = data['dims']
+            import cvxpy.settings as s
+            P = data.get(s.P, None)
+
+            # Convert ConeDims object to dict format expected by solve_cone_problem
+            # CVXPY ConeDims has: zero, nonneg, exp, soc, psd, p3d
+            # POGS expects: f, l, q, s, ep, ed
+            cvxpy_dims = data['dims']
+            dims = {
+                'f': getattr(cvxpy_dims, 'zero', 0),      # zero cone
+                'l': getattr(cvxpy_dims, 'nonneg', 0),    # nonneg cone
+                'q': list(getattr(cvxpy_dims, 'soc', [])), # SOC cones
+                's': list(getattr(cvxpy_dims, 'psd', [])), # SDP cones
+                'ep': getattr(cvxpy_dims, 'exp', 0),       # exponential cones
+                'ed': 0,                                    # dual exponential cones
+            }
 
             # Get solver options
             opts = solver_opts.copy() if solver_opts else {}
             abs_tol = opts.get('abs_tol', 1e-4)
             rel_tol = opts.get('rel_tol', 1e-3)
-            max_iter = opts.get('max_iter', 10000)
-            rho = opts.get('rho', 1.0)
-            verbose_level = 5 if verbose else 0
+            max_iter = opts.get('max_iter', 50000)  # Higher default for convergence
+            rho = opts.get('rho', None)  # Use automatic rho selection by default
+            adaptive_rho = opts.get('adaptive_rho', True)
+            rho_mode = opts.get('rho_mode', None)
+            rho_scale = opts.get('rho_scale', 1.0)
+            verbose_level = opts.get('verbose', 5 if verbose else 0)
+            use_direct = opts.get('use_direct', None)
+            prefer_ctypes = opts.get('prefer_ctypes', True)
 
             # Solve
             result = solve_cone_problem(
@@ -397,7 +564,13 @@ try:
                 abs_tol=abs_tol,
                 rel_tol=rel_tol,
                 max_iter=max_iter,
-                verbose=verbose_level
+                adaptive_rho=adaptive_rho,
+                verbose=verbose_level,
+                use_direct=use_direct,
+                prefer_ctypes=prefer_ctypes,
+                P=P,
+                rho_mode=rho_mode,
+                rho_scale=rho_scale,
             )
 
             return result
@@ -419,33 +592,62 @@ try:
                 Solution in CVXPY format
             """
 
+            from cvxpy.reductions.solution import Solution, failure_solution
+            from cvxpy.reductions.solvers.solver import Solver
+            import cvxpy.settings as s
+
             attr = {}
 
-            if solution['status'] == 0:
-                status = cvxpy.OPTIMAL
+            # POGS status codes:
+            # 0 = optimal, 1 = infeasible, 2 = unbounded, 3 = iteration limit
+            pogs_status = solution['status']
+            if pogs_status == 0:
+                status = s.OPTIMAL
+            elif pogs_status == 3:
+                # Iteration limit reached - return inaccurate solution
+                status = s.OPTIMAL_INACCURATE
             else:
-                status = cvxpy.SOLVER_ERROR
+                status = s.SOLVER_ERROR
 
-            attr[cvxpy.settings.SOLVE_TIME] = 0  # Not tracked
-            attr[cvxpy.settings.NUM_ITERS] = solution.get('num_iters', 0)
+            attr[s.SOLVE_TIME] = solution.get('solve_time', 0)
+            attr[s.SETUP_TIME] = solution.get('setup_time', 0)
+            attr[s.NUM_ITERS] = solution.get('num_iters', 0)
 
-            # Unpack solution
-            primal_vars = {
-                inverse_data[cvxpy.settings.VAR_ID]: solution['x']
-            }
+            if status in [s.OPTIMAL, s.OPTIMAL_INACCURATE]:
+                # Extract optimal value with offset
+                opt_val = solution.get('optval', 0)
+                if s.OFFSET in inverse_data:
+                    opt_val += inverse_data[s.OFFSET]
 
-            dual_vars = {}
-            if 'z' in solution:
-                dual_vars = cvxpy.reductions.solvers.utilities.extract_dual_value(
-                    solution['z'],
-                    inverse_data[cvxpy.settings.EQ_DUAL],
-                    inverse_data.get(cvxpy.settings.NEQ_DUAL, [])
-                )
+                # Unpack primal solution
+                # VAR_ID is a class constant inherited from Solver
+                primal_vars = {
+                    inverse_data[self.VAR_ID]: solution['x']
+                }
 
-            return cvxpy.Solution(status, solution.get('optval'), primal_vars, dual_vars, attr)
+                # Return None for dual variables to skip dual extraction
+                # (POGS cone solver doesn't track constraint duals in a compatible way)
+                dual_vars = None
 
-    # Register the solver with CVXPY
-    # Note: This happens automatically when the solver is imported
+                return Solution(status, opt_val, primal_vars, dual_vars, attr)
+            else:
+                return failure_solution(status, attr)
+
+    # Register the solver with CVXPY so "solver='POGS'" works.
+    try:
+        from cvxpy.reductions.solvers import defines as cvxpy_defines
+        solver_name = "POGS"
+        if solver_name not in cvxpy_defines.SOLVER_MAP_CONIC:
+            cvxpy_defines.SOLVER_MAP_CONIC[solver_name] = POGS()
+        if solver_name not in cvxpy_defines.CONIC_SOLVERS:
+            cvxpy_defines.CONIC_SOLVERS.append(solver_name)
+        cvxpy_defines.INSTALLED_SOLVERS = cvxpy_defines.installed_solvers()
+        cvxpy_defines.INSTALLED_CONIC_SOLVERS = [
+            slv for slv in cvxpy_defines.INSTALLED_SOLVERS
+            if slv in cvxpy_defines.CONIC_SOLVERS
+        ]
+    except Exception:
+        pass
 
 except ImportError:
     # CVXPY not installed, skip integration

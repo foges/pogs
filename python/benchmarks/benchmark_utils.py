@@ -55,19 +55,22 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
         # Extract solver statistics
         setup_time = 0
         iterations = 0
+        solve_time = None
         primal_res = None
         dual_res = None
 
         if hasattr(problem, 'solver_stats'):
             stats = problem.solver_stats
-            setup_time = getattr(stats, 'setup_time', 0)
-            iterations = getattr(stats, 'num_iters', 0)
+            setup_time = getattr(stats, 'setup_time', 0) or 0
+            iterations = getattr(stats, 'num_iters', 0) or 0
+            solve_time = getattr(stats, 'solve_time', None)
 
-        solve_time = total_time - setup_time
+        if not solve_time:
+            solve_time = total_time - setup_time
 
         return BenchmarkResult(
             problem_name=problem.name,
-            problem_size=problem.size_metrics,
+            problem_size=getattr(problem, '_custom_size_metrics', {}),
             solver=solver_name,
             solve_time=solve_time,
             setup_time=setup_time,
@@ -87,7 +90,7 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
 
         return BenchmarkResult(
             problem_name=problem.name,
-            problem_size=problem.size_metrics,
+            problem_size=getattr(problem, '_custom_size_metrics', {}),
             solver=solver_name,
             solve_time=total_time,
             setup_time=0,
