@@ -142,6 +142,14 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   cml::vector<T> ytemp = cml::vector_subvector(&ztemp, n, m);
   CUDA_CHECK_ERR();
 
+  cml::vector<T> temp_m;
+  cml::vector<T> temp_n;
+  if (kUseExactTol) {
+    temp_m = cml::vector_calloc<T>(m);
+    temp_n = cml::vector_calloc<T>(n);
+    CUDA_CHECK_ERR();
+  }
+
   // Scale objective to account for diagonal scaling e and d.
   objective->scale(d.data, e.data);
   CUDA_CHECK_ERR();
@@ -267,13 +275,41 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
       cml::vector_memcpy(&ztemp, &z12);
       _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
       cudaDeviceSynchronize();
-      nrm_r = cml::blas_nrm2(hdl, &ytemp);
+      if (kUseExactTol) {
+        cml::vector_memcpy(&temp_m, &ytemp);
+        cml::vector_div(&temp_m, &d);
+        nrm_r = cml::blas_nrm2(hdl, &temp_m);
+
+        cml::vector_memcpy(&temp_m, &y12);
+        cml::vector_div(&temp_m, &d);
+        T y_norm = cml::blas_nrm2(hdl, &temp_m);
+
+        cml::vector_memcpy(&temp_m, &ytemp);
+        cml::blas_axpy(hdl, kOne, &y12, &temp_m);
+        cml::vector_div(&temp_m, &d);
+        T ax_norm = cml::blas_nrm2(hdl, &temp_m);
+
+        cml::vector_memcpy(&temp_n, &x12);
+        cml::vector_mul(&temp_n, &e);
+        T x_norm = cml::blas_nrm2(hdl, &temp_n);
+
+        eps_pri = sqrtm_atol + _rel_tol * std::max(ax_norm, y_norm);
+        eps_dua = _rho * (sqrtn_atol + _rel_tol * x_norm);
+      } else {
+        nrm_r = cml::blas_nrm2(hdl, &ytemp);
+      }
       cml::vector_memcpy(&ztemp, &z12);
       cml::blas_axpy(hdl, kOne, &zt, &ztemp);
       cml::blas_axpy(hdl, -kOne, &zprev, &ztemp);
       _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
       cudaDeviceSynchronize();
-      nrm_s = _rho * cml::blas_nrm2(hdl, &xtemp);
+      if (kUseExactTol) {
+        cml::vector_memcpy(&temp_n, &xtemp);
+        cml::vector_div(&temp_n, &e);
+        nrm_s = _rho * cml::blas_nrm2(hdl, &temp_n);
+      } else {
+        nrm_s = _rho * cml::blas_nrm2(hdl, &xtemp);
+      }
       exact = true;
     }
     CUDA_CHECK_ERR();
@@ -387,6 +423,10 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   cml::vector_free(&z12);
   cml::vector_free(&zprev);
   cml::vector_free(&ztemp);
+  if (kUseExactTol) {
+    cml::vector_free(&temp_m);
+    cml::vector_free(&temp_n);
+  }
   cublasDestroy(hdl);
   CUDA_CHECK_ERR();
 

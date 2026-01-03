@@ -205,6 +205,45 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   double time_prox = 0.0;
   double time_proj = 0.0;
   double time_res = 0.0;
+  auto orig_primal_metrics = [&](const T *r_scaled, const T *y_scaled,
+                                 const T *x_scaled, T *nrm_r_out,
+                                 T *ax_norm_out, T *y_norm_out,
+                                 T *x_norm_out) {
+    T r_sq = kZero;
+    T ax_sq = kZero;
+    T y_sq = kZero;
+    for (size_t i = 0; i < m; ++i) {
+      const T di = d.data[i];
+      if (di == kZero)
+        continue;
+      const T r_i = r_scaled[i] / di;
+      r_sq += r_i * r_i;
+      const T y_i = y_scaled[i] / di;
+      y_sq += y_i * y_i;
+      const T ax_i = (r_scaled[i] + y_scaled[i]) / di;
+      ax_sq += ax_i * ax_i;
+    }
+    T x_sq = kZero;
+    for (size_t i = 0; i < n; ++i) {
+      const T xi = x_scaled[i] * e.data[i];
+      x_sq += xi * xi;
+    }
+    *nrm_r_out = std::sqrt(r_sq);
+    *ax_norm_out = std::sqrt(ax_sq);
+    *y_norm_out = std::sqrt(y_sq);
+    *x_norm_out = std::sqrt(x_sq);
+  };
+  auto orig_dual_norm = [&](const T *s_scaled) {
+    T s_sq = kZero;
+    for (size_t i = 0; i < n; ++i) {
+      const T ei = e.data[i];
+      if (ei == kZero)
+        continue;
+      const T si = s_scaled[i] / ei;
+      s_sq += si * si;
+    }
+    return std::sqrt(s_sq);
+  };
 
   // Anderson acceleration for primal variable z.
   // We accelerate only the primal fixed-point iteration, not the dual.
@@ -278,12 +317,26 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
       if ((nrm_r < 10 * eps_pri && nrm_s < 10 * eps_dua) || kUseExactTol) {
         gsl::vector_memcpy(&ztemp, &z12);
         _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
-        nrm_r = gsl::blas_nrm2(&ytemp);
+        if (kUseExactTol) {
+          T ax_norm = kZero;
+          T y_norm = kZero;
+          T x_norm = kZero;
+          orig_primal_metrics(ytemp.data, y12.data, x12.data, &nrm_r,
+                              &ax_norm, &y_norm, &x_norm);
+          eps_pri = sqrtm_atol + _rel_tol * std::max(ax_norm, y_norm);
+          eps_dua = _rho * (sqrtn_atol + _rel_tol * x_norm);
+        } else {
+          nrm_r = gsl::blas_nrm2(&ytemp);
+        }
         gsl::vector_memcpy(&ztemp, &z12);
         gsl::blas_axpy(kOne, &zt, &ztemp);
         gsl::blas_axpy(-kOne, &zprev, &ztemp);
         _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
-        nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        if (kUseExactTol) {
+          nrm_s = _rho * orig_dual_norm(xtemp.data);
+        } else {
+          nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        }
         exact = true;
       }
       time_res += timer<double>() - t;
@@ -304,12 +357,26 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
       if ((nrm_r < 10 * eps_pri && nrm_s < 10 * eps_dua) || kUseExactTol) {
         gsl::vector_memcpy(&ztemp, &z12);
         _A.Mul('n', kOne, x12.data, -kOne, ytemp.data);
-        nrm_r = gsl::blas_nrm2(&ytemp);
+        if (kUseExactTol) {
+          T ax_norm = kZero;
+          T y_norm = kZero;
+          T x_norm = kZero;
+          orig_primal_metrics(ytemp.data, y12.data, x12.data, &nrm_r,
+                              &ax_norm, &y_norm, &x_norm);
+          eps_pri = sqrtm_atol + _rel_tol * std::max(ax_norm, y_norm);
+          eps_dua = _rho * (sqrtn_atol + _rel_tol * x_norm);
+        } else {
+          nrm_r = gsl::blas_nrm2(&ytemp);
+        }
         gsl::vector_memcpy(&ztemp, &z12);
         gsl::blas_axpy(kOne, &zt, &ztemp);
         gsl::blas_axpy(-kOne, &zprev, &ztemp);
         _A.Mul('t', kOne, ytemp.data, kOne, xtemp.data);
-        nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        if (kUseExactTol) {
+          nrm_s = _rho * orig_dual_norm(xtemp.data);
+        } else {
+          nrm_s = _rho * gsl::blas_nrm2(&xtemp);
+        }
         exact = true;
       }
 
