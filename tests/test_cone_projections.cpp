@@ -75,23 +75,21 @@ TEST_CASE("LP with inequality constraints", "[cone][integration]") {
 TEST_CASE("Cone constraints work correctly", "[cone]") {
     // Verify that different cone types can be combined
 
-    const size_t m = 4;
+    const size_t m = 3;
     const size_t n = 3;
 
-    std::vector<double> A_data(m * n, 0.0);
-    std::vector<double> b_data(m, 1.0);
-    std::vector<double> c_data(n, 0.0);
-
-    // Simple identity-like matrix
-    for (size_t i = 0; i < std::min(m, n); ++i) {
-        A_data[i * n + i] = 1.0;
-    }
+    // Identity matrix - ensures feasible system Ax = b
+    std::vector<double> A_data = {1.0, 0.0, 0.0,
+                                   0.0, 1.0, 0.0,
+                                   0.0, 0.0, 1.0};
+    std::vector<double> b_data = {1.0, 1.0, 1.0};  // Feasible: x = [1,1,1]
+    std::vector<double> c_data = {0.0, 0.0, 0.0};
 
     pogs::MatrixDense<double> A('r', m, n, A_data.data());
 
     SECTION("NonNeg cone on variables") {
         std::vector<ConeConstraint> Kx = {{kConeNonNeg, {0, 1, 2}}};
-        std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2, 3}}};
+        std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2}}};
 
         pogs::PogsDirectCone<double, pogs::MatrixDense<double>> solver(A, Kx, Ky);
         solver.SetMaxIter(1000);
@@ -106,7 +104,7 @@ TEST_CASE("Cone constraints work correctly", "[cone]") {
     SECTION("Mixed cone constraints") {
         // Some variables in NonNeg, some unconstrained
         std::vector<ConeConstraint> Kx = {{kConeNonNeg, {0, 1}}};  // First two non-negative
-        std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2, 3}}};
+        std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2}}};
 
         pogs::PogsDirectCone<double, pogs::MatrixDense<double>> solver(A, Kx, Ky);
         solver.SetMaxIter(1000);
