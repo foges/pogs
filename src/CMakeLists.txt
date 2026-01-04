@@ -65,6 +65,38 @@ target_compile_options(pogs_cpu
 # Create alias for easier usage
 add_library(pogs::cpu ALIAS pogs_cpu)
 
+# Create shared library for Python bindings
+add_library(pogs_cpu_shared SHARED
+    ${POGS_CPU_SOURCES}
+    ${POGS_C_INTERFACE_SOURCES}
+)
+
+target_include_directories(pogs_cpu_shared
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/cpu/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(pogs_cpu_shared
+    PUBLIC
+        BLAS::BLAS
+        LAPACK::LAPACK
+)
+
+if(APPLE)
+    if(ACCELERATE_LIBRARY)
+        target_link_libraries(pogs_cpu_shared PUBLIC ${ACCELERATE_LIBRARY})
+    endif()
+endif()
+
+# Set output name to match what Python bindings expect
+set_target_properties(pogs_cpu_shared PROPERTIES
+    OUTPUT_NAME pogs_cpu
+)
+
 # GPU library (optional)
 if(POGS_BUILD_GPU)
     add_library(pogs_gpu STATIC

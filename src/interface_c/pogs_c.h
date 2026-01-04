@@ -79,7 +79,33 @@ int PogsS(enum ORD ord, size_t m, size_t n, const float *A,
           unsigned int verbose, int adaptive_rho, int gap_stop,
           float *x, float *y, float *l, float *optval, unsigned int * final_iter);
 
-// TODO: Add interface for sparse version.
+// Sparse matrix interface (CSR/CSC format)
+// Input:
+// - nnz: Number of non-zero elements
+// - data: Array of non-zero values (length nnz)
+// - ptr: Row/column pointer array (length m+1 for CSR, n+1 for CSC)
+// - ind: Column/row index array (length nnz)
+int PogsSparseD(enum ORD ord, size_t m, size_t n, size_t nnz,
+                const double *data, const int *ptr, const int *ind,
+                const double *f_a, const double *f_b, const double *f_c,
+                const double *f_d, const double *f_e, const enum FUNCTION *f_h,
+                const double *g_a, const double *g_b, const double *g_c,
+                const double *g_d, const double *g_e, const enum FUNCTION *g_h,
+                double rho, double abs_tol, double rel_tol, unsigned int max_iter,
+                unsigned int verbose, int adaptive_rho, int gap_stop,
+                double *x, double *y, double *l, double *optval,
+                unsigned int *final_iter);
+
+int PogsSparseS(enum ORD ord, size_t m, size_t n, size_t nnz,
+                const float *data, const int *ptr, const int *ind,
+                const float *f_a, const float *f_b, const float *f_c,
+                const float *f_d, const float *f_e, const enum FUNCTION *f_h,
+                const float *g_a, const float *g_b, const float *g_c,
+                const float *g_d, const float *g_e, const enum FUNCTION *g_h,
+                float rho, float abs_tol, float rel_tol, unsigned int max_iter,
+                unsigned int verbose, int adaptive_rho, int gap_stop,
+                float *x, float *y, float *l, float *optval,
+                unsigned int *final_iter);
 
 // Cone types for cone form problems
 //   min. c^T * x
