@@ -18,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13, macos-14, windows-2022]
+        os: [ubuntu-22.04, macos-14, windows-2022]
+        # macos-14 (arm64) cross-compiles both x86_64 and arm64 wheels
 
     steps:
       - uses: actions/checkout@v4
