@@ -60,6 +60,8 @@ jobs:
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/bin -w {dest_dir} {wheel}"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
+          # Linux: list wheel contents for debugging, then test
+          CIBW_BEFORE_TEST_LINUX: "python -c \"import pogs, os; print('Package dir:', os.path.dirname(pogs.__file__)); import subprocess; subprocess.run(['ls', '-laR', os.path.dirname(pogs.__file__)])\""
 
       - uses: actions/upload-artifact@v4
         with:

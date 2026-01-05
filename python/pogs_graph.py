@@ -44,10 +44,24 @@ def _find_shared_library():
         # Wheel install: library is in the package directory or lib/ subdirectory
         os.path.join(pkg_dir, lib_name),
         os.path.join(pkg_dir, "lib", lib_name),
+        # Linux auditwheel puts libs in .libs with version suffix
+        os.path.join(pkg_dir, ".libs", lib_name),
         # Source build locations
         os.path.join(source_root, "build", "lib", lib_name),
         os.path.join(source_root, "src", "build", lib_name),
     ]
+    # Also check for versioned .so files (auditwheel renames them)
+    if platform.system() == "Linux":
+        import glob
+
+        patterns = [
+            os.path.join(pkg_dir, ".libs", "libpogs_cpu*.so*"),
+            os.path.join(pkg_dir, "lib", "libpogs_cpu*.so*"),
+        ]
+        for pattern in patterns:
+            matches = glob.glob(pattern)
+            if matches:
+                candidates.insert(0, matches[0])
     for path in candidates:
         if os.path.exists(path):
             return path
