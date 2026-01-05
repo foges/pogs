@@ -62,15 +62,15 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
     message(STATUS "  DLL file: ${SCIPY_OPENBLAS_DLL_FILE}")
 
     # Create BLAS::BLAS imported target for scipy-openblas
-    # Use SHARED IMPORTED with IMPORTED_IMPLIB for Windows .lib files
-    add_library(BLAS::BLAS SHARED IMPORTED)
+    # Use SHARED IMPORTED GLOBAL with IMPORTED_IMPLIB for Windows .lib files
+    add_library(BLAS::BLAS SHARED IMPORTED GLOBAL)
     set_target_properties(BLAS::BLAS PROPERTIES
       IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
       IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
       INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
     )
     # Create LAPACK::LAPACK imported target (same library)
-    add_library(LAPACK::LAPACK SHARED IMPORTED)
+    add_library(LAPACK::LAPACK SHARED IMPORTED GLOBAL)
     set_target_properties(LAPACK::LAPACK PROPERTIES
       IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
       IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
