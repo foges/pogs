@@ -98,11 +98,11 @@ jobs:
           merge-multiple: true
 
       - name: Publish to TestPyPI
-        if: github.event_name == 'workflow_dispatch' && inputs.test_pypi == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.test_pypi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish to PyPI
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.test_pypi == 'false')
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.test_pypi)
         uses: pypa/gh-action-pypi-publish@release/v1
