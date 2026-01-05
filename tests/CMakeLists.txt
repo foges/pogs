@@ -18,7 +18,7 @@ include(Catch)
 add_executable(pogs_tests
     test_main.cpp
     # test_types.cpp        # TODO: Enable when modern API is complete
-    # test_proximal.cpp     # TODO: Enable when modern API is complete
+    test_proximal.cpp
     test_cone_projections.cpp
     test_solver.cpp
 )
