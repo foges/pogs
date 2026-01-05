@@ -21,6 +21,7 @@ add_executable(pogs_tests
     test_proximal.cpp
     test_cone_projections.cpp
     test_solver.cpp
+    test_c_interface.cpp
 )
 
 target_link_libraries(pogs_tests
@@ -34,6 +35,7 @@ target_include_directories(pogs_tests
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/include
         ${CMAKE_SOURCE_DIR}/src/cpu/include
+        ${CMAKE_SOURCE_DIR}/src
 )
 
 target_compile_features(pogs_tests PRIVATE cxx_std_20)
