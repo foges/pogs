@@ -9,18 +9,8 @@ on:
 
 jobs:
   build-linux:
-    name: Linux (${{ matrix.compiler }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - compiler: gcc
-            cc: gcc-12
-            cxx: g++-12
-          - compiler: clang
-            cc: clang-15
-            cxx: clang++-15
+    name: Linux (GCC)
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -32,12 +22,12 @@ jobs:
           sudo apt-get install -y \
             libblas-dev \
             liblapack-dev \
-            ${{ matrix.compiler == 'gcc' && 'g++-12' || 'clang-15' }}
+            g++-11
 
       - name: Configure
         env:
-          CC: ${{ matrix.cc }}
-          CXX: ${{ matrix.cxx }}
+          CC: gcc-11
+          CXX: g++-11
         run: |
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
