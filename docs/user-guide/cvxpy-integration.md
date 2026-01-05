@@ -1,195 +1,205 @@
 # CVXPY Integration
 
-POGS can be used as a solver backend for CVXPY, allowing you to express optimization problems in a high-level modeling language.
+POGS can solve CVXPY problems directly using `pogs_solve()`. It auto-detects supported problem patterns and uses the fast graph-form solver.
 
 ---
 
-## Overview
-
-The CVXPY interface allows you to solve convex optimization problems using POGS as the solver backend. POGS supports the following cone types:
-
-- **Zero cone** (`{x : x = 0}`): Equality constraints
-- **Non-negative cone** (`{x : x ≥ 0}`): Inequality constraints
-- **Second-order cone** (`{(p,x) : ||x||₂ ≤ p}`): Quadratic constraints
-- **Semidefinite cone** (`{X : X ⪰ 0}`): PSD matrix constraints
-- **Exponential cone**: Exponential constraints
-
----
-
-## Installation
-
-### Prerequisites
-
-1. **Build POGS library:**
-   ```bash
-   cmake -B build -DCMAKE_BUILD_TYPE=Release -DPOGS_BUILD_GPU=OFF
-   cmake --build build
-   sudo cmake --install build
-   ```
-
-2. **Install Python dependencies:**
-   ```bash
-   pip install numpy cvxpy
-   ```
-
-### Verify Installation
-
-```bash
-cd python
-python3 verify_cvxpy_interface.py
-```
-
-Expected output: `✓ All components verified!`
-
----
-
-## Usage Examples
-
-### Basic Linear Program
+## Basic Usage
 
 ```python
 import cvxpy as cp
-import sys
-sys.path.insert(0, '/path/to/pogs/python')
+import numpy as np
+from pogs import pogs_solve
 
-# Problem: minimize x[0] subject to x[0] + x[1] = 2, x >= 0
-x = cp.Variable(2)
-objective = cp.Minimize(x[0])
-constraints = [
-    x[0] + x[1] == 2,
-    x >= 0
-]
-prob = cp.Problem(objective, constraints)
+# Problem data
+A = np.random.randn(100, 50)
+b = np.random.randn(100)
+
+# Define CVXPY problem
+x = cp.Variable(50)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
 
 # Solve with POGS
-result = prob.solve(solver='POGS', verbose=True)
+pogs_solve(prob)
 
+print(f"Status: {prob.status}")
 print(f"Optimal value: {prob.value}")
-print(f"Solution: x = {x.value}")
-# Output: x = [0, 2], optimal value = 0
+print(f"Solution: {x.value}")
 ```
 
-### Quadratic Program
+---
+
+## How It Works
+
+`pogs_solve()` inspects the CVXPY problem structure and detects if it matches a supported pattern:
+
+| Pattern | CVXPY Expression | POGS Solver |
+|:--------|:-----------------|:------------|
+| **Lasso** | `sum_squares(A @ x - b) + λ * norm(x, 1)` | `solve_lasso` |
+| **Ridge** | `sum_squares(A @ x - b) + λ * sum_squares(x)` | `solve_ridge` |
+| **NNLS** | `sum_squares(A @ x - b)` with `x >= 0` | `solve_nonneg_ls` |
+
+If a pattern is detected, POGS uses its fast graph-form solver. Otherwise, it falls back to CVXPY's default solver.
+
+---
+
+## Registering as a Solve Method
+
+You can register `pogs_solve` as a named method:
 
 ```python
-# Problem: minimize 0.5*||x||^2 + c^T*x subject to Ax <= b
+import cvxpy as cp
+from pogs import pogs_solve
+
+# Register once
+cp.Problem.register_solve("POGS", pogs_solve)
+
+# Now use like any other solver
+prob.solve(method="POGS")
+```
+
+This lets you use the familiar `solve(method=...)` syntax.
+
+---
+
+## Examples
+
+### Lasso
+
+```python
+import cvxpy as cp
+import numpy as np
+from pogs import pogs_solve
+
+m, n = 500, 300
+A = np.random.randn(m, n)
+b = np.random.randn(m)
+
 x = cp.Variable(n)
-objective = cp.Minimize(0.5 * cp.sum_squares(x) + c @ x)
-constraints = [A @ x <= b]
-prob = cp.Problem(objective, constraints)
+lambd = 0.1
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + lambd * cp.norm(x, 1)))
 
-result = prob.solve(solver='POGS')
+pogs_solve(prob, verbose=True)
+# Output: POGS: Detected lasso pattern, using fast graph-form solver
 ```
 
-### Second-Order Cone Program
+### Ridge
 
 ```python
-# Problem: minimize ||Ax - b||_2 + lambda * ||x||_2
 x = cp.Variable(n)
-objective = cp.Minimize(cp.norm(A @ x - b) + lam * cp.norm(x))
-prob = cp.Problem(objective)
+lambd = 0.1
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + lambd * cp.sum_squares(x)))
 
-result = prob.solve(solver='POGS')
+pogs_solve(prob, verbose=True)
+# Output: POGS: Detected ridge pattern, using fast graph-form solver
 ```
 
-### Semidefinite Program
+### Non-negative Least Squares
 
 ```python
-# Problem: minimize trace(C @ X) subject to trace(A_i @ X) = b_i, X PSD
-X = cp.Variable((n, n), PSD=True)
-objective = cp.Minimize(cp.trace(C @ X))
-constraints = [cp.trace(A[i] @ X) == b[i] for i in range(m)]
-prob = cp.Problem(objective, constraints)
+x = cp.Variable(n)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b)), [x >= 0])
 
-result = prob.solve(solver='POGS')
+pogs_solve(prob, verbose=True)
+# Output: POGS: Detected nonneg_ls pattern, using fast graph-form solver
+```
+
+### Unsupported Problems
+
+For problems that don't match a supported pattern:
+
+```python
+x = cp.Variable(n)
+prob = cp.Problem(cp.Minimize(cp.norm(A @ x - b, 1)))  # L1 loss, not L2
+
+pogs_solve(prob, verbose=True)
+# Output: POGS: No graph-form pattern detected, using default solver
 ```
 
 ---
 
 ## Solver Options
 
-You can customize solver behavior with additional options:
+Pass solver options to `pogs_solve()`:
 
 ```python
-prob.solve(
-    solver='POGS',
-    verbose=True,       # Print solver output
-    abs_tol=1e-4,      # Absolute tolerance
-    rel_tol=1e-3,      # Relative tolerance
-    max_iter=10000,    # Maximum iterations
-    rho=1.0            # Initial penalty parameter
+pogs_solve(
+    prob,
+    verbose=True,      # Print solver output
+    abs_tol=1e-6,      # Absolute tolerance
+    rel_tol=1e-6,      # Relative tolerance
+    max_iter=5000,     # Maximum iterations
+    rho=1.0,           # ADMM penalty parameter
 )
 ```
 
 ---
 
-## Performance Considerations
+## When to Use POGS vs Direct Solvers
 
-### When to Use POGS
+### Use `pogs_solve()` when:
 
-POGS is well-suited for:
+- You have existing CVXPY code
+- You want automatic pattern detection
+- You're not sure which solver function to use
 
-- **Medium-scale problems** (thousands of variables)
-- **Dense or moderately sparse** problems
-- **Problems with SDP constraints** (POGS supports SDP natively)
-- **Custom cone constraints** (easy to extend)
+### Use direct solvers (`solve_lasso`, etc.) when:
 
-### When to Use Other Solvers
+- You know the exact problem type
+- You want maximum performance
+- You're writing new code
 
-Consider alternatives for:
+Direct solvers are slightly faster because they skip pattern detection:
 
-- **Very large sparse problems**: Use SCS or OSQP
-- **Mixed-integer programs**: Use ECOS_BB, GLPK_MI, or Gurobi
-- **High-precision requirements**: Use CVXOPT or MOSEK
+```python
+# Direct (faster)
+from pogs import solve_lasso
+result = solve_lasso(A, b, lambd=0.1)
+x = result['x']
 
-### Tuning
-
-For better performance:
-
-- **Adjust `rho`**: Start with 1.0, try 0.1-10.0 range
-- **Tighten tolerances**: Use `abs_tol=1e-6, rel_tol=1e-6` for higher accuracy
-- **Increase iterations**: Set `max_iter=20000` for difficult problems
-
----
-
-## Troubleshooting
-
-### "POGS library not found"
-
-**Solution**: Build the POGS library first:
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-sudo cmake --install build
+# Via CVXPY (convenient)
+from pogs import pogs_solve
+x = cp.Variable(n)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
+pogs_solve(prob)
+x_val = x.value
 ```
 
-### "Solver did not converge"
+---
 
-**Solutions**:
-1. Increase `max_iter`
-2. Adjust `rho` parameter
-3. Check problem formulation (is it convex?)
-4. Scale the problem (normalize data)
+## Supported Patterns
 
-### Problem is infeasible/unbounded
+POGS detects these specific CVXPY expression patterns:
 
-POGS returns status code != 0. Check:
-- Problem constraints are feasible
-- Problem is bounded
-- Data is correctly formatted
+### Lasso
+
+```python
+# minimize ½||Ax - b||² + λ||x||₁
+cp.Minimize(cp.sum_squares(A @ x - b) + lambd * cp.norm(x, 1))
+cp.Minimize(0.5 * cp.sum_squares(A @ x - b) + lambd * cp.norm1(x))
+```
+
+### Ridge
+
+```python
+# minimize ½||Ax - b||² + λ||x||²
+cp.Minimize(cp.sum_squares(A @ x - b) + lambd * cp.sum_squares(x))
+```
+
+### Non-negative Least Squares
+
+```python
+# minimize ½||Ax - b||² s.t. x >= 0
+cp.Minimize(cp.sum_squares(A @ x - b)), constraints=[x >= 0]
+```
 
 ---
 
-## Examples
+## Limitations
 
-See the Python examples directory for more:
+- **Single variable**: Only problems with one optimization variable are supported
+- **Minimization**: Must be a minimization problem
+- **Specific patterns**: Only Lasso, Ridge, and NNLS patterns are detected
+- **Dense matrices**: Works best with dense matrices A
 
-- `python/test_cone_simple.py` - Python example without CVXPY
-- `python/test_cvxpy_interface.py` - Full CVXPY integration tests
-
----
-
-## References
-
-- CVXPY documentation: [https://www.cvxpy.org](https://www.cvxpy.org)
-- Cone programming: [Convex Optimization by Boyd & Vandenberghe](https://web.stanford.edu/~boyd/cvxbook/)
+For problems outside these patterns, POGS falls back to CVXPY's default solver, which may be slower but handles general convex problems.

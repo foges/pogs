@@ -4,25 +4,18 @@ Complete reference for POGS Python functions.
 
 ---
 
-## Installation
-
-```bash
-pip install pogs
-```
-
----
-
 ## Quick Reference
 
 | Function | Problem |
-|----------|---------|
-| `solve_lasso` | Sparse regression (L1) |
-| `solve_ridge` | Ridge regression (L2) |
-| `solve_elastic_net` | L1 + L2 regularization |
-| `solve_logistic` | Logistic regression |
-| `solve_svm` | Support vector machine |
-| `solve_huber` | Robust regression |
-| `solve_nonneg_ls` | Non-negative least squares |
+|:---------|:--------|
+| [`solve_lasso`](#solve_lasso) | Sparse regression (L1) |
+| [`solve_ridge`](#solve_ridge) | Ridge regression (L2) |
+| [`solve_elastic_net`](#solve_elastic_net) | L1 + L2 regularization |
+| [`solve_logistic`](#solve_logistic) | Logistic regression |
+| [`solve_svm`](#solve_svm) | Support vector machine |
+| [`solve_huber`](#solve_huber) | Robust regression |
+| [`solve_nonneg_ls`](#solve_nonneg_ls) | Non-negative least squares |
+| [`pogs_solve`](#pogs_solve) | CVXPY integration |
 
 ---
 
@@ -342,8 +335,70 @@ result = solve_lasso(A_sparse, b, lambd=0.1)
 
 ---
 
+## pogs_solve
+
+Solve CVXPY problems with automatic pattern detection:
+
+```python
+from pogs import pogs_solve
+
+optval = pogs_solve(problem, verbose=False, **solver_opts)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `problem` | cvxpy.Problem | The CVXPY problem to solve |
+| `verbose` | bool | Print solver output (default: False) |
+| `abs_tol` | float | Absolute tolerance (default: 1e-4) |
+| `rel_tol` | float | Relative tolerance (default: 1e-4) |
+| `max_iter` | int | Maximum iterations (default: 2500) |
+| `rho` | float | ADMM penalty parameter (default: 1.0) |
+
+**Returns:** float - optimal objective value
+
+**Supported Patterns:**
+
+| Pattern | CVXPY Expression |
+|:--------|:-----------------|
+| Lasso | `sum_squares(A @ x - b) + λ * norm(x, 1)` |
+| Ridge | `sum_squares(A @ x - b) + λ * sum_squares(x)` |
+| NNLS | `sum_squares(A @ x - b)` with `x >= 0` |
+
+For unsupported patterns, falls back to CVXPY's default solver.
+
+**Example:**
+
+```python
+import cvxpy as cp
+import numpy as np
+from pogs import pogs_solve
+
+A = np.random.randn(100, 50)
+b = np.random.randn(100)
+
+x = cp.Variable(50)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
+
+pogs_solve(prob, verbose=True)
+# Output: POGS: Detected lasso pattern, using fast graph-form solver
+
+print(x.value)  # Solution is stored in the variable
+```
+
+**Registering as a Method:**
+
+```python
+cp.Problem.register_solve("POGS", pogs_solve)
+prob.solve(method="POGS")
+```
+
+---
+
 ## See Also
 
 - [Quick Start](../getting-started/quick-start.md) - Getting started guide
+- [CVXPY Integration](../user-guide/cvxpy-integration.md) - Detailed CVXPY usage
 - [Lasso Example](../examples/lasso.md) - Detailed Lasso example
 - [Logistic Example](../examples/logistic.md) - Classification example

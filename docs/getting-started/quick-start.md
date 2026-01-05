@@ -1,12 +1,12 @@
 # Quick Start
 
-Solve your first optimization problem in under 2 minutes.
+Solve your first optimization problem in under a minute.
 
 ---
 
 ## Lasso Regression
 
-The most common use case - sparse linear regression:
+The most common use case—sparse linear regression:
 
 ```python
 from pogs import solve_lasso
@@ -20,7 +20,7 @@ x_true = np.zeros(n)
 x_true[:10] = np.random.randn(10)  # Sparse ground truth
 b = A @ x_true + 0.1 * np.random.randn(m)
 
-# Solve
+# Solve: minimize ½||Ax - b||² + λ||x||₁
 result = solve_lasso(A, b, lambd=0.1)
 
 print(f"Status: {'Solved' if result['status'] == 0 else 'Failed'}")
@@ -37,7 +37,7 @@ Nonzeros: 10
 
 ---
 
-## All Supported Problems
+## All Solvers
 
 POGS provides optimized solvers for common ML problems:
 
@@ -46,16 +46,16 @@ POGS provides optimized solvers for common ML problems:
 ```python
 from pogs import solve_lasso, solve_ridge, solve_elastic_net, solve_huber
 
-# Lasso: ||Ax - b||² + λ||x||₁
+# Lasso: ½||Ax - b||² + λ||x||₁
 result = solve_lasso(A, b, lambd=0.1)
 
-# Ridge: ||Ax - b||² + λ||x||²
+# Ridge: ½||Ax - b||² + λ||x||²
 result = solve_ridge(A, b, lambd=0.1)
 
-# Elastic Net: ||Ax - b||² + λ₁||x||₁ + λ₂||x||²
+# Elastic Net: ½||Ax - b||² + λ₁||x||₁ + λ₂||x||²
 result = solve_elastic_net(A, b, lambda1=0.1, lambda2=0.05)
 
-# Huber: ρ(Ax - b) + λ||x||₁ (robust regression)
+# Huber: Σ huber(Aᵢx - bᵢ) + λ||x||₁
 result = solve_huber(A, b, lambd=0.1, delta=1.0)
 ```
 
@@ -64,20 +64,22 @@ result = solve_huber(A, b, lambd=0.1, delta=1.0)
 ```python
 from pogs import solve_logistic, solve_svm
 
-# Logistic Regression: Σ log(1 + exp(-yᵢaᵢ'x)) + λ||x||₁
-y = np.sign(A @ np.random.randn(n))  # Binary labels {-1, +1}
+# Labels in {-1, +1}
+y = np.sign(A @ np.random.randn(n))
+
+# Logistic: Σ log(1 + exp(-yᵢaᵢᵀx)) + λ||x||₁
 result = solve_logistic(A, y, lambd=0.01)
 
-# SVM: Σ max(0, 1 - yᵢaᵢ'x) + λ||x||²
+# SVM: Σ max(0, 1 - yᵢaᵢᵀx) + λ||x||²
 result = solve_svm(A, y, lambd=0.01)
 ```
 
-### Constrained Problems
+### Constrained
 
 ```python
 from pogs import solve_nonneg_ls
 
-# Non-negative Least Squares: ||Ax - b||² s.t. x ≥ 0
+# Non-negative Least Squares: ½||Ax - b||² s.t. x ≥ 0
 result = solve_nonneg_ls(A, b)
 ```
 
@@ -85,87 +87,76 @@ result = solve_nonneg_ls(A, b)
 
 ## Result Dictionary
 
-All solvers return a dictionary with:
+All solvers return a dictionary:
 
-| Key | Description |
-|-----|-------------|
-| `x` | Solution vector |
-| `status` | 0=success, other=failure |
-| `iterations` | Number of iterations |
-| `optval` | Optimal objective value |
+| Key | Type | Description |
+|:----|:-----|:------------|
+| `x` | ndarray | Solution vector |
+| `status` | int | 0=converged, 1=max_iter, 2=error |
+| `iterations` | int | Number of ADMM iterations |
+| `optval` | float | Optimal objective value |
 
 ```python
 result = solve_lasso(A, b, lambd=0.1)
 
 x = result['x']           # Solution
-print(f"Solution norm: {np.linalg.norm(x):.4f}")
-print(f"Iterations: {result['iterations']}")
+status = result['status'] # 0 = success
+iters = result['iterations']
 ```
 
 ---
 
 ## Tuning Parameters
 
-### Tolerance
+All solvers accept the same parameters:
 
 ```python
-# More accurate (slower)
-result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-6, abs_tol=1e-6)
-
-# Faster (less accurate)
-result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-3, abs_tol=1e-3)
+result = solve_lasso(
+    A, b,
+    lambd=0.1,       # Regularization strength
+    abs_tol=1e-4,    # Absolute tolerance (default)
+    rel_tol=1e-4,    # Relative tolerance (default)
+    max_iter=2500,   # Maximum iterations (default)
+    verbose=0,       # 0=quiet, 1=summary, 2=per-iteration
+)
 ```
 
-### Max Iterations
+### Higher Accuracy
 
 ```python
-# For difficult problems
-result = solve_lasso(A, b, lambd=0.1, max_iter=5000)
+result = solve_lasso(A, b, lambd=0.1, abs_tol=1e-6, rel_tol=1e-6)
+```
+
+### Faster (Lower Accuracy)
+
+```python
+result = solve_lasso(A, b, lambd=0.1, abs_tol=1e-3, rel_tol=1e-3)
 ```
 
 ### Verbose Output
 
 ```python
-# See iteration progress
 result = solve_lasso(A, b, lambd=0.1, verbose=2)
 ```
 
 ---
 
-## Using with CVXPY
+## CVXPY Integration
 
-For more general problems, use POGS as a CVXPY backend:
+For more complex problems, use `pogs_solve()` with CVXPY:
 
 ```python
 import cvxpy as cp
-import numpy as np
+from pogs import pogs_solve
 
-# Define problem
-x = cp.Variable(300)
-A = np.random.randn(500, 300)
-b = np.random.randn(500)
+x = cp.Variable(n)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
 
-objective = cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1))
-prob = cp.Problem(objective)
-
-# Solve with POGS
-prob.solve(solver='POGS')
-
-print(f"Status: {prob.status}")
-print(f"Optimal value: {prob.value:.4f}")
+pogs_solve(prob)  # Auto-detects Lasso
+print(x.value)
 ```
 
----
-
-## Performance Comparison
-
-POGS is optimized for these ML problems:
-
-| Problem | Size | POGS | OSQP | SCS |
-|---------|------|------|------|-----|
-| Lasso | 500x300 | **51ms** | 399ms | 206ms |
-| Ridge | 500x300 | **8ms** | 89ms | 64ms |
-| Logistic | 500x300 | **34ms** | 312ms | 198ms |
+See [CVXPY Integration](../user-guide/cvxpy-integration.md) for details.
 
 ---
 
@@ -185,7 +176,7 @@ result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-3)
 
 ### Slow convergence
 
-Check your data scaling:
+Normalize your data:
 
 ```python
 # Normalize columns of A
@@ -197,5 +188,6 @@ result = solve_lasso(A, b, lambd=0.1)
 
 ## Next Steps
 
-- [Examples](../examples/lasso.md) - Detailed examples with explanations
-- [API Reference](../api/solver.md) - Full function documentation
+- [Lasso Example](../examples/lasso.md) - Detailed Lasso walkthrough
+- [Logistic Example](../examples/logistic.md) - Classification example
+- [API Reference](../api/solver.md) - Full documentation

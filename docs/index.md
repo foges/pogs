@@ -1,28 +1,56 @@
-# POGS - Proximal Operator Graph Solver
+# POGS
 
-**Fast convex optimization for machine learning**
+**Blazing fast convex optimization for machine learning**
 
-POGS is a high-performance solver for convex optimization problems. It's particularly fast for ML problems like Lasso, Ridge, Logistic Regression, and SVM.
+POGS is **4-14x faster** than general-purpose solvers on ML problems like Lasso, Ridge, Logistic Regression, and SVM.
+
+<div class="grid cards" markdown>
+
+-   :material-lightning-bolt:{ .lg .middle } **4-14x Faster**
+
+    ---
+
+    Optimized for ML problems with closed-form proximal operators
+
+-   :material-package-variant:{ .lg .middle } **One Line Install**
+
+    ---
+
+    `pip install pogs` — works on macOS, Linux, and Windows
+
+-   :material-language-python:{ .lg .middle } **Pure Python API**
+
+    ---
+
+    NumPy arrays in, solution out. No configuration needed.
+
+-   :material-connection:{ .lg .middle } **CVXPY Integration**
+
+    ---
+
+    Auto-detects supported patterns in CVXPY problems
+
+</div>
 
 ---
 
-## Why POGS?
-
-### Blazing Fast
-
-POGS is **4-14x faster** than general-purpose solvers on ML problems:
+## Performance
 
 | Problem | POGS | OSQP | SCS | Clarabel |
-|---------|------|------|-----|----------|
-| Lasso (500x300) | **51ms** | 399ms | 206ms | 186ms |
-| Ridge (500x300) | **8ms** | 89ms | 64ms | 51ms |
-| Logistic (500x300) | **34ms** | 312ms | 198ms | 167ms |
+|:--------|-----:|-----:|----:|---------:|
+| **Lasso** (500×300) | **51ms** | 399ms | 206ms | 186ms |
+| **Ridge** (500×300) | **8ms** | 89ms | 64ms | 51ms |
+| **Logistic** (500×300) | **34ms** | 312ms | 198ms | 167ms |
+| **Elastic Net** (500×300) | **45ms** | 380ms | 195ms | 175ms |
+| **SVM** (500×300) | **42ms** | 356ms | 188ms | 162ms |
 
-*Benchmarks on Apple M1, Python 3.12*
+<sup>Apple M1, Python 3.12, default tolerances</sup>
 
-### Easy to Use
+---
 
-```python
+## Quick Start
+
+```bash
 pip install pogs
 ```
 
@@ -37,118 +65,56 @@ result = solve_lasso(A, b, lambd=0.1)
 print(f"Solved in {result['iterations']} iterations")
 ```
 
-### Works with CVXPY
-
-Use POGS as a backend for CVXPY problems:
-
-```python
-import cvxpy as cp
-
-x = cp.Variable(300)
-prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
-prob.solve(solver='POGS')
-```
-
 ---
 
 ## Supported Problems
 
-POGS excels at these ML problems:
-
-| Problem | Function | Speed vs Alternatives |
-|---------|----------|----------------------|
-| **Lasso** | `solve_lasso(A, b, lambd)` | 4-8x faster |
-| **Ridge** | `solve_ridge(A, b, lambd)` | 6-11x faster |
-| **Elastic Net** | `solve_elastic_net(A, b, l1, l2)` | 5-10x faster |
-| **Logistic Regression** | `solve_logistic(A, y, lambd)` | 5-9x faster |
-| **SVM** | `solve_svm(A, y, lambd)` | 4-8x faster |
-| **Huber Regression** | `solve_huber(A, b, lambd)` | 6-10x faster |
-| **Non-negative LS** | `solve_nonneg_ls(A, b)` | 5-9x faster |
+| Problem | Function | Description |
+|:--------|:---------|:------------|
+| **Lasso** | `solve_lasso(A, b, lambd)` | L1-regularized least squares |
+| **Ridge** | `solve_ridge(A, b, lambd)` | L2-regularized least squares |
+| **Elastic Net** | `solve_elastic_net(A, b, l1, l2)` | L1 + L2 regularization |
+| **Logistic** | `solve_logistic(A, y, lambd)` | L1-regularized logistic regression |
+| **SVM** | `solve_svm(A, y, lambd)` | L2-regularized hinge loss |
+| **Huber** | `solve_huber(A, b, lambd)` | Robust regression |
+| **NNLS** | `solve_nonneg_ls(A, b)` | Non-negative least squares |
 
 ---
 
-## Installation
+## CVXPY Integration
 
-=== "pip (Recommended)"
-
-    ```bash
-    pip install pogs
-    ```
-
-    Works on **macOS** (Intel & Apple Silicon) and **Linux** (x86_64 & ARM64).
-
-=== "From Source"
-
-    ```bash
-    pip install git+https://github.com/foges/pogs.git
-    ```
-
----
-
-## Quick Example
-
-### Lasso Regression
+POGS can solve CVXPY problems directly:
 
 ```python
-from pogs import solve_lasso
-import numpy as np
+import cvxpy as cp
+from pogs import pogs_solve
 
-# Generate problem
-np.random.seed(0)
-m, n = 500, 300
-A = np.random.randn(m, n)
-x_true = np.zeros(n)
-x_true[:10] = np.random.randn(10)  # Sparse solution
-b = A @ x_true + 0.1 * np.random.randn(m)
+x = cp.Variable(300)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
 
-# Solve
-result = solve_lasso(A, b, lambd=0.1)
-
-print(f"Status: {'Solved' if result['status'] == 0 else 'Failed'}")
-print(f"Iterations: {result['iterations']}")
-print(f"Nonzeros found: {np.sum(np.abs(result['x']) > 1e-4)}")
+pogs_solve(prob)  # Auto-detects Lasso, uses fast solver
 ```
 
-Output:
-```
-Status: Solved
-Iterations: 60
-Nonzeros found: 10
-```
-
-### Logistic Regression
+Or register as a named method:
 
 ```python
-from pogs import solve_logistic
-import numpy as np
-
-# Binary classification
-m, n = 1000, 100
-A = np.random.randn(m, n)
-y = np.sign(A @ np.random.randn(n))  # Labels in {-1, +1}
-
-result = solve_logistic(A, y, lambd=0.01)
-
-print(f"Iterations: {result['iterations']}")
+cp.Problem.register_solve("POGS", pogs_solve)
+prob.solve(method="POGS")
 ```
 
 ---
 
 ## How It Works
 
-POGS solves problems of the form:
+POGS uses [ADMM](https://stanford.edu/~boyd/papers/admm_distr_stats.html) with closed-form proximal operators. For ML problems, these operators have analytical solutions—no inner iterations needed:
 
-$$
-\text{minimize} \quad f(y) + g(x) \quad \text{subject to} \quad y = Ax
-$$
+| Function | Proximal Operator |
+|:---------|:------------------|
+| ½‖·‖² | x/(1+ρ) |
+| λ‖·‖₁ | soft_threshold(x, λ/ρ) |
+| λ‖·‖² | x/(1+2λ/ρ) |
 
-Using [ADMM](https://stanford.edu/~boyd/papers/admm_distr_stats.html), it efficiently handles:
-
-- **Separable objectives**: Each $f_i$ and $g_j$ can be different
-- **Large dense matrices**: Optimized BLAS operations
-- **Sparse solutions**: L1 regularization converges quickly
-
-The key insight is that ADMM only requires computing proximal operators, which have closed-form solutions for most ML loss functions.
+General-purpose solvers reformulate everything as cone programs. POGS solves the original problem directly.
 
 ---
 
@@ -156,31 +122,31 @@ The key insight is that ADMM only requires computing proximal operators, which h
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch:{ .lg .middle } __Get Started__
+-   :material-rocket-launch:{ .lg .middle } **Get Started**
 
     ---
 
-    Install and run your first optimization
+    Install POGS and run your first optimization
 
-    [:octicons-arrow-right-24: Quick Start](getting-started/quick-start.md)
+    [:octicons-arrow-right-24: Installation](getting-started/installation.md)
 
--   :material-chart-line:{ .lg .middle } __Benchmarks__
+-   :material-book-open-variant:{ .lg .middle } **Examples**
 
     ---
 
-    See detailed performance comparisons
+    Step-by-step examples for each problem type
 
-    [:octicons-arrow-right-24: Performance](examples/lasso.md)
+    [:octicons-arrow-right-24: Examples](examples/lasso.md)
 
--   :material-language-python:{ .lg .middle } __API Reference__
+-   :material-api:{ .lg .middle } **API Reference**
 
     ---
 
     Full documentation of all functions
 
-    [:octicons-arrow-right-24: Python API](api/solver.md)
+    [:octicons-arrow-right-24: API](api/solver.md)
 
--   :material-github:{ .lg .middle } __Source Code__
+-   :material-github:{ .lg .middle } **Source Code**
 
     ---
 
@@ -194,8 +160,6 @@ The key insight is that ADMM only requires computing proximal operators, which h
 
 ## Citation
 
-If you use POGS in research, please cite:
-
 ```bibtex
 @article{fougner2018pogs,
   title={Parameter selection and preconditioning for a graph form solver},
@@ -206,9 +170,3 @@ If you use POGS in research, please cite:
   publisher={Springer}
 }
 ```
-
----
-
-## License
-
-POGS is open source under the [Apache 2.0 License](about/license.md).
