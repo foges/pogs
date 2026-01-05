@@ -61,6 +61,8 @@ Issues = "https://github.com/foges/pogs/issues"
 cmake.args = ["-DPOGS_BUILD_GPU=OFF", "-DPOGS_BUILD_TESTS=OFF", "-DPOGS_BUILD_PYTHON=ON"]
 wheel.packages = ["python/pogs"]
 build-dir = "build/{wheel_tag}"
+# Install shared library into the pogs package
+wheel.install-dir = "pogs"
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
