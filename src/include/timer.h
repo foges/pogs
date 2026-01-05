@@ -1,16 +1,15 @@
-#ifndef TIMER_H_ 
-#define TIMER_H_ 
+#ifndef TIMER_H_
+#define TIMER_H_
 
-#include <unistd.h>
-#include <sys/time.h>
+#include <chrono>
 
 template <typename T>
 T timer() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return static_cast<T>(tv.tv_sec) +
-      static_cast<T>(tv.tv_usec) * static_cast<T>(1e-6);
+  using namespace std::chrono;
+  auto now = high_resolution_clock::now();
+  auto duration = now.time_since_epoch();
+  auto seconds = duration_cast<std::chrono::duration<T>>(duration);
+  return seconds.count();
 }
 
 #endif  // TIMER_H_
-
