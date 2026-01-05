@@ -51,8 +51,8 @@ jobs:
             dnf install -y openblas-devel lapack-devel
           # Windows: download pre-built OpenBLAS
           CIBW_BEFORE_ALL_WINDOWS: >
-            curl -L -o C:\openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
-            7z x C:\openblas.zip -oC:\OpenBLAS -y
+            curl -L -o openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
+            7z x openblas.zip -oC:\ -y
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
@@ -60,9 +60,9 @@ jobs:
           # Skip auditwheel - our ctypes library links to system BLAS
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/libopenblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/libopenblas.lib"
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS-0.3.28-x64/lib/libopenblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS-0.3.28-x64/lib/libopenblas.lib"
           # Windows: bundle DLLs into wheel
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/OpenBLAS-0.3.28-x64/bin -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS-0.3.28-x64/bin -w {dest_dir} {wheel}"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
