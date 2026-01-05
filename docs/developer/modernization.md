@@ -270,6 +270,5 @@ class ADMMAlgorithm {
 
 ## See Also
 
-- [MODERNIZATION_PHASE2.md](../../../MODERNIZATION_PHASE2.md) - Detailed Phase 2 report
 - [Architecture](architecture.md) - Current architecture
 - [Contributing](contributing.md) - How to contribute
