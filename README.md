@@ -2,9 +2,11 @@
 
 **Modern C++20 solver for convex optimization using ADMM**
 
+[![CI](https://github.com/foges/pogs/actions/workflows/ci.yml/badge.svg)](https://github.com/foges/pogs/actions/workflows/ci.yml)
+[![Docs](https://github.com/foges/pogs/actions/workflows/docs.yml/badge.svg)](https://foges.github.io/pogs/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
-[![CMake](https://img.shields.io/badge/Build-CMake-green.svg)](https://cmake.org/)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)]()
 
 [**Documentation**](https://foges.github.io/pogs/) | [**Paper**](http://stanford.edu/~boyd/papers/pogs.html) | [**Examples**](https://foges.github.io/pogs/examples/)
 
@@ -212,7 +214,7 @@ Version 0.4 represents a major modernization of the POGS codebase:
 - **C++20**: Modern C++ features including smart pointers, RAII, concepts
 - **CMake Build System**: Replaced Makefiles with modern CMake
 - **Comprehensive Documentation**: New MkDocs Material site with search
-- **Test Suite**: Catch2-based testing framework with 85+ assertions
+- **Test Suite**: Catch2-based testing framework with 130+ assertions
 - **C Interface**: Complete C API for cone form problems
 - **Code Quality**: Eliminated code duplication, improved maintainability
 - **MATLAB Removal**: MATLAB interface removed (use Python/CVXPY instead)

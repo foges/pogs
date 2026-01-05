@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, cone]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Linux (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: gcc
+            cc: gcc-12
+            cxx: g++-12
+          - compiler: clang
+            cc: clang-15
+            cxx: clang++-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libblas-dev \
+            liblapack-dev \
+            ${{ matrix.compiler == 'gcc' && 'g++-12' || 'clang-15' }}
+
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPOGS_BUILD_TESTS=ON \
+            -DPOGS_BUILD_EXAMPLES=ON \
+            -DPOGS_BUILD_GPU=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Test
+        run: ./build/bin/pogs_tests
+
+  build-macos:
+    name: macOS (AppleClang)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPOGS_BUILD_TESTS=ON \
+            -DPOGS_BUILD_EXAMPLES=ON \
+            -DPOGS_BUILD_GPU=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(sysctl -n hw.ncpu)
+
+      - name: Test
+        run: ./build/bin/pogs_tests
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install MkDocs
+        run: pip install mkdocs-material pymdown-extensions
+
+      - name: Build docs
+        run: mkdocs build --strict
