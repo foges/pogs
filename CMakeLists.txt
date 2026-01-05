@@ -41,43 +41,39 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
     OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_NAME
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  # List files in lib directory for debugging
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32, os; d=scipy_openblas32.get_lib_dir(); print('Files in', d, ':', os.listdir(d) if os.path.isdir(d) else 'NOT A DIR')"
-    OUTPUT_VARIABLE SCIPY_OPENBLAS_FILES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
   if(SCIPY_OPENBLAS_RESULT EQUAL 0)
     message(STATUS "Found scipy-openblas32:")
     message(STATUS "  Library dir: ${SCIPY_OPENBLAS_LIB_DIR}")
     message(STATUS "  Include dir: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
     message(STATUS "  Library name: ${SCIPY_OPENBLAS_LIB_NAME}")
-    message(STATUS "  ${SCIPY_OPENBLAS_FILES}")
 
     # The .lib file is in the lib directory with the library name
     set(SCIPY_OPENBLAS_LIB_FILE "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.lib")
-    set(SCIPY_OPENBLAS_DLL_FILE "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.dll")
 
     message(STATUS "  Lib file: ${SCIPY_OPENBLAS_LIB_FILE}")
-    message(STATUS "  DLL file: ${SCIPY_OPENBLAS_DLL_FILE}")
 
-    # Create BLAS::BLAS imported target for scipy-openblas
-    # Use SHARED IMPORTED GLOBAL with IMPORTED_IMPLIB for Windows .lib files
-    add_library(BLAS::BLAS SHARED IMPORTED GLOBAL)
-    set_target_properties(BLAS::BLAS PROPERTIES
-      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
-      IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
-      INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
-    )
-    # Create LAPACK::LAPACK imported target (same library)
-    add_library(LAPACK::LAPACK SHARED IMPORTED GLOBAL)
-    set_target_properties(LAPACK::LAPACK PROPERTIES
-      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
-      IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
-      INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
-    )
-    set(BLAS_FOUND TRUE)
-    set(LAPACK_FOUND TRUE)
+    # Use scipy-openblas32's CMake config by adding to CMAKE_PREFIX_PATH
+    set(CMAKE_PREFIX_PATH "${SCIPY_OPENBLAS_LIB_DIR}/cmake" ${CMAKE_PREFIX_PATH})
+    find_package(OpenBLAS REQUIRED CONFIG)
+    message(STATUS "  Found OpenBLAS via CMake config")
+
+    # Create BLAS::BLAS and LAPACK::LAPACK wrapping OpenBLAS
+    if(TARGET OpenBLAS::OpenBLAS)
+      # OpenBLAS provides both BLAS and LAPACK
+      # Use INTERFACE libraries to wrap the imported target
+      add_library(BLAS::BLAS INTERFACE IMPORTED GLOBAL)
+      set_target_properties(BLAS::BLAS PROPERTIES
+        INTERFACE_LINK_LIBRARIES OpenBLAS::OpenBLAS
+      )
+      add_library(LAPACK::LAPACK INTERFACE IMPORTED GLOBAL)
+      set_target_properties(LAPACK::LAPACK PROPERTIES
+        INTERFACE_LINK_LIBRARIES OpenBLAS::OpenBLAS
+      )
+      set(BLAS_FOUND TRUE)
+      set(LAPACK_FOUND TRUE)
+    else()
+      message(FATAL_ERROR "OpenBLAS::OpenBLAS target not found after find_package(OpenBLAS)")
+    endif()
   else()
     message(FATAL_ERROR "scipy-openblas32 not found. Install with: pip install scipy-openblas32")
   endif()
