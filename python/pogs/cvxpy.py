@@ -434,5 +434,3 @@ def _solve_graph_form_detected(detection, solver_opts):
 
     result["solve_time"] = time.perf_counter() - t0
     return result
-
-

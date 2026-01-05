@@ -1,5 +1,9 @@
 [build-system]
-requires = ["scikit-build-core>=0.10", "pybind11>=2.12"]
+requires = [
+    "scikit-build-core>=0.10",
+    "pybind11>=2.12",
+    "scipy-openblas32; platform_system == 'Windows'",
+]
 build-backend = "scikit_build_core.build"
 
 [project]
