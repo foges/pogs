@@ -66,6 +66,8 @@ wheel.install-dir = "pogs"
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
+# Install library directly into package (not lib/ subdirectory)
+CMAKE_INSTALL_LIBDIR = "."
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "python"]

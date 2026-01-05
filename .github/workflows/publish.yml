@@ -60,7 +60,7 @@ jobs:
           # Skip auditwheel - our ctypes library links to system BLAS
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLA_VENDOR=OpenBLAS -DCMAKE_PREFIX_PATH=C:/OpenBLAS/OpenBLAS-0.3.28-x64"
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/openblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/openblas.lib"
           # Windows: bundle DLLs into wheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/OpenBLAS-0.3.28-x64/bin -w {dest_dir} {wheel}"
           CIBW_TEST_REQUIRES: numpy
