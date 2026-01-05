@@ -15,7 +15,7 @@
 
 namespace pogs {
 
-static const char POGS_VERSION[] = "0.2.0";
+static const char POGS_VERSION[] = "0.4.0";
 
 // Defaults.
 const double       kAbsTol       = 1e-4;
@@ -76,11 +76,6 @@ class PogsImplementation {
   unsigned int _max_iter, _init_iter, _verbose;
   bool _adaptive_rho, _gap_stop, _init_x, _init_lambda;
 
-  // Anderson acceleration parameters.
-  bool _use_anderson;
-  unsigned int _anderson_mem;    // Memory depth (number of past iterates)
-  unsigned int _anderson_start;  // Iteration to start acceleration
-
   // Solver
   PogsStatus Solve(PogsObjective<T> *obj);
 
@@ -104,10 +99,6 @@ class PogsImplementation {
   unsigned int GetVerbose()     const { return _verbose; }
   bool         GetAdaptiveRho() const { return _adaptive_rho; }
   bool         GetGapStop()     const { return _gap_stop; }
-  bool         GetUseAnderson() const { return _use_anderson; }
-  unsigned int GetAndersonMem() const { return _anderson_mem; }
-  unsigned int GetAndersonStart() const { return _anderson_start; }
-
 
   // Setters for parameters and initial values.
   void SetRho(T rho)                       { _rho = rho; }
@@ -118,9 +109,6 @@ class PogsImplementation {
   void SetVerbose(unsigned int verbose)    { _verbose = verbose; }
   void SetAdaptiveRho(bool adaptive_rho)   { _adaptive_rho = adaptive_rho; }
   void SetGapStop(bool gap_stop)           { _gap_stop = gap_stop; }
-  void SetUseAnderson(bool use_anderson)   { _use_anderson = use_anderson; }
-  void SetAndersonMem(unsigned int mem)    { _anderson_mem = mem; }
-  void SetAndersonStart(unsigned int start){ _anderson_start = start; }
   void SetInitX(const T *x) {
     memcpy(_x.get(), x, _A.Cols() * sizeof(T));
     _init_x = true;

@@ -9,7 +9,6 @@
 #include <numeric>
 #include <type_traits>
 
-#include "anderson.h"
 #include "equil_helper.h"
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_vector.h"
@@ -48,10 +47,7 @@ PogsImplementation<T, M, P>::PogsImplementation(const M &A)
       _verbose(kVerbose),
       _adaptive_rho(kAdaptiveRho),
       _gap_stop(kGapStop),
-      _init_x(false), _init_lambda(false),
-      _use_anderson(false),
-      _anderson_mem(5u),
-      _anderson_start(10u) {
+      _init_x(false), _init_lambda(false) {
   // Zero-initialize output arrays
   std::fill_n(_x.get(), _A.Cols(), T{});
   std::fill_n(_y.get(), _A.Rows(), T{});
@@ -251,20 +247,8 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
     return std::sqrt(s_sq);
   };
 
-  // Anderson acceleration for primal variable z.
-  // We accelerate only the primal fixed-point iteration, not the dual.
-  // This is more stable than accelerating the combined primal-dual state.
-  std::unique_ptr<AndersonAccelerator<T>> anderson;
-  gsl::vector<T> z_acc;
-  T prev_nrm_r = std::numeric_limits<T>::max();  // For safeguarding
-  if (_use_anderson && _anderson_mem > 0) {
-    anderson = std::make_unique<AndersonAccelerator<T>>(m + n, _anderson_mem);
-    z_acc = gsl::vector_calloc<T>(m + n);
-    if (_verbose > 0) {
-      Printf("Anderson acceleration enabled: mem=%u, start=%u\n",
-             _anderson_mem, _anderson_start);
-    }
-  }
+  // Track residual for residual-based projection tolerance
+  T prev_nrm_r = std::numeric_limits<T>::max();
 
   for (;; ++k) {
     gsl::vector_memcpy(&zprev, &z);
@@ -446,7 +430,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
               T scale = _rho / rho_new;
               _rho = rho_new;
               gsl::blas_scal(scale, &zt);
-              if (anderson) anderson->Reset();
               if (_verbose > 3)
                 Printf("spectral rho update: %e (imbalance=%.1f)\n", _rho, imbalance);
             }
@@ -462,7 +445,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
           gsl::blas_scal(1 / delta, &zt);
           delta = kGamma * delta;
           ku = k;
-          if (anderson) anderson->Reset();  // Reset Anderson on rho change
           if (_verbose > 3)
             Printf("+ rho %e\n", _rho);
         }
@@ -473,7 +455,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
           gsl::blas_scal(delta, &zt);
           delta = kGamma * delta;
           kd = k;
-          if (anderson) anderson->Reset();  // Reset Anderson on rho change
           if (_verbose > 3)
             Printf("- rho %e\n", _rho);
         }
@@ -481,46 +462,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
         xi *= kKappa;
       } else {
         delta = kDeltaMin;
-      }
-    }
-
-    // Apply Anderson acceleration to primal variable z only.
-    // Use residual-based safeguarding: only accept if residual decreases.
-    if (anderson && k >= _anderson_start) {
-      // Apply Anderson to the primal iterate z
-      if (anderson->Apply(z.data, zprev.data, z_acc.data)) {
-        // Compute norm of acceleration step
-        T acc_step = kZero;
-        for (size_t i = 0; i < m + n; ++i) {
-          T diff = z_acc.data[i] - z.data[i];
-          acc_step += diff * diff;
-        }
-        acc_step = std::sqrt(acc_step);
-
-        // Compute norm of regular ADMM step
-        T admm_step = kZero;
-        for (size_t i = 0; i < m + n; ++i) {
-          T diff = z.data[i] - zprev.data[i];
-          admm_step += diff * diff;
-        }
-        admm_step = std::sqrt(admm_step);
-
-        // Type-I safeguarding: accept if acceleration step is smaller than ADMM step
-        // This ensures we don't overshoot. Use a relaxation factor of 2.0.
-        const T kSafetyFactor = static_cast<T>(2.0);
-        if (acc_step < kSafetyFactor * admm_step + _abs_tol) {
-          // Accept accelerated iterate
-          gsl::vector_memcpy(&z, &z_acc);
-          if (_verbose > 3) {
-            Printf("Anderson: accepted (acc_step=%.2e, admm_step=%.2e)\n",
-                   acc_step, admm_step);
-          }
-        } else {
-          if (_verbose > 3) {
-            Printf("Anderson: rejected (acc_step=%.2e > %.1f*admm_step=%.2e)\n",
-                   acc_step, kSafetyFactor, kSafetyFactor * admm_step);
-          }
-        }
       }
     }
 
@@ -635,9 +576,6 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   gsl::vector_free(&z12);
   gsl::vector_free(&zprev);
   gsl::vector_free(&ztemp);
-  if (_use_anderson && _anderson_mem > 0) {
-    gsl::vector_free(&z_acc);
-  }
 
   return status;
 }
@@ -1513,11 +1451,6 @@ PogsStatus SolveHsdeCone(const M& A,
   const T kIterRefineRelTol = static_cast<T>(1e-12);
   const T kIterRefineAbsTol = static_cast<T>(1e-12);
   const T kIterRefineStopRatio = static_cast<T>(5.0);
-  const bool kUseAnderson = true;
-  const size_t kAndersonMem = 5;
-  const size_t kAndersonStart = 10;
-  const T kAndersonSafety = static_cast<T>(2.0);
-  const size_t kAndersonRejectReset = 5;
   const size_t kDirectLimit = 2000;
   (void)rho;
   const T kRho = kOne;
@@ -1708,22 +1641,8 @@ PogsStatus SolveHsdeCone(const M& A,
   T alpha = kAlphaMin;
   bool converged = false;
   PogsStatus status = POGS_MAX_ITER;
-  std::unique_ptr<AndersonAccelerator<T>> anderson;
-  size_t anderson_rejects = 0;
-  if (kUseAnderson && kAndersonMem > 0) {
-    anderson = std::make_unique<AndersonAccelerator<T>>(dim, kAndersonMem);
-    u_acc.assign(dim, kZero);
-    if (verbose > 0) {
-      Printf("HSDE Anderson acceleration enabled: mem=%u, start=%u\n",
-             static_cast<unsigned int>(kAndersonMem),
-             static_cast<unsigned int>(kAndersonStart));
-    }
-  }
 
   for (unsigned int k = 0; k < max_iter; ++k) {
-    if (anderson)
-      std::copy(u.begin(), u.end(), u_prev.begin());
-
     // Linear solve: w = (I + ρQ)⁻¹ u
     if (use_smw) {
       // SMW approach: solve (I + ρQ)w = u directly (no normal equations!)
@@ -1790,43 +1709,6 @@ PogsStatus SolveHsdeCone(const M& A,
     for (size_t i = 0; i < dim; ++i)
       tmp[i] = z[i] - w[i];
     fp_resid = Norm2(tmp.data(), dim);
-
-    if (anderson && k >= kAndersonStart) {
-      if (anderson->Apply(u.data(), u_prev.data(), u_acc.data())) {
-        T acc_step = kZero;
-        for (size_t i = 0; i < dim; ++i) {
-          const T diff = u_acc[i] - u[i];
-          acc_step += diff * diff;
-        }
-        acc_step = std::sqrt(acc_step);
-
-        T drs_step = kZero;
-        for (size_t i = 0; i < dim; ++i) {
-          const T diff = u[i] - u_prev[i];
-          drs_step += diff * diff;
-        }
-        drs_step = std::sqrt(drs_step);
-
-        if (acc_step < kAndersonSafety * drs_step + abs_tol) {
-          std::copy(u_acc.begin(), u_acc.end(), u.begin());
-          anderson_rejects = 0;
-          if (verbose > 3) {
-            Printf("HSDE Anderson: accepted (acc_step=%.2e, drs_step=%.2e)\n",
-                   acc_step, drs_step);
-          }
-        } else {
-          ++anderson_rejects;
-          if (anderson_rejects >= kAndersonRejectReset) {
-            anderson->Reset();
-            anderson_rejects = 0;
-          }
-          if (verbose > 3) {
-            Printf("HSDE Anderson: rejected (acc_step=%.2e > %.1f*drs_step=%.2e)\n",
-                   acc_step, kAndersonSafety, kAndersonSafety * drs_step);
-          }
-        }
-      }
-    }
 
     if (k % 10 == 0 || k == max_iter - 1) {
       const T *state = w.data();
@@ -2061,7 +1943,6 @@ PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
       return POGS_ERROR;
     }
   }
-  this->SetUseAnderson(false);
   const bool use_hsde = this->Kx.empty();
   if (use_hsde) {
     PogsObjectiveHsdeScale<T> scale_obj(this->Kx, this->Ky);

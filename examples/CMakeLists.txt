@@ -18,8 +18,8 @@ endfunction()
 # Cone examples that build successfully
 add_pogs_example(test_sdp cpp_cone/test_sdp.cpp)
 
-# Anderson acceleration benchmark (now implemented!)
-add_pogs_example(anderson_benchmark cpp/anderson_benchmark.cpp)
+# Anderson acceleration benchmark - disabled (Anderson removed)
+# add_pogs_example(anderson_benchmark cpp/anderson_benchmark.cpp)
 
 # Excluded examples - to be fixed in Phase 2 modernization:
 # add_pogs_example(run_all cpp/run_all.cpp)  # Needs example libs
