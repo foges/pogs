@@ -12,7 +12,6 @@ option(POGS_BUILD_GPU "Build GPU support" ON)
 option(POGS_BUILD_TESTS "Build tests" ON)
 option(POGS_BUILD_EXAMPLES "Build examples" ON)
 option(POGS_BUILD_PYTHON "Build Python bindings" OFF)
-option(POGS_USE_SCIPY_OPENBLAS "Use scipy-openblas32 for BLAS (Windows)" OFF)
 
 # Output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -20,63 +19,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Find dependencies
-# On Windows, optionally use scipy-openblas32 for MSVC-compatible BLAS
-if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
-  # Find scipy-openblas32 via Python
-  find_package(Python COMPONENTS Interpreter REQUIRED)
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
-    OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE SCIPY_OPENBLAS_RESULT
-  )
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_include_dir())"
-    OUTPUT_VARIABLE SCIPY_OPENBLAS_INCLUDE_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  # Get the library name (returns just the name, not path)
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_library())"
-    OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_NAME
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  if(SCIPY_OPENBLAS_RESULT EQUAL 0)
-    message(STATUS "Found scipy-openblas32:")
-    message(STATUS "  Library dir: ${SCIPY_OPENBLAS_LIB_DIR}")
-    message(STATUS "  Include dir: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
-    message(STATUS "  Library name: ${SCIPY_OPENBLAS_LIB_NAME}")
-
-    # The .lib file is in the lib directory with the library name
-    set(SCIPY_OPENBLAS_LIB_FILE "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.lib")
-
-    message(STATUS "  Lib file: ${SCIPY_OPENBLAS_LIB_FILE}")
-
-    # Use scipy-openblas32's CMake config by adding to CMAKE_PREFIX_PATH
-    set(CMAKE_PREFIX_PATH "${SCIPY_OPENBLAS_LIB_DIR}/cmake" ${CMAKE_PREFIX_PATH})
-    find_package(OpenBLAS REQUIRED CONFIG)
-    message(STATUS "  Found OpenBLAS via CMake config")
-    message(STATUS "  OpenBLAS_LIBRARIES: ${OpenBLAS_LIBRARIES}")
-    message(STATUS "  OpenBLAS_INCLUDE_DIRS: ${OpenBLAS_INCLUDE_DIRS}")
-    message(STATUS "  OpenBLAS_LIB: ${OpenBLAS_LIB}")
-
-    # Get library path from scipy-openblas32 CMake config
-    if(OpenBLAS_LIBRARIES)
-      set(POGS_BLAS_LIBRARIES "${OpenBLAS_LIBRARIES}" CACHE STRING "BLAS library path" FORCE)
-      set(POGS_BLAS_INCLUDE_DIRS "${OpenBLAS_INCLUDE_DIRS}" CACHE STRING "BLAS include path" FORCE)
-      message(STATUS "  Using OpenBLAS lib: ${POGS_BLAS_LIBRARIES}")
-      set(BLAS_FOUND TRUE)
-      set(LAPACK_FOUND TRUE)
-    else()
-      message(FATAL_ERROR "OpenBLAS not properly configured: no libraries found")
-    endif()
-  else()
-    message(FATAL_ERROR "scipy-openblas32 not found. Install with: pip install scipy-openblas32")
-  endif()
-else()
-  find_package(BLAS REQUIRED)
-  find_package(LAPACK REQUIRED)
-endif()
+# Note: Windows builds are not currently supported due to scipy-openblas32 linking issues
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
 
 # GPU support
 if(POGS_BUILD_GPU)

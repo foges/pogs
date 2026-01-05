@@ -42,18 +42,11 @@ target_include_directories(pogs_cpu
 )
 
 # Link dependencies for CPU library
-if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32
-    message(STATUS "POGS CPU: Linking with ${POGS_BLAS_LIBRARIES}")
-    # Set LINK_FLAGS property directly - this is the most reliable way
-    set_property(TARGET pogs_cpu APPEND_STRING PROPERTY LINK_FLAGS " \"${POGS_BLAS_LIBRARIES}\"")
-    if(POGS_BLAS_INCLUDE_DIRS)
-        target_include_directories(pogs_cpu PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
-    endif()
-else()
-    # On Linux/macOS, use standard BLAS/LAPACK targets
-    target_link_libraries(pogs_cpu PUBLIC BLAS::BLAS LAPACK::LAPACK)
-endif()
+target_link_libraries(pogs_cpu
+    PUBLIC
+        BLAS::BLAS
+        LAPACK::LAPACK
+)
 
 # Platform-specific libraries
 if(APPLE)
@@ -87,19 +80,11 @@ target_include_directories(pogs_cpu_shared
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Link dependencies for shared library
-if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32
-    message(STATUS "POGS CPU Shared: Linking with ${POGS_BLAS_LIBRARIES}")
-    # Set LINK_FLAGS property directly for shared library
-    set_property(TARGET pogs_cpu_shared APPEND_STRING PROPERTY LINK_FLAGS " \"${POGS_BLAS_LIBRARIES}\"")
-    if(POGS_BLAS_INCLUDE_DIRS)
-        target_include_directories(pogs_cpu_shared PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
-    endif()
-else()
-    # On Linux/macOS, use standard BLAS/LAPACK targets
-    target_link_libraries(pogs_cpu_shared PUBLIC BLAS::BLAS LAPACK::LAPACK)
-endif()
+target_link_libraries(pogs_cpu_shared
+    PUBLIC
+        BLAS::BLAS
+        LAPACK::LAPACK
+)
 
 if(APPLE)
     if(ACCELERATE_LIBRARY)
