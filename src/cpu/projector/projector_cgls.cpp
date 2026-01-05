@@ -14,7 +14,7 @@ namespace pogs {
 
 namespace {
 
-int kMaxIter = 100;
+int kMaxIter = 500;
 bool kCglsQuiet = true;
 
 // CGLS Gemv struct for matrix multiplication.
@@ -56,8 +56,12 @@ int ProjectorCgls<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
   if (!this->_done_init || s < static_cast<T>(0.))
     return 1;
 
-  // Set initial x and y.
-  memset(x, 0, _A.Cols() * sizeof(T));
+  // Use x as an initial guess for the projected x. Convert to delta x.
+  gsl::vector<T> x_vec = gsl::vector_view_array(x, _A.Cols());
+  const gsl::vector<T> x0_vec = gsl::vector_view_array(x0, _A.Cols());
+  gsl::blas_axpy(static_cast<T>(-1.), &x0_vec, &x_vec);
+
+  // Set initial y.
   memcpy(y, y0, _A.Rows() * sizeof(T));
 
   // y := y0 - Ax0;
@@ -68,14 +72,14 @@ int ProjectorCgls<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
       static_cast<cgls::INT>(_A.Cols()), y, x, s, tol, kMaxIter, kCglsQuiet);
  
   // x := x + x0
-  gsl::vector<T> x_vec = gsl::vector_view_array(x, _A.Cols());
-  const gsl::vector<T> x0_vec = gsl::vector_view_array(x0, _A.Cols());
   gsl::blas_axpy(static_cast<T>(1.), &x0_vec, &x_vec);
 
   // y := Ax
   _A.Mul('n', static_cast<T>(1.), x, static_cast<T>(0.), y);
 
 #ifdef DEBUG
+  // TODO
+  T kTol = 1e-9;
   // Verify that projection was successful.
   CheckProjection(&_A, x0, y0, x, y, s, static_cast<T>(1e1 * kTol));
 #endif
@@ -94,4 +98,3 @@ template class ProjectorCgls<float, MatrixSparse<float> >;
 #endif
 
 }  // namespace pogs
-

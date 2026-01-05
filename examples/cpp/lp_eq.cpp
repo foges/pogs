@@ -1,7 +1,6 @@
 #include <random>
 #include <vector>
 
-#include "matrix/matrix_dense.h"
 #include "pogs.h"
 #include "timer.h"
 
@@ -51,7 +50,14 @@ double LpEq(size_t m, size_t n) {
     g.emplace_back(kIndGe0);
 
   double t = timer<double>();
+  pogs_data.SetVerbose(5);
+  pogs_data.SetRelTol(1e-6);
+  pogs_data.SetAbsTol(1e-6);
   pogs_data.Solve(f, g);
+
+//  for (int i = 0; i < n; ++i)
+//    printf("%e, ", pogs_data.GetX()[i]);
+//  printf("\n");
 
   return timer<double>() - t;
 }

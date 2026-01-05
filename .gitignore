@@ -1,0 +1,40 @@
+# Build artifacts
+*.o
+*.a
+*.dSYM/
+build/
+src/build/
+
+# Executables
+examples/cpp/run
+examples/cpp/*_test
+examples/cpp_cone/run
+examples/cpp_cone/test_*
+!examples/cpp_cone/test_*.c
+!examples/cpp_cone/test_*.cpp
+anderson_benchmark
+test_anderson
+test_qr
+
+# Planning and development
+_claude/
+
+# Benchmark results
+python/benchmarks/results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

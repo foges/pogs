@@ -97,8 +97,10 @@ static const char* cusparseGetErrorString(cusparseStatus_t error) {
   }
 }
 
-inline uint calc_grid_dim(size_t size, uint block_size) {
-  return std::min<uint>((size + block_size - 1u) / block_size, kMaxGridSize);
+inline size_t calc_grid_dim(size_t size, size_t block_size) {
+  if (block_size > 0)
+    return std::min((size + block_size - 1) / block_size, kMaxGridSize);
+  return 0;
 }
 
 // From thrust examples.
@@ -111,7 +113,7 @@ class strided_range {
     diff_t stride;
     StrideF(diff_t stride) : stride(stride) { }
     __host__ __device__
-    diff_t operator()(const diff_t& i) const { 
+    diff_t operator()(const diff_t& i) const {
       return stride * i;
     }
   };
@@ -124,7 +126,7 @@ class strided_range {
   // Construct strided_range for the range [first,last).
   strided_range(It first, It last, diff_t stride)
       : first(first), last(last), stride(stride) { }
- 
+
   strided_iterator_t begin() const {
     return PermutationIt(first, TransformIt(CountingIt(0), StrideF(stride)));
   }
@@ -132,7 +134,7 @@ class strided_range {
   strided_iterator_t end() const {
     return begin() + ((last - first) + (stride - 1)) / stride;
   }
-  
+
  protected:
   It first;
   It last;

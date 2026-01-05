@@ -16,7 +16,7 @@ namespace pogs {
 namespace {
 
 // File scoped constants.
-const NormTypes kNormEquilibrate = kNorm2; 
+const NormTypes kNormEquilibrate = kNorm2;
 const NormTypes kNormNormalize   = kNormFro;
 
 template<typename T>
@@ -82,7 +82,7 @@ MatrixDense<T>::~MatrixDense() {
     DEBUG_CUDA_CHECK_ERR();
   }
 }
-      
+
 template <typename T>
 int MatrixDense<T>::Init() {
   DEBUG_EXPECT(!this->_done_init);
@@ -129,7 +129,9 @@ int MatrixDense<T>::Mul(char trans, T alpha, const T *x, T beta, T *y) const {
 }
 
 template <typename T>
-int MatrixDense<T>::Equil(T *d, T *e) {
+int MatrixDense<T>::Equil(T *d, T *e,
+                          const std::function<void(T*)> &constrain_d,
+                          const std::function<void(T*)> &constrain_e) {
   DEBUG_ASSERT(this->_done_init);
   if (!this->_done_init)
     return 1;
@@ -150,25 +152,28 @@ int MatrixDense<T>::Equil(T *d, T *e) {
 
   // Fill sign bits, assigning each thread a multiple of 8 elements.
   size_t num_chars = num_el / 8;
-  size_t grid_size = cml::calc_grid_dim(num_chars, cml::kBlockSize);
-  if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-    __SetSign<<<grid_size, cml::kBlockSize>>>(_data, sign, num_chars,
-        SquareF<T>());
-  } else {
-    __SetSign<<<grid_size, cml::kBlockSize>>>(_data, sign, num_chars,
-        AbsF<T>());
+  size_t block_size = std::min(cml::kBlockSize, num_chars);
+  size_t grid_size = cml::calc_grid_dim(num_chars, block_size);
+  if (num_chars > 0) {
+    if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
+      __SetSign<<<grid_size, block_size>>>(_data, sign, num_chars,
+          SquareF<T>());
+    } else {
+      __SetSign<<<grid_size, block_size>>>(_data, sign, num_chars,
+          AbsF<T>());
+    }
+    cudaDeviceSynchronize();
+    CUDA_CHECK_ERR();
   }
-  cudaDeviceSynchronize();
-  CUDA_CHECK_ERR();
 
   // If numel(A) is not a multiple of 8, then we need to set the last couple
-  // of sign bits too. 
+  // of sign bits too.
   if (num_el > num_chars * 8) {
     if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-      __SetSignSingle<<<1, 1>>>(_data + num_chars * 8, sign + num_chars, 
+      __SetSignSingle<<<1, 1>>>(_data + num_chars * 8, sign + num_chars,
           num_el - num_chars * 8, SquareF<T>());
     } else {
-      __SetSignSingle<<<1, 1>>>(_data + num_chars * 8, sign + num_chars, 
+      __SetSignSingle<<<1, 1>>>(_data + num_chars * 8, sign + num_chars,
           num_el - num_chars * 8, AbsF<T>());
     }
     cudaDeviceSynchronize();
@@ -176,20 +181,22 @@ int MatrixDense<T>::Equil(T *d, T *e) {
   }
 
   // Perform Sinkhorn-Knopp equilibration.
-  SinkhornKnopp(this, d, e);
+  SinkhornKnopp(this, d, e, constrain_d, constrain_e);
   cudaDeviceSynchronize();
 
   // Transform A = sign(A) .* sqrt(A) if 2-norm equilibration was performed,
   // or A = sign(A) .* A if the 1-norm was equilibrated.
-  if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-    __UnSetSign<<<grid_size, cml::kBlockSize>>>(_data, sign, num_chars,
-        SqrtF<T>());
-  } else {
-    __UnSetSign<<<grid_size, cml::kBlockSize>>>(_data, sign, num_chars,
-        IdentityF<T>());
+  if (num_chars > 0) {
+    if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
+      __UnSetSign<<<grid_size, block_size>>>(_data, sign, num_chars,
+          SqrtF<T>());
+    } else {
+      __UnSetSign<<<grid_size, block_size>>>(_data, sign, num_chars,
+          IdentityF<T>());
+    }
+    cudaDeviceSynchronize();
+    CUDA_CHECK_ERR();
   }
-  cudaDeviceSynchronize();
-  CUDA_CHECK_ERR();
 
   // Deal with last few entries if num_el is not a multiple of 8.
   if (num_el > num_chars * 8) {
@@ -290,12 +297,12 @@ void __global__ __MultCol(size_t m, size_t n, const T *d, const T *e, T *data) {
 template <typename T>
 void MultDiag(const T *d, const T *e, size_t m, size_t n,
               typename MatrixDense<T>::Ord ord, T *data) {
+  size_t block_size = std::min(cml::kBlockSize, m * n);
+  size_t grid_dim_row = cml::calc_grid_dim(m * n, block_size);
   if (ord == MatrixDense<T>::ROW) {
-    size_t grid_dim_row = cml::calc_grid_dim(m * n, cml::kBlockSize);
-    __MultRow<<<grid_dim_row, cml::kBlockSize>>>(m, n, d, e, data);
+    __MultRow<<<grid_dim_row, block_size>>>(m, n, d, e, data);
   } else {
-    size_t grid_dim_row = cml::calc_grid_dim(m * n, cml::kBlockSize);
-    __MultCol<<<grid_dim_row, cml::kBlockSize>>>(m, n, d, e, data);
+    __MultCol<<<grid_dim_row, block_size>>>(m, n, d, e, data);
   }
 }
 

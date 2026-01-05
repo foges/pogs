@@ -1,0 +1,39 @@
+/* Custom styles for POGS documentation */
+
+:root {
+    --pogs-primary: #3f51b5;
+    --pogs-accent: #536dfe;
+}
+
+/* Code block improvements */
+.highlight {
+    border-radius: 4px;
+}
+
+/* Grid cards for landing page */
+.md-typeset .grid.cards > ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Admonition customization */
+.md-typeset .admonition {
+    border-radius: 4px;
+}
+
+/* Math rendering improvements */
+.arithmatex {
+    overflow-x: auto;
+}
+
+/* Improve table styling */
+.md-typeset table:not([class]) {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Code inline */
+.md-typeset code {
+    border-radius: 3px;
+}

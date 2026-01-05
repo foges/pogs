@@ -2,6 +2,7 @@
 #define EQUIL_HELPER_H_
 
 #include <algorithm>
+#include <functional>
 #include <cmath>
 
 #include "gsl/gsl_blas.h"
@@ -11,14 +12,13 @@
 #include "util.h"
 
 namespace pogs {
-namespace {
 
 // Different norm types.
 enum NormTypes { kNorm1, kNorm2, kNormFro };
 
 // TODO: Figure out a better value for this constant
 const double kSinkhornConst        = 1e-4;
-const double kNormEstTol           = 1e-3;
+const double kNormEstTol           = 1e-4;
 const unsigned int kEquilIter      = 50u;
 const unsigned int kNormEstMaxIter = 50u;
 
@@ -26,36 +26,37 @@ const unsigned int kNormEstMaxIter = 50u;
 ///////////////////////// Helper Functions /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// Modern C++20: No need for std::unary_function (removed in C++17)
 template <typename T>
-struct ReciprF : std::unary_function<T, T> {
+struct ReciprF {
   T alpha;
   ReciprF() : alpha(1) { }
   ReciprF(T alpha) : alpha(alpha) { }
-  T operator()(T x) { return alpha / x; }
+  T operator()(T x) const { return alpha / x; }
 };
 
 template <typename T>
-struct AbsF : std::unary_function<T, T> {
-  inline double Abs(double x) { return fabs(x); }
-  inline float Abs(float x) { return fabsf(x); }
-  T operator()(T x) { return Abs(x); }
+struct AbsF {
+  inline double Abs(double x) const { return fabs(x); }
+  inline float Abs(float x) const { return fabsf(x); }
+  T operator()(T x) const { return Abs(x); }
 };
 
 template <typename T>
-struct IdentityF : std::unary_function<T, T> {
-  T operator()(T x) { return x; }
+struct IdentityF {
+  T operator()(T x) const { return x; }
 };
 
 template <typename T>
-struct SquareF: std::unary_function<T, T> {
-  T operator()(T x) { return x * x; }
+struct SquareF {
+  T operator()(T x) const { return x * x; }
 };
 
 template <typename T>
-struct SqrtF : std::unary_function<T, T> {
-  inline double Sqrt(double x) { return sqrt(x); }
-  inline float Sqrt(float x) { return sqrtf(x); }
-  T operator()(T x) { return Sqrt(x); }
+struct SqrtF {
+  inline double Sqrt(double x) const { return sqrt(x); }
+  inline float Sqrt(float x) const { return sqrtf(x); }
+  T operator()(T x) const { return Sqrt(x); }
 };
 
 template <typename T, typename F>
@@ -110,8 +111,8 @@ T Norm2Est(const Matrix<T> *A) {
   T kTol = static_cast<T>(kNormEstTol);
 
   T norm_est = 0, norm_est_last;
-  gsl::vector<T> x = gsl::vector_alloc<T>(A->Cols());
-  gsl::vector<T> Sx = gsl::vector_alloc<T>(A->Rows());
+  gsl::vector<T> x = gsl::vector_calloc<T>(A->Cols());
+  gsl::vector<T> Sx = gsl::vector_calloc<T>(A->Rows());
   gsl::rand(x.data, x.size);
 
   unsigned int i = 0;
@@ -137,28 +138,31 @@ T Norm2Est(const Matrix<T> *A) {
 ///////////////////////// Modified Sinkhorn Knopp //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-void SinkhornKnopp(const Matrix<T> *A, T *d, T *e) {
+void SinkhornKnopp(const Matrix<T> *A, T *d, T *e,
+                   const std::function<void(T*)> &constrain_d,
+                   const std::function<void(T*)> &constrain_e) {
   gsl::vector<T> d_vec = gsl::vector_view_array<T>(d, A->Rows());
   gsl::vector<T> e_vec = gsl::vector_view_array<T>(e, A->Cols());
-  gsl::vector_set_all(&d_vec, static_cast<T>(1.));
-  gsl::vector_set_all(&e_vec, static_cast<T>(1.));
+  gsl::vector_set_all(&d_vec, static_cast<T>(1));
+  gsl::vector_set_all(&e_vec, static_cast<T>(1));
 
   for (unsigned int k = 0; k < kEquilIter; ++k) {
     // e := 1 ./ (A' * d).
-    A->Mul('t', static_cast<T>(1.), d, static_cast<T>(0.), e);
+    A->Mul('t', static_cast<T>(1), d, static_cast<T>(0), e);
     gsl::vector_add_constant(&e_vec,
         static_cast<T>(kSinkhornConst) * (A->Rows() + A->Cols()) / A->Rows());
+    constrain_e(e);
     std::transform(e, e + e_vec.size, e, ReciprF<T>(A->Rows()));
 
     // d := 1 ./ (A' * e).
-    A->Mul('n', static_cast<T>(1.), e, static_cast<T>(0.), d);
+    A->Mul('n', static_cast<T>(1), e, static_cast<T>(0), d);
     gsl::vector_add_constant(&d_vec,
         static_cast<T>(kSinkhornConst) * (A->Rows() + A->Cols()) / A->Cols());
+    constrain_d(d);
     std::transform(d, d + d_vec.size, d, ReciprF<T>(A->Cols()));
   }
 }
 
-}  // namespace
 }  // namespace pogs
 
 #endif  // EQUIL_HELPER_H_

@@ -1,6 +1,9 @@
 #ifndef MATRIX_MATRIX_DENSE_H_
 #define MATRIX_MATRIX_DENSE_H_
 
+#include <functional>
+#include <memory>
+
 #include "matrix.h"
 
 namespace pogs {
@@ -11,8 +14,8 @@ class MatrixDense : public Matrix<T> {
   enum Ord {ROW, COL};
 
  private:
-  // TODO: This should be shared cpu/gpu pointer?
-  T *_data;
+  // Owned copy of the matrix data
+  std::unique_ptr<T[]> _data;
 
   Ord _ord;
 
@@ -29,13 +32,15 @@ class MatrixDense : public Matrix<T> {
   int Init();
 
   // Method to equilibrate.
-  int Equil(T *d, T *e);
+  int Equil(T *d, T *e,
+            const std::function<void(T*)> &constrain_d,
+            const std::function<void(T*)> &constrain_e);
 
   // Method to multiply by A and A^T.
   int Mul(char trans, T alpha, const T *x, T beta, T *y) const;
 
   // Getters
-  const T* Data() const { return _data; }
+  const T* Data() const { return _data.get(); }
   Ord Order() const { return _ord; }
 };
 

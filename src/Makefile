@@ -2,15 +2,28 @@
 
 # Bulid directory
 OBJDIR=build
-
+DEBUG=#-DDEBUG
 
 # C++ Flags
 CXX=g++
-CXXFLAGS=$(IFLAGS) -g -O3 -Wall -std=c++11 -fPIC #-DDEBUG # -Wconversion
+CXXFLAGS=$(IFLAGS) -g  -Wall -std=c++14 -fPIC # -Wconversion
+
+# Shared library settings
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SHARED_EXT=dylib
+	SHARED_LDFLAGS=-dynamiclib -Wl,-install_name,@rpath/libpogs_cpu.$(SHARED_EXT)
+	SHARED_SYS_LIBS=-framework Accelerate
+else
+	SHARED_EXT=so
+	SHARED_LDFLAGS=-shared -Wl,-soname,libpogs_cpu.$(SHARED_EXT)
+	SHARED_SYS_LIBS=-lblas -llapack
+endif
+SHARED_LIB=$(OBJDIR)/libpogs_cpu.$(SHARED_EXT)
 
 # CUDA Flags
 CUXX=nvcc
-CUFLAGS=$(IFLAGS) -arch=sm_20 -Xcompiler -fPIC #-DDEBUG
+CUFLAGS=$(IFLAGS) -std=c++11 -gencode=arch=compute_50,code=sm_50 -Xcompiler -fPIC
 
 
 # POGS header files.
@@ -46,6 +59,8 @@ CPU_MTX_OBJ=\
 CPU_PRJ_OBJ=\
 	$(OBJDIR)/cpu/projector/projector_cgls.o \
 	$(OBJDIR)/cpu/projector/projector_direct_dense.o
+CPU_C_OBJ=\
+	$(OBJDIR)/cpu/interface_c/pogs_c.o
 CPU_OBJ=$(OBJDIR)/cpu/pogs.o
 
 # GPU Specific headers and object files.
@@ -75,12 +90,13 @@ GPU_OBJ=$(OBJDIR)/gpu/pogs.o
 
 
 # Set vpath for build
-VPATH=cpu cpu/matrix cpu/projector gpu gpu/matrix gpu/projector
+VPATH=cpu cpu/matrix cpu/projector cpu/interface_c interface_c gpu gpu/matrix gpu/projector
 
 
 # Build all
-cpu: $(CPU_OBJ) $(CPU_MTX_OBJ) $(CPU_PRJ_OBJ)
+cpu: $(CPU_OBJ) $(CPU_MTX_OBJ) $(CPU_PRJ_OBJ) $(CPU_C_OBJ)
 	ar cr $(OBJDIR)/pogs.a $^
+	$(CXX) $(SHARED_LDFLAGS) -o $(SHARED_LIB) $^ $(SHARED_SYS_LIBS)
 
 gpu: $(OBJDIR)/pogs_link.o $(GPU_OBJ) $(GPU_MTX_OBJ) $(GPU_PRJ_OBJ)
 	ar cr $(OBJDIR)/pogs.a $^
@@ -92,12 +108,15 @@ $(OBJDIR):
 
 # Directories CPU
 $(OBJDIR)/cpu: $(OBJDIR)
-	mkdir -p $@ 
+	mkdir -p $@
 
 $(OBJDIR)/cpu/matrix: $(OBJDIR)/cpu
-	mkdir -p $@ 
+	mkdir -p $@
 
 $(OBJDIR)/cpu/projector: $(OBJDIR)/cpu
+	mkdir -p $@
+
+$(OBJDIR)/cpu/interface_c: $(OBJDIR)/cpu
 	mkdir -p $@ 
 
 # Directories GPU
@@ -124,6 +143,9 @@ $(OBJDIR)/cpu/projector/%.o: %.cpp $(CPU_HDR) | $(OBJDIR)/cpu/projector
 $(OBJDIR)/cpu/%.o: %.cpp $(CPU_HDR) | $(OBJDIR)/cpu
 	$(CXX) -Iinclude -Icpu/include $< $(CXXFLAGS) $(IFLAGS) -c -o $@
 
+$(OBJDIR)/cpu/interface_c/%.o: interface_c/%.cpp | $(OBJDIR)/cpu/interface_c
+	$(CXX) -Iinclude -Icpu/include -Iinterface_c $< $(CXXFLAGS) $(IFLAGS) -c -o $@
+
 # POGS GPU objects
 $(OBJDIR)/pogs_link.o: $(GPU_OBJ) $(GPU_MTX_OBJ) $(GPU_PRJ_OBJ) | $(OBJDIR)
 	$(CUXX) $(CUFLAGS) $^ -dlink -o $@ 
@@ -142,4 +164,3 @@ $(OBJDIR)/gpu/%.o: %.cu $(GPU_HDR) | $(OBJDIR)/gpu
 
 clean:
 	rm -rf pogs.a build/ *.dSYM
-
