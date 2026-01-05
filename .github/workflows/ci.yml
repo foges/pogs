@@ -98,7 +98,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        # Windows disabled: OpenBLAS pre-built binaries are MinGW, not MSVC
+        # TODO: Add Windows with MSYS2/MinGW toolchain like SCS does
+        os: [ubuntu-22.04, macos-14]
 
     steps:
       - uses: actions/checkout@v4
