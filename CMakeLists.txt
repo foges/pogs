@@ -35,22 +35,41 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
     OUTPUT_VARIABLE SCIPY_OPENBLAS_INCLUDE_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
+  # Get the library name (returns just the name, not path)
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_library())"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_NAME
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  # List files in lib directory for debugging
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32, os; d=scipy_openblas32.get_lib_dir(); print('Files in', d, ':', os.listdir(d) if os.path.isdir(d) else 'NOT A DIR')"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_FILES
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
   if(SCIPY_OPENBLAS_RESULT EQUAL 0)
     message(STATUS "Found scipy-openblas32:")
     message(STATUS "  Library dir: ${SCIPY_OPENBLAS_LIB_DIR}")
     message(STATUS "  Include dir: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
+    message(STATUS "  Library name: ${SCIPY_OPENBLAS_LIB_NAME}")
+    message(STATUS "  ${SCIPY_OPENBLAS_FILES}")
+
+    # The .lib file is in the lib directory with the library name
+    set(SCIPY_OPENBLAS_LIB_FILE "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.lib")
+    set(SCIPY_OPENBLAS_DLL_FILE "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.dll")
+
     # Create BLAS::BLAS imported target for scipy-openblas
     add_library(BLAS::BLAS SHARED IMPORTED)
     set_target_properties(BLAS::BLAS PROPERTIES
-      IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas64_.dll"
-      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib"
+      IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
+      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
       INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
     )
     # Create LAPACK::LAPACK imported target (same library provides both)
     add_library(LAPACK::LAPACK SHARED IMPORTED)
     set_target_properties(LAPACK::LAPACK PROPERTIES
-      IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas64_.dll"
-      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib"
+      IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
+      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
       INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
     )
     set(BLAS_FOUND TRUE)
