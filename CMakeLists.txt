@@ -69,17 +69,16 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
       endif()
       message(STATUS "  Using OpenBLAS lib: ${OPENBLAS_LIB_TO_USE}")
 
-      # Create proper imported targets
-      add_library(BLAS::BLAS SHARED IMPORTED GLOBAL)
+      # Create imported targets using UNKNOWN type (simplest for just linking)
+      # Use IMPORTED_LOCATION for the .lib file (import library)
+      add_library(BLAS::BLAS UNKNOWN IMPORTED GLOBAL)
       set_target_properties(BLAS::BLAS PROPERTIES
-        IMPORTED_IMPLIB "${OPENBLAS_LIB_TO_USE}"
-        IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.dll"
+        IMPORTED_LOCATION "${OPENBLAS_LIB_TO_USE}"
         INTERFACE_INCLUDE_DIRECTORIES "${OpenBLAS_INCLUDE_DIRS}"
       )
-      add_library(LAPACK::LAPACK SHARED IMPORTED GLOBAL)
+      add_library(LAPACK::LAPACK UNKNOWN IMPORTED GLOBAL)
       set_target_properties(LAPACK::LAPACK PROPERTIES
-        IMPORTED_IMPLIB "${OPENBLAS_LIB_TO_USE}"
-        IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/${SCIPY_OPENBLAS_LIB_NAME}.dll"
+        IMPORTED_LOCATION "${OPENBLAS_LIB_TO_USE}"
         INTERFACE_INCLUDE_DIRECTORIES "${OpenBLAS_INCLUDE_DIRS}"
       )
       set(BLAS_FOUND TRUE)
