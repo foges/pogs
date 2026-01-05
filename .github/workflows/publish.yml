@@ -59,8 +59,14 @@ jobs:
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
-          # Skip auditwheel - our ctypes library links to system BLAS
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
+          # Repair wheel but exclude system BLAS libraries from bundling
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+            auditwheel repair -w {dest_dir} {wheel}
+            --exclude libopenblas.so.0
+            --exclude liblapack.so.3
+            --exclude libblas.so.3
+            --exclude libgfortran.so.5
+            --exclude libquadmath.so.0
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib"
           # Windows: bundle DLLs into wheel

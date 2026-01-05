@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pogs"
-version = "0.4.1"
+version = "0.4.2"
 description = "Proximal Operator Graph Solver - High-performance convex optimization using ADMM"
 readme = "README.md"
 license = {text = "Apache-2.0"}

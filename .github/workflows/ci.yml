@@ -132,7 +132,13 @@ jobs:
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+            auditwheel repair -w {dest_dir} {wheel}
+            --exclude libopenblas.so.0
+            --exclude liblapack.so.3
+            --exclude libblas.so.3
+            --exclude libgfortran.so.5
+            --exclude libquadmath.so.0
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib"
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/bin -w {dest_dir} {wheel}"
