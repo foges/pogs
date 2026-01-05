@@ -3,13 +3,21 @@ CVXPY integration for POGS.
 
 Provides:
 - pogs_solve(): Solve CVXPY problems with automatic graph-form detection
-- POGS solver registration for prob.solve(solver='POGS')
+- register(): Register POGS with CVXPY so problem.solve(method='POGS') works
+
+Usage:
+    import cvxpy as cp
+    from pogs.cvxpy import register
+
+    register()  # One-time registration
+
+    problem = cp.Problem(...)
+    problem.solve(method='POGS')  # Uses POGS!
 """
 
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -18,10 +26,6 @@ from pogs.graph import (
     solve_nonneg_ls,
     solve_ridge,
 )
-
-
-if TYPE_CHECKING:
-    pass
 
 
 def pogs_solve(problem, verbose: bool = False, **solver_opts) -> float:
@@ -429,3 +433,28 @@ def _solve_graph_form_detected(detection, solver_opts):
 
     result["solve_time"] = time.perf_counter() - t0
     return result
+
+
+def register():
+    """
+    Register POGS as a CVXPY solve method.
+
+    After calling this, you can use problem.solve(method='POGS').
+
+    Example
+    -------
+    >>> import cvxpy as cp
+    >>> from pogs.cvxpy import register
+    >>> register()
+    >>> x = cp.Variable(100)
+    >>> prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm1(x)))
+    >>> prob.solve(method="POGS")
+    """
+    try:
+        import cvxpy as cp
+
+        cp.Problem.register_solve("POGS", pogs_solve)
+    except ImportError as e:
+        raise ImportError(
+            "CVXPY is required for register(). Install with: pip install cvxpy"
+        ) from e

@@ -23,6 +23,8 @@ from __future__ import annotations
 __version__ = "0.4.2"
 
 # Graph-form solvers (main API)
+# CVXPY integration (cvxpy checked at runtime, not import time)
+from pogs.cvxpy import pogs_solve, register
 from pogs.graph import (
     solve_elastic_net,
     solve_huber,
@@ -34,17 +36,11 @@ from pogs.graph import (
 )
 
 
-# CVXPY integration (optional, only if cvxpy is installed)
-try:
-    from pogs.cvxpy import pogs_solve
-except ImportError:
-    pogs_solve = None  # type: ignore[assignment,misc]
-
-
 __all__ = [
     "__version__",
     # CVXPY integration
     "pogs_solve",
+    "register",
     # Graph-form solvers
     "solve_elastic_net",
     "solve_huber",
