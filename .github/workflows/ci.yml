@@ -123,8 +123,10 @@ jobs:
             dnf install -y epel-release &&
             dnf install -y openblas-devel lapack-devel
           CIBW_BEFORE_ALL_WINDOWS: >
-            curl -L -o C:\openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
-            7z x C:\openblas.zip -oC:\OpenBLAS -y
+            curl -L -o openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
+            7z x openblas.zip -oC:\OpenBLAS -y &&
+            dir C:\OpenBLAS &&
+            dir C:\OpenBLAS\OpenBLAS-0.3.28-x64\lib
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
