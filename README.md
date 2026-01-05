@@ -106,28 +106,23 @@ result['optval']      # Optimal objective value
 
 ## Using with CVXPY
 
-For CVXPY problems, import pogs to register it as a solver:
+Use `pogs_solve()` to solve CVXPY problems - it auto-detects graph-form patterns:
 
 ```python
 import cvxpy as cp
 import numpy as np
-import pogs  # Registers POGS solver with CVXPY
+from pogs import pogs_solve
 
 A = np.random.randn(100, 50)
 b = np.random.randn(100)
 
 x = cp.Variable(50)
 prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
-prob.solve(solver='POGS')
-```
 
-Or use `pogs_solve()` for automatic graph-form detection (faster):
-
-```python
-from pogs import pogs_solve
-
-# Detects Lasso pattern and uses fast graph-form solver
+# Detects Lasso pattern, uses fast graph-form solver
 pogs_solve(prob)
+
+print(x.value)  # Solution is set on the CVXPY variable
 ```
 
 ## C++ Library
