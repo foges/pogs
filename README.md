@@ -53,6 +53,21 @@ See the [full list](https://foges.github.io/pogs/api/proximal/) in the documenta
 - **Well-Documented**: Full documentation with examples at [foges.github.io/pogs](https://foges.github.io/pogs/)
 - **Multiple Interfaces**: C++, C, and Python/CVXPY bindings
 
+## When to Use POGS
+
+**POGS excels at:**
+- Medium to large-scale problems (100s to millions of variables)
+- Problems with separable structure in the objective
+- Machine learning applications (Lasso, logistic regression, SVM)
+- When you need warm starting for similar problems
+- Problems where ADMM's parallelization benefits apply
+
+**Consider alternatives for:**
+- Very small problems (< 100 variables) where direct methods are faster
+- Problems requiring high precision (< 1e-8) - POGS is a first-order method
+- Highly non-separable objectives
+- Problems where interior-point accuracy is critical
+
 ## Quick Start
 
 ### Installation
@@ -99,6 +114,20 @@ for (size_t j = 0; j < n; ++j) {
 
 solver.Solve(f, g);
 const double* x = solver.GetX();
+```
+
+**C++ (Cone Form - LP)**:
+```cpp
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
+
+// Problem: min c'x s.t. Ax = b, x >= 0
+pogs::MatrixDense<double> A('r', m, n, A_data);
+std::vector<ConeConstraint> Kx = {{kConeNonNeg, {0, 1, ..., n-1}}};
+std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, ..., m-1}}};
+
+pogs::PogsDirectCone<double, pogs::MatrixDense<double>> solver(A, Kx, Ky);
+solver.Solve(b, c);
 ```
 
 **Python/CVXPY**:
@@ -178,10 +207,13 @@ See the [Examples](https://foges.github.io/pogs/examples/) for detailed problem 
 
 Version 0.4 represents a major modernization of the POGS codebase:
 
+- **Cone Form Support**: Native support for LP, SOCP, and SDP problems via cone constraints
+- **Anderson Acceleration**: Optional acceleration for faster convergence (up to 2x speedup)
 - **C++20**: Modern C++ features including smart pointers, RAII, concepts
 - **CMake Build System**: Replaced Makefiles with modern CMake
 - **Comprehensive Documentation**: New MkDocs Material site with search
-- **Test Suite**: Catch2-based testing framework
+- **Test Suite**: Catch2-based testing framework with 85+ assertions
+- **C Interface**: Complete C API for cone form problems
 - **Code Quality**: Eliminated code duplication, improved maintainability
 - **MATLAB Removal**: MATLAB interface removed (use Python/CVXPY instead)
 
