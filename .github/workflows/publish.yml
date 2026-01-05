@@ -18,8 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13, macos-14]
-        # Windows excluded for now - requires complex BLAS/LAPACK setup
+        os: [ubuntu-22.04, macos-13, macos-14, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -40,14 +39,22 @@ jobs:
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           # Linux: x86_64 and aarch64 via QEMU emulation
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
-          # Linux: install OpenBLAS/LAPACK (manylinux uses AlmaLinux/CentOS)
+          # Windows: x86_64 only
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          # Linux: install OpenBLAS/LAPACK
           CIBW_BEFORE_ALL_LINUX: >
             yum install -y epel-release &&
             yum install -y openblas-devel lapack-devel
+          # Windows: install OpenBLAS via choco
+          CIBW_BEFORE_ALL_WINDOWS: choco install openblas -y
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          # Windows: bundle DLLs into wheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
