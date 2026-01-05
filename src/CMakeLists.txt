@@ -43,8 +43,12 @@ target_include_directories(pogs_cpu
 
 # Link dependencies for CPU library
 if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32, use direct library path
-    target_link_libraries(pogs_cpu PUBLIC "${POGS_BLAS_LIBRARIES}")
+    # On Windows with scipy-openblas32, use link_directories
+    get_filename_component(POGS_BLAS_LIB_DIR "${POGS_BLAS_LIBRARIES}" DIRECTORY)
+    get_filename_component(POGS_BLAS_LIB_NAME "${POGS_BLAS_LIBRARIES}" NAME)
+    message(STATUS "POGS CPU: Linking with ${POGS_BLAS_LIB_NAME} from ${POGS_BLAS_LIB_DIR}")
+    target_link_directories(pogs_cpu PUBLIC "${POGS_BLAS_LIB_DIR}")
+    target_link_libraries(pogs_cpu PUBLIC "${POGS_BLAS_LIB_NAME}")
     target_include_directories(pogs_cpu PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
 else()
     # On Linux/macOS, use standard BLAS/LAPACK targets
@@ -85,8 +89,10 @@ target_include_directories(pogs_cpu_shared
 
 # Link dependencies for shared library
 if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32, use direct library path
-    target_link_libraries(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIBRARIES}")
+    # On Windows with scipy-openblas32, use link_directories
+    message(STATUS "POGS CPU Shared: Linking with ${POGS_BLAS_LIB_NAME} from ${POGS_BLAS_LIB_DIR}")
+    target_link_directories(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIB_DIR}")
+    target_link_libraries(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIB_NAME}")
     target_include_directories(pogs_cpu_shared PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
 else()
     # On Linux/macOS, use standard BLAS/LAPACK targets
