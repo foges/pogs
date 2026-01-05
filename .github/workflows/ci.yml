@@ -98,7 +98,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        # Windows temporarily disabled - scipy-openblas32 lib path issues
+        os: [ubuntu-22.04, macos-14]
 
     steps:
       - uses: actions/checkout@v4
