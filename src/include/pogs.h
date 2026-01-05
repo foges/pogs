@@ -2,6 +2,7 @@
 #define POGS_H_
 
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -55,7 +56,8 @@ class PogsImplementation {
   // Data
   M _A;
   P _P;
-  T *_de, *_z, *_zt, _rho;
+  std::unique_ptr<T[]> _de, _z, _zt;
+  T _rho;
   bool _done_init;
 
   // Results
@@ -65,7 +67,8 @@ class PogsImplementation {
   int _Init(const PogsObjective<T> *obj);
 
   // Output.
-  T *_x, *_y, *_mu, *_lambda, _optval;
+  std::unique_ptr<T[]> _x, _y, _mu, _lambda;
+  T _optval;
   unsigned int _final_iter;
 
   // Parameters.
@@ -87,10 +90,10 @@ class PogsImplementation {
   ~PogsImplementation();
 
   // Getters for solution variables and parameters.
-  const T*     GetX()           const { return _x; }
-  const T*     GetY()           const { return _y; }
-  const T*     GetLambda()      const { return _lambda; }
-  const T*     GetMu()          const { return _mu; }
+  const T*     GetX()           const { return _x.get(); }
+  const T*     GetY()           const { return _y.get(); }
+  const T*     GetLambda()      const { return _lambda.get(); }
+  const T*     GetMu()          const { return _mu.get(); }
   T            GetOptval()      const { return _optval; }
   unsigned int GetFinalIter()   const { return _final_iter; }
   T            GetRho()         const { return _rho; }
@@ -119,11 +122,11 @@ class PogsImplementation {
   void SetAndersonMem(unsigned int mem)    { _anderson_mem = mem; }
   void SetAndersonStart(unsigned int start){ _anderson_start = start; }
   void SetInitX(const T *x) {
-    memcpy(_x, x, _A.Cols() * sizeof(T));
+    memcpy(_x.get(), x, _A.Cols() * sizeof(T));
     _init_x = true;
   }
   void SetInitLambda(const T *lambda) {
-    memcpy(_lambda, lambda, _A.Rows() * sizeof(T));
+    memcpy(_lambda.get(), lambda, _A.Rows() * sizeof(T));
     _init_lambda = true;
   }
 };

@@ -32,10 +32,14 @@ namespace pogs {
 template <typename T, typename M, typename P>
 PogsImplementation<T, M, P>::PogsImplementation(const M &A)
     : _A(A), _P(_A),
-      _de(0), _z(0), _zt(0),
+      _de(), _z(), _zt(),
       _rho(static_cast<T>(kRhoInit)),
       _done_init(false),
-      _x(0), _y(0), _mu(0), _lambda(0), _optval(static_cast<T>(0.)),
+      _x(std::make_unique<T[]>(_A.Cols())),
+      _y(std::make_unique<T[]>(_A.Rows())),
+      _mu(std::make_unique<T[]>(_A.Cols())),
+      _lambda(std::make_unique<T[]>(_A.Rows())),
+      _optval(static_cast<T>(0.)),
       _final_iter(0),
       _abs_tol(static_cast<T>(kAbsTol)),
       _rel_tol(static_cast<T>(kRelTol)),
@@ -48,10 +52,11 @@ PogsImplementation<T, M, P>::PogsImplementation(const M &A)
       _use_anderson(false),
       _anderson_mem(5u),
       _anderson_start(10u) {
-  _x = new T[_A.Cols()]();
-  _y = new T[_A.Rows()]();
-  _mu = new T[_A.Cols()]();
-  _lambda = new T[_A.Rows()]();
+  // Zero-initialize output arrays
+  std::fill_n(_x.get(), _A.Cols(), T{});
+  std::fill_n(_y.get(), _A.Rows(), T{});
+  std::fill_n(_mu.get(), _A.Cols(), T{});
+  std::fill_n(_lambda.get(), _A.Rows(), T{});
 }
 
 template <typename T, typename M, typename P>
@@ -64,18 +69,15 @@ int PogsImplementation<T, M, P>::_Init(const PogsObjective<T> *objective) {
   size_t m = _A.Rows();
   size_t n = _A.Cols();
 
-  _de = new T[m + n];
-  ASSERT(_de != 0);
-  _z = new T[m + n];
-  ASSERT(_z != 0);
-  _zt = new T[m + n];
-  ASSERT(_zt != 0);
-  memset(_de, 0, (m + n) * sizeof(T));
-  memset(_z, 0, (m + n) * sizeof(T));
-  memset(_zt, 0, (m + n) * sizeof(T));
+  _de = std::make_unique<T[]>(m + n);
+  _z = std::make_unique<T[]>(m + n);
+  _zt = std::make_unique<T[]>(m + n);
+  std::fill_n(_de.get(), m + n, T{});
+  std::fill_n(_z.get(), m + n, T{});
+  std::fill_n(_zt.get(), m + n, T{});
 
   _A.Init();
-  _A.Equil(_de, _de + m,
+  _A.Equil(_de.get(), _de.get() + m,
            std::function<void(T*)>([objective](T *v){
                objective->constrain_d(v);
            }),
@@ -120,9 +122,9 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   size_t n = _A.Cols();
 
   // Allocate data for ADMM variables.
-  gsl::vector<T> de    = gsl::vector_view_array(_de, m + n);
-  gsl::vector<T> z     = gsl::vector_view_array(_z, m + n);
-  gsl::vector<T> zt    = gsl::vector_view_array(_zt, m + n);
+  gsl::vector<T> de    = gsl::vector_view_array(_de.get(), m + n);
+  gsl::vector<T> z     = gsl::vector_view_array(_z.get(), m + n);
+  gsl::vector<T> zt    = gsl::vector_view_array(_zt.get(), m + n);
   gsl::vector<T> zprev = gsl::vector_calloc<T>(m + n);
   gsl::vector<T> ztemp = gsl::vector_calloc<T>(m + n);
   gsl::vector<T> z12   = gsl::vector_calloc<T>(m + n);
@@ -144,13 +146,13 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
 
   // Initialize (x, lambda) from (x0, lambda0).
   if (_init_x) {
-    gsl::vector_memcpy(&xtemp, _x);
+    gsl::vector_memcpy(&xtemp, _x.get());
     gsl::vector_div(&xtemp, &e);
     _A.Mul('n', kOne, xtemp.data, kZero, ytemp.data);
     gsl::vector_memcpy(&z, &ztemp);
   }
   if (_init_lambda) {
-    gsl::vector_memcpy(&ytemp, _lambda);
+    gsl::vector_memcpy(&ytemp, _lambda.get());
     gsl::vector_div(&ytemp, &d);
     _A.Mul('t', -kOne, ytemp.data, kZero, xtemp.data);
     gsl::blas_scal(-kOne / _rho, &ztemp);
@@ -621,10 +623,10 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
   }
 
   // Copy results to output.
-  gsl::vector_memcpy(_x, &x12);
-  gsl::vector_memcpy(_y, &y12);
-  gsl::vector_memcpy(_mu, &xtemp);
-  gsl::vector_memcpy(_lambda, &ytemp);
+  gsl::vector_memcpy(_x.get(), &x12);
+  gsl::vector_memcpy(_y.get(), &y12);
+  gsl::vector_memcpy(_mu.get(), &xtemp);
+  gsl::vector_memcpy(_lambda.get(), &ytemp);
 
   // Store z.
   gsl::vector_memcpy(&z, &zprev);
@@ -642,16 +644,7 @@ PogsStatus PogsImplementation<T, M, P>::Solve(PogsObjective<T> *objective) {
 
 template <typename T, typename M, typename P>
 PogsImplementation<T, M, P>::~PogsImplementation() {
-  delete [] _de;
-  delete [] _z;
-  delete [] _zt;
-  _de = _z = _zt = 0;
-
-  delete [] _x;
-  delete [] _y;
-  delete [] _mu;
-  delete [] _lambda;
-  _x = _y = _mu = _lambda = 0;
+  // unique_ptr handles cleanup automatically
 }
 
 // Pogs for separable problems
@@ -2077,8 +2070,8 @@ PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
 
     const size_t m = this->_A.Rows();
     const size_t n = this->_A.Cols();
-    const T *d = this->_de;
-    const T *e = this->_de + m;
+    const T *d = this->_de.get();
+    const T *e = this->_de.get() + m;
 
     std::vector<T> x_out;
     std::vector<T> y_out;
@@ -2090,10 +2083,10 @@ PogsStatus PogsCone<T, M, P>::Solve(const std::vector<T>& b,
                                       &lambda_out, &this->_optval,
                                       &this->_final_iter);
 
-    std::copy(x_out.begin(), x_out.end(), this->_x);
-    std::copy(y_out.begin(), y_out.end(), this->_y);
-    std::copy(lambda_out.begin(), lambda_out.end(), this->_lambda);
-    std::fill(this->_mu, this->_mu + n, static_cast<T>(0));
+    std::copy(x_out.begin(), x_out.end(), this->_x.get());
+    std::copy(y_out.begin(), y_out.end(), this->_y.get());
+    std::copy(lambda_out.begin(), lambda_out.end(), this->_lambda.get());
+    std::fill(this->_mu.get(), this->_mu.get() + n, static_cast<T>(0));
     return status;
   }
 
