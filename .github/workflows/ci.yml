@@ -90,3 +90,53 @@ jobs:
 
       - name: Build docs
         run: uvx --with mkdocs-material mkdocs build --strict
+
+  # Python wheel builds (test on every push)
+  wheels:
+    name: Wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-2022]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.22
+        env:
+          # Only build one Python version for CI (faster)
+          CIBW_BUILD: "cp312-*"
+          CIBW_SKIP: "*-musllinux_* *-win32 *-manylinux_i686"
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
+          CIBW_BEFORE_ALL_LINUX: >
+            dnf install -y epel-release &&
+            dnf install -y openblas-devel lapack-devel
+          CIBW_BEFORE_ALL_WINDOWS: >
+            curl -L -o C:\openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
+            7z x C:\openblas.zip -oC:\OpenBLAS -y
+          CIBW_ENVIRONMENT_MACOS: >
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          CIBW_ENVIRONMENT_LINUX: >
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/openblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/OpenBLAS-0.3.28-x64/lib/openblas.lib"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/OpenBLAS-0.3.28-x64/bin -w {dest_dir} {wheel}"
+          CIBW_TEST_REQUIRES: numpy
+          CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
