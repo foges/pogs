@@ -42,11 +42,14 @@ target_include_directories(pogs_cpu
 )
 
 # Link dependencies for CPU library
-target_link_libraries(pogs_cpu
-    PUBLIC
-        BLAS::BLAS
-        LAPACK::LAPACK
-)
+if(POGS_BLAS_LIBRARIES)
+    # On Windows with scipy-openblas32, use direct library path
+    target_link_libraries(pogs_cpu PUBLIC "${POGS_BLAS_LIBRARIES}")
+    target_include_directories(pogs_cpu PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
+else()
+    # On Linux/macOS, use standard BLAS/LAPACK targets
+    target_link_libraries(pogs_cpu PUBLIC BLAS::BLAS LAPACK::LAPACK)
+endif()
 
 # Platform-specific libraries
 if(APPLE)
@@ -80,11 +83,15 @@ target_include_directories(pogs_cpu_shared
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(pogs_cpu_shared
-    PUBLIC
-        BLAS::BLAS
-        LAPACK::LAPACK
-)
+# Link dependencies for shared library
+if(POGS_BLAS_LIBRARIES)
+    # On Windows with scipy-openblas32, use direct library path
+    target_link_libraries(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIBRARIES}")
+    target_include_directories(pogs_cpu_shared PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
+else()
+    # On Linux/macOS, use standard BLAS/LAPACK targets
+    target_link_libraries(pogs_cpu_shared PUBLIC BLAS::BLAS LAPACK::LAPACK)
+endif()
 
 if(APPLE)
     if(ACCELERATE_LIBRARY)

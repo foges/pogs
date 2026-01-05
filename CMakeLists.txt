@@ -60,43 +60,15 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
     message(STATUS "  OpenBLAS_INCLUDE_DIRS: ${OpenBLAS_INCLUDE_DIRS}")
     message(STATUS "  OpenBLAS_LIB: ${OpenBLAS_LIB}")
 
-    # Create BLAS::BLAS and LAPACK::LAPACK
-    # scipy-openblas32 sets variables instead of targets
-    if(OpenBLAS_LIBRARIES OR OpenBLAS_LIB)
-      set(OPENBLAS_LIB_TO_USE "${OpenBLAS_LIBRARIES}")
-      if(NOT OPENBLAS_LIB_TO_USE)
-        set(OPENBLAS_LIB_TO_USE "${OpenBLAS_LIB}")
-      endif()
-      message(STATUS "  Using OpenBLAS lib: ${OPENBLAS_LIB_TO_USE}")
-
-      # Create imported targets using UNKNOWN type (simplest for just linking)
-      # Use IMPORTED_LOCATION for the .lib file (import library)
-      add_library(BLAS::BLAS UNKNOWN IMPORTED GLOBAL)
-      set_target_properties(BLAS::BLAS PROPERTIES
-        IMPORTED_LOCATION "${OPENBLAS_LIB_TO_USE}"
-        INTERFACE_INCLUDE_DIRECTORIES "${OpenBLAS_INCLUDE_DIRS}"
-      )
-      add_library(LAPACK::LAPACK UNKNOWN IMPORTED GLOBAL)
-      set_target_properties(LAPACK::LAPACK PROPERTIES
-        IMPORTED_LOCATION "${OPENBLAS_LIB_TO_USE}"
-        INTERFACE_INCLUDE_DIRECTORIES "${OpenBLAS_INCLUDE_DIRS}"
-      )
-      set(BLAS_FOUND TRUE)
-      set(LAPACK_FOUND TRUE)
-    elseif(TARGET OpenBLAS::OpenBLAS)
-      # Some configs create targets
-      add_library(BLAS::BLAS INTERFACE IMPORTED GLOBAL)
-      set_target_properties(BLAS::BLAS PROPERTIES
-        INTERFACE_LINK_LIBRARIES OpenBLAS::OpenBLAS
-      )
-      add_library(LAPACK::LAPACK INTERFACE IMPORTED GLOBAL)
-      set_target_properties(LAPACK::LAPACK PROPERTIES
-        INTERFACE_LINK_LIBRARIES OpenBLAS::OpenBLAS
-      )
+    # Get library path from scipy-openblas32 CMake config
+    if(OpenBLAS_LIBRARIES)
+      set(POGS_BLAS_LIBRARIES "${OpenBLAS_LIBRARIES}" CACHE STRING "BLAS library path" FORCE)
+      set(POGS_BLAS_INCLUDE_DIRS "${OpenBLAS_INCLUDE_DIRS}" CACHE STRING "BLAS include path" FORCE)
+      message(STATUS "  Using OpenBLAS lib: ${POGS_BLAS_LIBRARIES}")
       set(BLAS_FOUND TRUE)
       set(LAPACK_FOUND TRUE)
     else()
-      message(FATAL_ERROR "OpenBLAS not properly configured: no libraries or targets found")
+      message(FATAL_ERROR "OpenBLAS not properly configured: no libraries found")
     endif()
   else()
     message(FATAL_ERROR "scipy-openblas32 not found. Install with: pip install scipy-openblas32")
