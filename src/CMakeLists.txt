@@ -43,11 +43,10 @@ target_include_directories(pogs_cpu
 
 # Link dependencies for CPU library
 if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32, use full path directly
+    # On Windows with scipy-openblas32, use raw linker options
     message(STATUS "POGS CPU: Linking with ${POGS_BLAS_LIBRARIES}")
-    # Convert to native path for Windows
-    file(TO_CMAKE_PATH "${POGS_BLAS_LIBRARIES}" POGS_BLAS_LIB_CMAKE)
-    target_link_libraries(pogs_cpu PUBLIC "${POGS_BLAS_LIB_CMAKE}")
+    # Use target_link_options with the full path
+    target_link_options(pogs_cpu PUBLIC "${POGS_BLAS_LIBRARIES}")
     if(POGS_BLAS_INCLUDE_DIRS)
         target_include_directories(pogs_cpu PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
     endif()
@@ -90,9 +89,9 @@ target_include_directories(pogs_cpu_shared
 
 # Link dependencies for shared library
 if(POGS_BLAS_LIBRARIES)
-    # On Windows with scipy-openblas32, use full path directly
+    # On Windows with scipy-openblas32, use raw linker options
     message(STATUS "POGS CPU Shared: Linking with ${POGS_BLAS_LIBRARIES}")
-    target_link_libraries(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIB_CMAKE}")
+    target_link_options(pogs_cpu_shared PUBLIC "${POGS_BLAS_LIBRARIES}")
     if(POGS_BLAS_INCLUDE_DIRS)
         target_include_directories(pogs_cpu_shared PUBLIC "${POGS_BLAS_INCLUDE_DIRS}")
     endif()
