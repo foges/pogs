@@ -6,7 +6,7 @@ import time
 import json
 import numpy as np
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional
+from typing import Optional
 from collections import defaultdict
 
 
@@ -14,7 +14,7 @@ from collections import defaultdict
 class BenchmarkResult:
     """Results from a single benchmark run."""
     problem_name: str
-    problem_size: Dict[str, int]
+    problem_size: dict[str, int]
     solver: str
     solve_time: float
     setup_time: float
@@ -102,20 +102,20 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
         )
 
 
-def save_results(results: List[BenchmarkResult], filename='results/latest.json'):
+def save_results(results: list[BenchmarkResult], filename='results/latest.json'):
     """Save benchmark results to JSON file."""
     with open(filename, 'w') as f:
         json.dump([asdict(r) for r in results], f, indent=2)
 
 
-def load_results(filename='results/latest.json') -> List[BenchmarkResult]:
+def load_results(filename='results/latest.json') -> list[BenchmarkResult]:
     """Load benchmark results from JSON file."""
     with open(filename, 'r') as f:
         data = json.load(f)
     return [BenchmarkResult(**r) for r in data]
 
 
-def generate_text_report(results: List[BenchmarkResult]) -> str:
+def generate_text_report(results: list[BenchmarkResult]) -> str:
     """
     Generate a human-readable text report from benchmark results.
 
@@ -223,7 +223,7 @@ def generate_text_report(results: List[BenchmarkResult]) -> str:
     return "\n".join(report_lines)
 
 
-def print_summary(results: List[BenchmarkResult]):
+def print_summary(results: list[BenchmarkResult]):
     """Print a summary of benchmark results to console."""
     report = generate_text_report(results)
     print(report)

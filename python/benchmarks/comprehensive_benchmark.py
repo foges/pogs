@@ -20,7 +20,7 @@ import time
 import sys
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 from pathlib import Path
 import pickle
 import urllib.request
