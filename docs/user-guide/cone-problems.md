@@ -75,10 +75,15 @@ Used for **matrix constraints**.
 ### Exponential Cone
 
 $$
-\mathcal{K}_\text{exp} = \{(x, y, z) : y > 0, ye^{x/y} \leq z\}
+\mathcal{K}_\text{exp} = \{(x, y, z) : y > 0, ye^{x/y} \leq z\} \cup \{(x, y, z) : x \leq 0, y = 0, z \geq 0\}
 $$
 
 Used for **exponential and logarithmic constraints**.
+
+The dual exponential cone is also supported:
+$$
+\mathcal{K}_\text{exp}^* = \{(u, v, w) : u < 0, -ue^{v/u} \leq ew\} \cup \{(u, v, w) : u = 0, v \geq 0, w \geq 0\}
+$$
 
 ---
 

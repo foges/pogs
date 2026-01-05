@@ -59,28 +59,35 @@ POGS is a high-performance solver for convex optimization problems using the [Al
 === "C++"
 
     ```cpp
-    #include <pogs/pogs.hpp>
+    #include "pogs.h"
+    #include "matrix/matrix_dense.h"
 
-    // Create matrix A and vectors b, c
-    auto A = std::make_unique<pogs::MatrixDense<double>>(m, n);
-    // ... fill A, b, c ...
+    // Problem: min 0.5||Ax - b||^2 + lambda||x||_1
+    pogs::MatrixDense<double> A('r', m, n, A_data);
+    pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
 
     // Configure solver
-    auto config = pogs::SolverConfig{
-        .rho = 1.0,
-        .abs_tol = 1e-4,
-        .rel_tol = 1e-3,
-        .max_iter = 1000,
-        .verbose = true
-    };
+    solver.SetRho(1.0);
+    solver.SetAbsTol(1e-4);
+    solver.SetRelTol(1e-3);
+    solver.SetMaxIter(1000);
+    solver.SetVerbose(2);
 
-    // Create and solve
-    auto solver = pogs::make_solver<double>(std::move(A));
-    solver.configure(config);
-    auto result = solver.solve(f, g);
+    // Define objective functions f and g
+    std::vector<FunctionObj<double>> f(m), g(n);
+    for (size_t i = 0; i < m; ++i) {
+        f[i].h = kSquare;
+        f[i].d = -b[i];
+    }
+    for (size_t j = 0; j < n; ++j) {
+        g[j].h = kAbs;
+        g[j].c = lambda;
+    }
 
-    if (result.status == pogs::Status::Success) {
-        std::cout << "Solution: " << result.x << std::endl;
+    // Solve and get results
+    pogs::PogsStatus status = solver.Solve(f, g);
+    if (status == pogs::POGS_SUCCESS) {
+        const double* x = solver.GetX();
     }
     ```
 
@@ -88,41 +95,46 @@ POGS is a high-performance solver for convex optimization problems using the [Al
 
     ```python
     import cvxpy as cp
-    from pogs_cvxpy import POGS
+    import numpy as np
 
     # Define problem
-    x = cp.Variable(n)
-    objective = cp.Minimize(cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1))
-    constraints = [x >= 0]
-    prob = cp.Problem(objective, constraints)
+    A = np.random.randn(100, 50)
+    b = np.random.randn(100)
+    lambda_val = 0.1
 
-    # Solve with POGS
+    x = cp.Variable(50)
+    objective = cp.Minimize(
+        0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1)
+    )
+    prob = cp.Problem(objective)
     prob.solve(solver='POGS', verbose=True)
 
     print(f"Status: {prob.status}")
-    print(f"Solution: {x.value}")
+    print(f"Optimal value: {prob.value}")
     ```
 
 === "C"
 
     ```c
-    #include <pogs/c/pogs_c.h>
+    #include "interface_c/pogs_c.h"
 
-    // Define problem data
-    double A[] = { /* ... */ };
-    double b[] = { /* ... */ };
-    double c[] = { /* ... */ };
+    // Problem: min c'x s.t. Ax = b, x >= 0
+    double A[] = {1.0, 1.0};  // 1x2 matrix
+    double b[] = {2.0};
+    double c[] = {1.0, 0.0};
 
     // Define cone constraints
-    struct ConeConstraintC cone_x = {CONE_NON_NEG, x_idx, n};
-    struct ConeConstraintC cone_y = {CONE_ZERO, y_idx, m};
+    unsigned int x_idx[] = {0, 1};
+    unsigned int y_idx[] = {0};
+    ConeConstraintC cone_x = {CONE_NON_NEG, x_idx, 2};
+    ConeConstraintC cone_y = {CONE_ZERO, y_idx, 1};
 
     // Solve
-    double x[n], y[m], optval;
+    double x[2], y[1], optval;
     unsigned int final_iter;
-    int status = PogsConeD(ROW_MAJ, m, n, A, b, c,
+    int status = PogsConeD(ROW_MAJ, 1, 2, A, b, c,
                           &cone_x, 1, &cone_y, 1,
-                          1.0, 1e-4, 1e-3, 1000, 1, 1, 1,
+                          1.0, 1e-4, 1e-3, 1000, 0, 1, 0,
                           x, y, NULL, &optval, &final_iter);
     ```
 
@@ -210,9 +222,10 @@ where $\mathcal{K}$ is a product of convex cones (zero, non-negative, SOC, SDP, 
 
     - **C++20 Support**: Modern C++ with smart pointers, enum classes, RAII
     - **CMake Build System**: Cross-platform, easy integration
-    - **SDP Cone Support**: Positive semidefinite constraints on CPU
+    - **Full Cone Support**: Zero, NonNeg, NonPos, SOC, SDP, and Exponential cones
+    - **Anderson Acceleration**: Optional acceleration for faster convergence
     - **Python/CVXPY**: High-level modeling interface
-    - **Better Documentation**: This beautiful new site!
+    - **130+ Test Assertions**: Comprehensive test coverage
 
     See the [Changelog](about/changelog.md) for full details.
 

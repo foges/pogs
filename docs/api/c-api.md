@@ -166,7 +166,7 @@ enum ORD {
 ## Complete Example
 
 ```c
-#include <pogs/c/pogs_c.h>
+#include "pogs_c.h"
 #include <stdio.h>
 #include <stdlib.h>
 

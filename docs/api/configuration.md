@@ -1,55 +1,39 @@
 # Solver Configuration
 
-Reference for solver configuration options.
+Reference for solver configuration methods.
 
 ---
 
-## SolverConfig Structure
+## Configuration Methods
+
+POGS solvers are configured using setter methods on the solver instance. All parameters have sensible defaults.
+
+### SetRho
 
 ```cpp
-struct SolverConfig {
-    double rho = 1.0;
-    double abs_tol = 1e-4;
-    double rel_tol = 1e-3;
-    size_t max_iter = 1000;
-    bool verbose = false;
-    bool adaptive_rho = true;
-    bool gap_stop = true;
-
-    // Reserved for future features
-    bool use_anderson = false;
-    size_t anderson_mem = 5;
-    size_t anderson_start = 10;
-};
+void SetRho(T rho);
+T GetRho() const;
 ```
 
----
-
-## Parameters
-
-### rho
-
-**Type:** `double`
 **Default:** `1.0`
-**Range:** `(0, ∞)`
+**Range:** `(0, infinity)`
 
 The ADMM penalty parameter. Controls the weight of the augmented Lagrangian term.
 
 **Guidelines:**
-- **Larger ρ** (5.0-100.0): Faster convergence, potentially less accurate
-- **Smaller ρ** (0.01-0.5): Slower convergence, more accurate
+- **Larger rho** (5.0-100.0): Faster convergence, potentially less accurate
+- **Smaller rho** (0.01-0.5): Slower convergence, more accurate
 - **Default** (1.0): Good starting point for most problems
-
-**Example:**
-```cpp
-config.rho = 10.0;  // Faster, less accurate
-```
 
 ---
 
-### abs_tol
+### SetAbsTol
 
-**Type:** `double`
+```cpp
+void SetAbsTol(T abs_tol);
+T GetAbsTol() const;
+```
+
 **Default:** `1e-4`
 **Range:** `(0, 1)`
 
@@ -65,38 +49,31 @@ $$
 - **Medium accuracy:** `1e-4` (default)
 - **Low accuracy:** `1e-2`
 
-**Example:**
-```cpp
-config.abs_tol = 1e-6;  // High accuracy
-```
-
 ---
 
-### rel_tol
+### SetRelTol
 
-**Type:** `double`
+```cpp
+void SetRelTol(T rel_tol);
+T GetRelTol() const;
+```
+
 **Default:** `1e-3`
 **Range:** `(0, 1)`
 
 Relative tolerance for convergence.
 
-**Guidelines:**
-- **High accuracy:** `1e-5` or smaller
-- **Medium accuracy:** `1e-3` (default)
-- **Low accuracy:** `1e-2`
-
-**Example:**
-```cpp
-config.rel_tol = 1e-5;  // High accuracy
-```
-
 ---
 
-### max_iter
+### SetMaxIter
 
-**Type:** `size_t`
-**Default:** `1000`
-**Range:** `[1, ∞)`
+```cpp
+void SetMaxIter(unsigned int max_iter);
+unsigned int GetMaxIter() const;
+```
+
+**Default:** `2500`
+**Range:** `[1, infinity)`
 
 Maximum number of ADMM iterations.
 
@@ -105,202 +82,263 @@ Maximum number of ADMM iterations.
 - **Medium problems:** 1000-2000 iterations
 - **Hard problems:** 5000-10000 iterations
 
-**Example:**
-```cpp
-config.max_iter = 5000;  // For difficult problems
-```
-
 ---
 
-### verbose
+### SetVerbose
 
-**Type:** `bool`
-**Default:** `false`
+```cpp
+void SetVerbose(unsigned int verbose);
+unsigned int GetVerbose() const;
+```
 
-Enable verbose output showing iteration progress.
+**Default:** `2`
+**Range:** `0-4`
+
+Verbosity level:
+- `0`: Silent
+- `1`: Summary only
+- `2`: Progress every 10 iterations
+- `3`: Progress every iteration
+- `4`: Debug output
 
 **Output format:**
 ```
-Iter   Primal Res   Dual Res     Gap        ρ
+Iter   Primal Res   Dual Res     Gap        rho
   10   1.23e-02    4.56e-03    8.90e-02   1.00
   20   3.45e-03    1.23e-03    2.34e-02   1.00
   ...
 ```
 
-**Example:**
-```cpp
-config.verbose = true;  // Show progress
-```
-
 ---
 
-### adaptive_rho
+### SetAdaptiveRho
 
-**Type:** `bool`
+```cpp
+void SetAdaptiveRho(bool adaptive_rho);
+bool GetAdaptiveRho() const;
+```
+
 **Default:** `true`
 
-Enable adaptive adjustment of ρ based on residual balance.
+Enable adaptive adjustment of rho based on residual balance.
 
-When enabled, ρ is automatically adjusted:
-- **Increase ρ** if primal residual >> dual residual
-- **Decrease ρ** if dual residual >> primal residual
+When enabled, rho is automatically adjusted:
+- **Increase rho** if primal residual >> dual residual
+- **Decrease rho** if dual residual >> primal residual
 
 **Guidelines:**
 - **Enable** (recommended): Better convergence for most problems
-- **Disable**: When you want fixed ρ or manual control
-
-**Example:**
-```cpp
-config.adaptive_rho = false;  // Fixed ρ
-```
+- **Disable**: When you want fixed rho or manual control
 
 ---
 
-### gap_stop
+### SetGapStop
 
-**Type:** `bool`
-**Default:** `true`
+```cpp
+void SetGapStop(bool gap_stop);
+bool GetGapStop() const;
+```
+
+**Default:** `false`
 
 Enable duality gap stopping criterion.
 
 Stops when both residuals are small AND duality gap is small.
 
-**Guidelines:**
-- **Enable** (recommended): More reliable convergence
-- **Disable**: For problems where duality gap is not available
-
-**Example:**
-```cpp
-config.gap_stop = true;  // Use duality gap
-```
-
 ---
 
-### use_anderson
+### SetUseAnderson
 
-**Type:** `bool`
+```cpp
+void SetUseAnderson(bool use_anderson);
+bool GetUseAnderson() const;
+```
+
 **Default:** `false`
-**Status:** Experimental
 
-Enable Anderson acceleration (experimental).
+Enable Anderson acceleration for faster convergence.
 
-!!! warning "Experimental Feature"
-    Anderson acceleration is disabled by default and may not improve convergence for all problems.
-
-See [Anderson Acceleration](../examples/anderson.md) for details.
-
-**Example:**
-```cpp
-config.use_anderson = true;       // Enable Anderson
-config.anderson_mem = 10;         // Memory depth
-config.anderson_start = 20;       // Start iteration
-```
+Anderson acceleration can provide up to 2x speedup on well-conditioned problems.
 
 ---
 
-### anderson_mem
+### SetAndersonMem
 
-**Type:** `size_t`
+```cpp
+void SetAndersonMem(unsigned int mem);
+unsigned int GetAndersonMem() const;
+```
+
 **Default:** `5`
 **Range:** `[1, 20]`
 
 Number of past iterates to store for Anderson acceleration.
 
-Only used when `use_anderson = true`.
+Only used when `SetUseAnderson(true)`.
 
 ---
 
-### anderson_start
+### SetAndersonStart
 
-**Type:** `size_t`
+```cpp
+void SetAndersonStart(unsigned int start);
+unsigned int GetAndersonStart() const;
+```
+
 **Default:** `10`
 **Range:** `[0, max_iter)`
 
 Iteration number to start applying Anderson acceleration.
 
-Only used when `use_anderson = true`.
+Only used when `SetUseAnderson(true)`.
+
+---
+
+### SetInitX
+
+```cpp
+void SetInitX(const T* x);
+```
+
+Provide an initial guess for the primal variable x (warm start).
+
+**Usage:**
+```cpp
+double x_init[n] = { /* initial values */ };
+solver.SetInitX(x_init);
+```
+
+---
+
+### SetInitLambda
+
+```cpp
+void SetInitLambda(const T* lambda);
+```
+
+Provide an initial guess for the dual variable lambda (warm start).
+
+---
+
+## Default Values Summary
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `rho` | 1.0 | ADMM penalty parameter |
+| `abs_tol` | 1e-4 | Absolute tolerance |
+| `rel_tol` | 1e-3 | Relative tolerance |
+| `max_iter` | 2500 | Maximum iterations |
+| `verbose` | 2 | Verbosity level |
+| `adaptive_rho` | true | Enable adaptive penalty |
+| `gap_stop` | false | Stop on duality gap |
+| `use_anderson` | false | Anderson acceleration |
+| `anderson_mem` | 5 | Anderson memory depth |
+| `anderson_start` | 10 | Anderson start iteration |
 
 ---
 
 ## Usage Examples
 
+### Basic Configuration
+
+```cpp
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
+
+pogs::MatrixDense<double> A('r', m, n, A_data);
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+
+// Configure
+solver.SetAbsTol(1e-4);
+solver.SetRelTol(1e-3);
+solver.SetMaxIter(1000);
+solver.SetVerbose(2);
+
+// Solve
+PogsStatus status = solver.Solve(f, g);
+```
+
+### High Accuracy
+
+```cpp
+solver.SetAbsTol(1e-6);
+solver.SetRelTol(1e-5);
+solver.SetMaxIter(5000);
+solver.SetRho(0.1);
+solver.SetAdaptiveRho(true);
+```
+
 ### Fast Approximate Solution
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .rho = 10.0,
-    .abs_tol = 1e-2,
-    .rel_tol = 1e-2,
-    .max_iter = 100
-};
+solver.SetAbsTol(1e-2);
+solver.SetRelTol(1e-2);
+solver.SetMaxIter(100);
+solver.SetRho(10.0);
 ```
 
-### High Accuracy Solution
+### With Anderson Acceleration
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .rho = 0.1,
-    .abs_tol = 1e-6,
-    .rel_tol = 1e-6,
-    .max_iter = 5000,
-    .adaptive_rho = true
-};
+solver.SetUseAnderson(true);
+solver.SetAndersonMem(10);
+solver.SetAndersonStart(20);
+solver.SetMaxIter(1000);
 ```
 
-### Debugging Configuration
+### Warm Starting
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .verbose = true,
-    .max_iter = 100
-};
-```
+// First solve
+solver.Solve(f, g);
+const double* x_solution = solver.GetX();
+const double* lambda_solution = solver.GetLambda();
 
----
+// Modify problem slightly...
 
-## Designated Initializers (C++20)
+// Warm start second solve
+double x_init[n], lambda_init[m];
+memcpy(x_init, x_solution, n * sizeof(double));
+memcpy(lambda_init, lambda_solution, m * sizeof(double));
 
-POGS uses C++20 designated initializers for convenient configuration:
-
-```cpp
-auto config = pogs::SolverConfig{
-    .rho = 1.0,
-    .abs_tol = 1e-4,
-    .verbose = true
-};
-// Unspecified fields use defaults
+solver.SetInitX(x_init);
+solver.SetInitLambda(lambda_init);
+solver.Solve(f_modified, g_modified);
 ```
 
 ---
 
 ## Performance Tuning
 
-### Problem-Specific Guidelines
+### Well-Conditioned Problems
 
-**Well-Conditioned Problems:**
 ```cpp
-config.rho = 5.0;          // Larger ρ
-config.adaptive_rho = true; // Let solver adjust
+solver.SetRho(5.0);
+solver.SetAdaptiveRho(true);
+solver.SetUseAnderson(true);
 ```
 
-**Ill-Conditioned Problems:**
+### Ill-Conditioned Problems
+
 ```cpp
-config.rho = 0.1;           // Smaller ρ
-config.adaptive_rho = true; // Critical for convergence
-config.max_iter = 5000;     // More iterations
+solver.SetRho(0.1);
+solver.SetAdaptiveRho(true);
+solver.SetMaxIter(5000);
 ```
 
-**Large-Scale Problems:**
+### Large-Scale Problems
+
 ```cpp
-config.abs_tol = 1e-3;      // Looser tolerances
-config.rel_tol = 1e-2;
-config.max_iter = 2000;
+solver.SetAbsTol(1e-3);
+solver.SetRelTol(1e-2);
+solver.SetMaxIter(2000);
+solver.SetVerbose(1);  // Less output
 ```
 
 ---
 
 ## See Also
 
-- [Basic Usage](../user-guide/basic-usage.md) - Using the configuration
-- [Advanced Features](../user-guide/advanced-features.md) - Parameter tuning
 - [Solver API](solver.md) - Main solver interface
+- [Basic Usage](../user-guide/basic-usage.md) - Usage guide
+- [Advanced Features](../user-guide/advanced-features.md) - Parameter tuning

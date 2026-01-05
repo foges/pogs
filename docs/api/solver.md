@@ -1,34 +1,70 @@
-# Core Solver API
+# Solver API
 
-Reference for the main POGS solver interface.
+Reference for the POGS solver classes.
 
 ---
 
-## Solver Class
+## Graph Form Solvers
+
+POGS provides templated solver classes for graph form problems:
+
+$$
+\begin{align}
+\text{minimize} \quad & f(y) + g(x) \\
+\text{subject to} \quad & y = Ax
+\end{align}
+$$
+
+### PogsDirect
+
+Direct factorization solver (recommended for dense problems).
 
 ```cpp
 namespace pogs {
 
-template<typename T, Matrix M>
-class Solver {
+template<typename T, typename M>
+class PogsDirect {
 public:
-    explicit Solver(std::unique_ptr<M> matrix);
+    explicit PogsDirect(const M& A);
+    ~PogsDirect();
 
-    void configure(const SolverConfig& config);
-    const SolverConfig& config() const;
+    // Solve the optimization problem
+    PogsStatus Solve(const std::vector<FunctionObj<T>>& f,
+                     const std::vector<FunctionObj<T>>& g);
 
-    Solution<T> solve(std::span<const FunctionObj<T>> f,
-                     std::span<const FunctionObj<T>> g);
+    // Configuration
+    void SetRho(T rho);
+    void SetAbsTol(T abs_tol);
+    void SetRelTol(T rel_tol);
+    void SetMaxIter(unsigned int max_iter);
+    void SetVerbose(unsigned int verbose);
+    void SetAdaptiveRho(bool adaptive_rho);
+    void SetGapStop(bool gap_stop);
 
-    void set_warm_start(std::span<const T> x, std::span<const T> y);
+    // Results
+    T GetOptval() const;
+    const T* GetX() const;
+    const T* GetY() const;
+    const T* GetLambda() const;
+    const T* GetMu() const;
+    unsigned int GetIter() const;
+};
 
-    // Move semantics
-    Solver(Solver&&) noexcept = default;
-    Solver& operator=(Solver&&) noexcept = default;
+} // namespace pogs
+```
 
-    // Deleted copy (expensive)
-    Solver(const Solver&) = delete;
-    Solver& operator=(const Solver&) = delete;
+### PogsCgls
+
+Iterative solver using CGLS (better for large sparse problems).
+
+```cpp
+namespace pogs {
+
+template<typename T, typename M>
+class PogsCgls {
+public:
+    explicit PogsCgls(const M& A);
+    // Same interface as PogsDirect
 };
 
 } // namespace pogs
@@ -36,204 +72,207 @@ public:
 
 ---
 
-## Solution Structure
+## Cone Form Solvers
+
+For cone form problems:
+
+$$
+\begin{align}
+\text{minimize} \quad & c^T x \\
+\text{subject to} \quad & Ax + s = b, \quad s \in \mathcal{K}
+\end{align}
+$$
+
+### PogsDirectCone
 
 ```cpp
-template<typename T>
-struct Solution {
-    Status status;                    // Solver status
-    std::vector<T> x;                 // Primal solution
-    std::vector<T> y;                 // Auxiliary variables
-    std::optional<T> primal_obj;      // Primal objective value
-    std::optional<T> dual_obj;        // Dual objective value
-    size_t iterations;                // Number of iterations
+namespace pogs {
+
+template<typename T, typename M>
+class PogsDirectCone {
+public:
+    PogsDirectCone(const M& A,
+                   const std::vector<ConeConstraint>& Kx,
+                   const std::vector<ConeConstraint>& Ky);
+
+    PogsStatus Solve(const std::vector<T>& b,
+                     const std::vector<T>& c);
+
+    // Configuration (same as PogsDirect)
+    void SetRho(T rho);
+    void SetAbsTol(T abs_tol);
+    void SetRelTol(T rel_tol);
+    void SetMaxIter(unsigned int max_iter);
+    void SetVerbose(unsigned int verbose);
+    void SetAdaptiveRho(bool adaptive_rho);
+    void SetGapStop(bool gap_stop);
+
+    // Results
+    T GetOptval() const;
+    const T* GetX() const;
+    const T* GetY() const;
 };
+
+} // namespace pogs
 ```
 
-### Status Enumeration
+---
+
+## Status Codes
 
 ```cpp
-enum class Status {
-    Success = 0,               // Converged successfully
-    MaxIterations,             // Maximum iterations reached
-    NumericalError,            // Numerical error encountered
-    InfeasibleOrUnbounded      // Problem is infeasible or unbounded
+namespace pogs {
+
+enum PogsStatus {
+    POGS_SUCCESS = 0,      // Converged successfully
+    POGS_INFEASIBLE,       // Problem infeasible
+    POGS_UNBOUNDED,        // Problem unbounded
+    POGS_MAX_ITER,         // Maximum iterations reached
+    POGS_NAN_FOUND,        // NaN encountered
+    POGS_ERROR             // Other error
 };
+
+} // namespace pogs
 ```
 
 ---
 
-## Factory Function
+## Matrix Classes
+
+### MatrixDense
 
 ```cpp
-template<typename T, Matrix M>
-auto make_solver(std::unique_ptr<M> matrix) -> Solver<T, M>;
-```
+namespace pogs {
 
-**Example:**
-```cpp
-auto A = std::make_unique<pogs::MatrixDense<double>>(m, n);
-auto solver = pogs::make_solver<double>(std::move(A));
-```
-
----
-
-## Methods
-
-### configure()
-
-Set solver configuration parameters.
-
-```cpp
-void configure(const SolverConfig& config);
-```
-
-**Parameters:**
-- `config`: Solver configuration (see [Configuration](configuration.md))
-
-**Example:**
-```cpp
-auto config = pogs::SolverConfig{
-    .rho = 1.0,
-    .abs_tol = 1e-4,
-    .rel_tol = 1e-3,
-    .max_iter = 1000,
-    .verbose = true
-};
-solver.configure(config);
-```
-
----
-
-### solve()
-
-Solve the optimization problem.
-
-```cpp
-Solution<T> solve(std::span<const FunctionObj<T>> f,
-                 std::span<const FunctionObj<T>> g);
-```
-
-**Parameters:**
-- `f`: Array of m function objects for $f(y)$
-- `g`: Array of n function objects for $g(x)$
-
-**Returns:** Solution structure with status and results
-
-**Example:**
-```cpp
-std::vector<pogs::FunctionObj<double>> f(m);
-std::vector<pogs::FunctionObj<double>> g(n);
-
-// ... configure f and g ...
-
-auto result = solver.solve(f, g);
-
-if (result.status == pogs::Status::Success) {
-    std::cout << "Optimal value: " << result.primal_obj.value() << "\n";
-}
-```
-
----
-
-### set_warm_start()
-
-Provide initial guess to accelerate convergence.
-
-```cpp
-void set_warm_start(std::span<const T> x, std::span<const T> y);
-```
-
-**Parameters:**
-- `x`: Initial guess for primal variables (size n)
-- `y`: Initial guess for auxiliary variables (size m)
-
-**Example:**
-```cpp
-// Solve first problem
-auto result1 = solver.solve(f1, g1);
-
-// Warm start for similar problem
-solver.set_warm_start(result1.x, result1.y);
-auto result2 = solver.solve(f2, g2);  // Faster!
-```
-
----
-
-## Matrix Interface
-
-### Dense Matrix
-
-```cpp
 template<typename T>
 class MatrixDense {
 public:
-    MatrixDense(size_t m, size_t n);
+    // Constructors
+    MatrixDense(char ord, size_t m, size_t n, const T* data);
+    MatrixDense(const MatrixDense& A);
 
-    size_t rows() const;
-    size_t cols() const;
+    // Dimensions
+    size_t Rows() const;
+    size_t Cols() const;
 
-    T& operator()(size_t i, size_t j);
-    const T& operator()(size_t i, size_t j) const;
+    // Data access
+    const T* Data() const;
 };
+
+} // namespace pogs
 ```
 
-### Sparse Matrix
+**Parameters:**
+- `ord`: Matrix order ('r' for row-major, 'c' for column-major)
+- `m`: Number of rows
+- `n`: Number of columns
+- `data`: Pointer to matrix data
+
+### MatrixSparse
 
 ```cpp
+namespace pogs {
+
 template<typename T>
 class MatrixSparse {
 public:
-    MatrixSparse(size_t m, size_t n, size_t nnz);
+    MatrixSparse(char ord, size_t m, size_t n, size_t nnz,
+                 const T* data, const int* ptr, const int* ind);
 
-    size_t rows() const;
-    size_t cols() const;
-    size_t nnz() const;  // Number of non-zeros
-
-    // CSR/CSC access methods
+    size_t Rows() const;
+    size_t Cols() const;
+    size_t Nnz() const;
 };
+
+} // namespace pogs
 ```
 
 ---
 
-## Concepts
+## Configuration Defaults
 
-The solver uses C++20 concepts for template constraints:
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `rho` | 1.0 | ADMM penalty parameter |
+| `abs_tol` | 1e-4 | Absolute tolerance |
+| `rel_tol` | 1e-3 | Relative tolerance |
+| `max_iter` | 2500 | Maximum iterations |
+| `verbose` | 2 | Verbosity (0=quiet, 1=summary, 2=progress) |
+| `adaptive_rho` | true | Enable adaptive penalty |
+| `gap_stop` | false | Stop on duality gap |
+
+---
+
+## Usage Examples
+
+### Lasso Regression
 
 ```cpp
-template<typename T>
-concept Numeric = std::is_floating_point_v<T>;
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
 
-template<typename M>
-concept Matrix = requires(M m) {
-    { m.rows() } -> std::convertible_to<size_t>;
-    { m.cols() } -> std::convertible_to<size_t>;
-};
+// Create matrix
+pogs::MatrixDense<double> A('r', m, n, A_data);
+
+// Create solver
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+
+// Configure
+solver.SetAbsTol(1e-5);
+solver.SetRelTol(1e-4);
+solver.SetMaxIter(1000);
+solver.SetVerbose(2);
+
+// Define f(y) = 0.5 * ||y - b||^2
+std::vector<FunctionObj<double>> f(m);
+for (size_t i = 0; i < m; ++i) {
+    f[i].h = kSquare;
+    f[i].c = 0.5;
+    f[i].d = -b[i];
+}
+
+// Define g(x) = lambda * ||x||_1
+std::vector<FunctionObj<double>> g(n);
+for (size_t j = 0; j < n; ++j) {
+    g[j].h = kAbs;
+    g[j].c = lambda;
+}
+
+// Solve
+pogs::PogsStatus status = solver.Solve(f, g);
+
+// Get results
+if (status == pogs::POGS_SUCCESS) {
+    const double* x = solver.GetX();
+    double optval = solver.GetOptval();
+}
 ```
 
----
+### Linear Program (Cone Form)
 
-## Thread Safety
+```cpp
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
 
-- **Solver instance**: Not thread-safe
-- **Multiple solvers**: Safe to use in different threads
-- **Const methods**: Safe for concurrent calls
+// min c'x s.t. Ax = b, x >= 0
+pogs::MatrixDense<double> A('r', m, n, A_data);
 
----
+// Cone constraints
+std::vector<ConeConstraint> Kx = {{kConeNonNeg, {0, 1, 2, ..., n-1}}};
+std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2, ..., m-1}}};
 
-## Memory Management
+// Create solver
+pogs::PogsDirectCone<double, pogs::MatrixDense<double>> solver(A, Kx, Ky);
 
-All memory is managed automatically using RAII:
-
-- Smart pointers for matrix ownership
-- `std::vector` for internal state
-- No manual `new`/`delete` required
-- Move semantics for efficiency
+// Solve
+pogs::PogsStatus status = solver.Solve(b, c);
+```
 
 ---
 
 ## See Also
 
-- [Types](types.md) - Function objects and enumerations
-- [Configuration](configuration.md) - Solver configuration options
+- [Function Objects](types.md) - FunctionObj and function types
 - [Proximal Operators](proximal.md) - Supported functions
+- [Configuration](configuration.md) - Solver parameters
+- [C API](c-api.md) - C interface for cone problems

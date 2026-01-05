@@ -11,59 +11,56 @@ Reference for POGS type definitions.
 ```cpp
 template<typename T>
 struct FunctionObj {
-    FunctionType type;
-    T a = 1.0;
-    T b = 0.0;
-    T c = 1.0;
-    T d = 0.0;
-    T e = 0.0;
-    T rho = 1.0;
+    Function h;       // Base function type
+    T a = 1.0;        // Input scaling
+    T b = 0.0;        // Input shift
+    T c = 1.0;        // Output scaling
+    T d = 0.0;        // Linear term coefficient
+    T e = 0.0;        // Quadratic term coefficient
 
-    explicit FunctionObj(FunctionType t = FunctionType::Zero);
+    // Constructors
+    explicit FunctionObj(Function h);
+    FunctionObj(Function h, T a);
+    FunctionObj(Function h, T a, T b);
+    FunctionObj(Function h, T a, T b, T c);
+    FunctionObj(Function h, T a, T b, T c, T d);
+    FunctionObj(Function h, T a, T b, T c, T d, T e);
+    FunctionObj();  // Default: kZero
 };
 ```
 
 Represents a function of the form:
 
 $$
-h(ax + b) \cdot c + d \cdot x + e
+c \cdot h(ax - b) + d \cdot x + e \cdot x^2
 $$
 
-where $h$ is the base function determined by `type`.
-
-**Fields:**
-- `type`: Base function type
-- `a`: Input scaling
-- `b`: Input shift
-- `c`: Output scaling
-- `d`: Linear term coefficient
-- `e`: Constant offset
-- `rho`: Penalty parameter (adaptive)
+where $h$ is the base function determined by the `h` field.
 
 ---
 
 ## Function Types
 
-### FunctionType Enumeration
+### Function Enumeration
 
 ```cpp
-enum class FunctionType {
-    Abs,        // |x|
-    Exp,        // e^x
-    Huber,      // Huber loss
-    Identity,   // x
-    IndBox01,   // I_{[0,1]}(x)
-    IndEq0,     // I_{x=0}(x)
-    IndGe0,     // I_{x>=0}(x)
-    IndLe0,     // I_{x<=0}(x)
-    Logistic,   // log(1 + e^x)
-    MaxNeg0,    // max(0, -x)
-    MaxPos0,    // max(0, x)
-    NegEntr,    // x log(x)
-    NegLog,     // -log(x)
-    Recipr,     // 1/x
-    Square,     // x^2
-    Zero        // 0
+enum Function {
+    kAbs,       // |x|
+    kExp,       // e^x
+    kHuber,     // Huber loss
+    kIdentity,  // x
+    kIndBox01,  // I_{[0,1]}(x)
+    kIndEq0,    // I_{x=0}(x)
+    kIndGe0,    // I_{x>=0}(x)
+    kIndLe0,    // I_{x<=0}(x)
+    kLogistic,  // log(1 + e^x)
+    kMaxNeg0,   // max(0, -x)
+    kMaxPos0,   // max(0, x)
+    kNegEntr,   // x log(x)
+    kNegLog,    // -log(x)
+    kRecipr,    // 1/x
+    kSquare,    // (1/2) x^2
+    kZero       // 0
 };
 ```
 
@@ -71,97 +68,94 @@ enum class FunctionType {
 
 | Type | Function h(x) | Domain | Use Case |
 |------|---------------|---------|----------|
-| `Abs` | $\|x\|$ | $\mathbb{R}$ | L1 regularization |
-| `Exp` | $e^x$ | $\mathbb{R}$ | Exponential objectives |
-| `Huber` | Huber loss | $\mathbb{R}$ | Robust regression |
-| `Identity` | $x$ | $\mathbb{R}$ | Linear terms |
-| `IndBox01` | $I_{[0,1]}(x)$ | $[0,1]$ | Box constraints |
-| `IndEq0` | $I_{\{0\}}(x)$ | $\{0\}$ | Equality constraints |
-| `IndGe0` | $I_{[0,\infty)}(x)$ | $[0,\infty)$ | Non-negativity |
-| `IndLe0` | $I_{(-\infty,0]}(x)$ | $(-\infty,0]$ | Non-positivity |
-| `Logistic` | $\log(1 + e^x)$ | $\mathbb{R}$ | Logistic regression |
-| `MaxNeg0` | $\max(0, -x)$ | $\mathbb{R}$ | Hinge loss |
-| `MaxPos0` | $\max(0, x)$ | $\mathbb{R}$ | ReLU |
-| `NegEntr` | $x \log x$ | $(0,\infty)$ | Entropy |
-| `NegLog` | $-\log x$ | $(0,\infty)$ | Barrier functions |
-| `Recipr` | $1/x$ | $(0,\infty)$ | Reciprocal |
-| `Square` | $\frac{1}{2}x^2$ | $\mathbb{R}$ | Least squares |
-| `Zero` | $0$ | $\mathbb{R}$ | Unconstrained |
+| `kAbs` | $\|x\|$ | $\mathbb{R}$ | L1 regularization |
+| `kExp` | $e^x$ | $\mathbb{R}$ | Exponential objectives |
+| `kHuber` | Huber loss | $\mathbb{R}$ | Robust regression |
+| `kIdentity` | $x$ | $\mathbb{R}$ | Linear terms |
+| `kIndBox01` | $I_{[0,1]}(x)$ | $[0,1]$ | Box constraints |
+| `kIndEq0` | $I_{\{0\}}(x)$ | $\{0\}$ | Equality constraints |
+| `kIndGe0` | $I_{[0,\infty)}(x)$ | $[0,\infty)$ | Non-negativity |
+| `kIndLe0` | $I_{(-\infty,0]}(x)$ | $(-\infty,0]$ | Non-positivity |
+| `kLogistic` | $\log(1 + e^x)$ | $\mathbb{R}$ | Logistic regression |
+| `kMaxNeg0` | $\max(0, -x)$ | $\mathbb{R}$ | Hinge loss |
+| `kMaxPos0` | $\max(0, x)$ | $\mathbb{R}$ | ReLU |
+| `kNegEntr` | $x \log x$ | $(0,\infty)$ | Entropy |
+| `kNegLog` | $-\log x$ | $(0,\infty)$ | Barrier functions |
+| `kRecipr` | $1/x$ | $(0,\infty)$ | Reciprocal |
+| `kSquare` | $\frac{1}{2}x^2$ | $\mathbb{R}$ | Least squares |
+| `kZero` | $0$ | $\mathbb{R}$ | Unconstrained |
 
 ---
 
 ## Cone Constraints
 
-### ConeType Enumeration
+### ConeConstraint Structure
 
 ```cpp
-enum class ConeType {
-    Zero,        // {x : x = 0}
-    NonNeg,      // {x : x >= 0}
-    NonPos,      // {x : x <= 0}
-    SOC,         // {(t,x) : ||x||_2 <= t}
-    SDP,         // {X : X ⪰ 0}
-    ExpPrimal,   // Exponential cone
-    ExpDual      // Dual exponential cone
-};
-```
-
-### ConeConstraint
-
-```cpp
-template<typename T>
 struct ConeConstraint {
-    ConeType type;
-    std::vector<size_t> indices;
+    enum ConeType { kConeZero, kConeNonNeg, kConeNonPos,
+                    kConeSoc, kConeSdp,
+                    kConeExpPrimal, kConeExpDual };
 
-    ConeConstraint(ConeType t, std::vector<size_t> idx);
+    ConeType cone;
+    std::vector<unsigned int> idx;
+
+    ConeConstraint(ConeType c, const std::vector<unsigned int>& indices);
 };
 ```
 
-**Fields:**
-- `type`: Type of cone
-- `indices`: Variable indices in this cone
+**Cone Types:**
+
+| Type | Definition | Use Case |
+|------|------------|----------|
+| `kConeZero` | $\{x : x = 0\}$ | Equality constraints |
+| `kConeNonNeg` | $\{x : x \geq 0\}$ | Non-negativity |
+| `kConeNonPos` | $\{x : x \leq 0\}$ | Non-positivity |
+| `kConeSoc` | $\{(t,x) : \|x\|_2 \leq t\}$ | Second-order cone |
+| `kConeSdp` | $\{X : X \succeq 0\}$ | Semidefinite |
+| `kConeExpPrimal` | Exponential cone | Exponential constraints |
+| `kConeExpDual` | Dual exponential cone | Dual constraints |
 
 **Example:**
 ```cpp
 // x[0], x[1], x[2] must be non-negative
-pogs::ConeConstraint<double> cone{
-    pogs::ConeType::NonNeg,
-    {0, 1, 2}
-};
+ConeConstraint cone{ConeConstraint::kConeNonNeg, {0, 1, 2}};
 ```
 
 ---
 
 ## Status Codes
 
-### Status Enumeration
+### PogsStatus Enumeration
 
 ```cpp
-enum class Status {
-    Success = 0,               // Converged successfully
-    MaxIterations,             // Maximum iterations reached
-    NumericalError,            // Numerical error encountered
-    InfeasibleOrUnbounded      // Problem is infeasible or unbounded
+enum PogsStatus {
+    POGS_SUCCESS,      // Converged successfully
+    POGS_INFEASIBLE,   // Problem likely infeasible
+    POGS_UNBOUNDED,    // Problem likely unbounded
+    POGS_MAX_ITER,     // Maximum iterations reached
+    POGS_NAN_FOUND,    // Numerical error (NaN)
+    POGS_INVALID_CONE, // Invalid cone specification
+    POGS_ERROR         // Generic error
 };
 ```
 
 **Usage:**
 ```cpp
-auto result = solver.solve(f, g);
+PogsStatus status = solver.Solve(f, g);
 
-switch (result.status) {
-    case pogs::Status::Success:
+switch (status) {
+    case POGS_SUCCESS:
         // Handle success
         break;
-    case pogs::Status::MaxIterations:
+    case POGS_MAX_ITER:
         // Handle non-convergence
         break;
-    case pogs::Status::NumericalError:
+    case POGS_NAN_FOUND:
         // Handle numerical issues
         break;
-    case pogs::Status::InfeasibleOrUnbounded:
-        // Handle infeasibility
+    default:
+        // Handle other errors
         break;
 }
 ```
@@ -170,43 +164,23 @@ switch (result.status) {
 
 ## Matrix Ordering
 
-### Ord Enumeration
+For the C interface:
 
-```cpp
-enum class Ord {
-    RowMajor,    // Row-major (C-style)
-    ColMajor     // Column-major (Fortran-style)
+```c
+enum ORD {
+    COL_MAJ,  // Column-major (Fortran-style)
+    ROW_MAJ   // Row-major (C-style)
 };
 ```
 
----
-
-## Type Aliases
-
-### Common Scalar Types
-
-```cpp
-using pogs::Float = float;
-using pogs::Double = double;
-```
-
-### Vector Types
-
-```cpp
-template<typename T>
-using Vector = std::vector<T>;
-
-template<typename T>
-using Span = std::span<T>;
-
-template<typename T>
-using ConstSpan = std::span<const T>;
-```
+For the C++ interface, the `MatrixDense` and `MatrixSparse` constructors take a `char ord` parameter:
+- `'r'` for row-major
+- `'c'` for column-major
 
 ---
 
 ## See Also
 
 - [Solver API](solver.md) - Main solver interface
-- [Configuration](configuration.md) - Solver configuration
+- [Configuration](configuration.md) - Solver parameters
 - [Proximal Operators](proximal.md) - Function implementations

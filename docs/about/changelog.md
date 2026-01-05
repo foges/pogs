@@ -24,10 +24,11 @@ All notable changes to POGS are documented here.
   - `c/pogs_c.h` - C interface
 
 **Optimization Features:**
-- Cone form support with SDP projection
+- Cone form support with full cone projections (Zero, NonNeg, NonPos, SOC, SDP, Exponential)
 - C interface for cone form problems (`PogsConeD`, `PogsConeF`)
 - Python/CVXPY integration for high-level optimization modeling
-- Comprehensive test suite for cone projections (48 tests passing)
+- Anderson acceleration for faster convergence
+- Comprehensive test suite (132 assertions across 35 test cases)
 
 **Documentation:**
 - Modern MkDocs Material documentation site

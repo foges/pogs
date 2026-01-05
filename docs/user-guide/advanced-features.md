@@ -11,61 +11,96 @@ Warm starting can significantly reduce solve time when solving a sequence of rel
 ### Basic Warm Start
 
 ```cpp
-auto solver = pogs::make_solver<double>(std::move(A));
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
+
+pogs::MatrixDense<double> A('r', m, n, A_data);
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
 
 // Solve first problem
-auto result1 = solver.solve(f1, g1);
+PogsStatus status1 = solver.Solve(f1, g1);
 
-// Warm start from previous solution
-solver.set_warm_start(result1.x, result1.y);
+// Get solution
+const double* x_sol = solver.GetX();
+const double* lambda_sol = solver.GetLambda();
+
+// Copy for warm start
+std::vector<double> x_init(x_sol, x_sol + n);
+std::vector<double> lambda_init(lambda_sol, lambda_sol + m);
+
+// Warm start for next problem
+solver.SetInitX(x_init.data());
+solver.SetInitLambda(lambda_init.data());
 
 // Solve similar problem (faster!)
-auto result2 = solver.solve(f2, g2);
+PogsStatus status2 = solver.Solve(f2, g2);
 ```
 
 ### Use Cases
 
-- **Parameter sweeps**: Solving problems with varying λ
+- **Parameter sweeps**: Solving problems with varying lambda
 - **Online optimization**: Updating solutions as new data arrives
 - **Iterative refinement**: Solving with increasing accuracy
 
 ---
 
-## Custom Penalty Parameter (ρ)
+## Custom Penalty Parameter (rho)
 
-The penalty parameter ρ controls the ADMM convergence behavior.
+The penalty parameter rho controls the ADMM convergence behavior.
 
-### Manual ρ Selection
+### Manual rho Selection
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .rho = 10.0,          // Larger for faster (but less accurate) convergence
-    .adaptive_rho = false  // Disable adaptive adjustment
-};
+solver.SetRho(10.0);           // Larger for faster convergence
+solver.SetAdaptiveRho(false);  // Disable adaptive adjustment
 ```
 
-### When to Adjust ρ
+### When to Adjust rho
 
-**Increase ρ** (larger values like 5.0-100.0):
+**Increase rho** (larger values like 5.0-100.0):
 - When primal residual >> dual residual
 - For well-conditioned problems
 - When you want faster convergence (may sacrifice accuracy)
 
-**Decrease ρ** (smaller values like 0.01-0.5):
+**Decrease rho** (smaller values like 0.01-0.5):
 - When dual residual >> primal residual
 - For ill-conditioned problems
 - When you need high accuracy
 
-### Adaptive ρ (Recommended)
+### Adaptive rho (Recommended)
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .rho = 1.0,
-    .adaptive_rho = true  // Automatically adjust ρ
-};
+solver.SetRho(1.0);
+solver.SetAdaptiveRho(true);  // Automatically adjust rho
 ```
 
-The solver will automatically increase/decrease ρ based on residual balance.
+The solver will automatically increase/decrease rho based on residual balance.
+
+---
+
+## Anderson Acceleration
+
+Anderson acceleration can speed up convergence by 20-50% on well-conditioned problems.
+
+### Enabling Anderson Acceleration
+
+```cpp
+solver.SetUseAnderson(true);
+solver.SetAndersonMem(5);     // Number of past iterates to store
+solver.SetAndersonStart(10);  // Start after 10 iterations
+```
+
+### When to Use
+
+- Well-conditioned problems
+- Problems that converge slowly without it
+- When iterations are the bottleneck (not matrix operations)
+
+### When to Avoid
+
+- Ill-conditioned problems (may be unstable)
+- When each iteration is expensive
+- Very easy problems (overhead not worth it)
 
 ---
 
@@ -76,7 +111,7 @@ The solver will automatically increase/decrease ρ based on residual balance.
 Each function has the form:
 
 $$
-h(ax + b) \cdot c + d \cdot x + e
+c \cdot h(ax - b) + d \cdot x + e \cdot x^2
 $$
 
 where:
@@ -84,33 +119,20 @@ where:
 - `b`: Input shift
 - `c`: Output scaling
 - `d`: Linear term coefficient
-- `e`: Constant offset
+- `e`: Quadratic term coefficient
 - `h`: Base function type
 
 ### Example: Scaled Huber Loss
 
 ```cpp
-pogs::FunctionObj<double> f;
-f.type = pogs::FunctionType::Huber;
-f.a = 2.0;   // Scale input
-f.c = 0.5;   // Scale output
-f.d = -b[i]; // Linear term (for data fitting)
+FunctionObj<double> f;
+f.h = kHuber;
+f.a = 2.0;     // Scale input
+f.c = 0.5;     // Scale output
+f.d = -b[i];   // Linear term (for data fitting)
 ```
 
 This creates: $f(x) = 0.5 \cdot \text{huber}(2x) - b_i \cdot x$
-
----
-
-## Over-Relaxation
-
-Over-relaxation can improve convergence for some problems.
-
-```cpp
-// Not yet exposed in modern API
-// Coming in future release
-```
-
-The ADMM algorithm uses over-relaxation parameter α = 1.7 by default for better convergence.
 
 ---
 
@@ -119,17 +141,21 @@ The ADMM algorithm uses over-relaxation parameter α = 1.7 by default for better
 ### Creating Sparse Matrices
 
 ```cpp
-// From triplet format (row, col, value)
-std::vector<int> rows = {0, 0, 1, 1, 2};
-std::vector<int> cols = {0, 1, 1, 2, 2};
-std::vector<double> vals = {1.0, 2.0, 3.0, 4.0, 5.0};
+#include "pogs.h"
+#include "matrix/matrix_sparse.h"
 
-auto A = pogs::make_sparse_matrix(m, n, rows, cols, vals);
+// CSR format (row-major sparse)
+// ptr: row pointers (size m+1)
+// ind: column indices (size nnz)
+// val: values (size nnz)
+
+pogs::MatrixSparse<double> A('r', m, n, nnz, val, ptr, ind);
+pogs::PogsCgls<double, pogs::MatrixSparse<double>> solver(A);
 ```
 
 ### Sparse Format Benefits
 
-- **Memory**: O(nnz) instead of O(m×n)
+- **Memory**: O(nnz) instead of O(m*n)
 - **Speed**: Faster matrix-vector products when sparse
 - **Scalability**: Enables much larger problems
 
@@ -144,8 +170,7 @@ Use sparse format when:
 
 ## GPU Acceleration
 
-!!! note "GPU Support"
-    GPU support requires CUDA and is built separately.
+GPU support requires CUDA and is built separately.
 
 ### Building with GPU Support
 
@@ -160,13 +185,16 @@ cmake --build build
 
 ### Using GPU Solver
 
+The GPU solver uses the same API as CPU:
+
 ```cpp
-#include <pogs/gpu/pogs_gpu.hpp>
+// Include GPU-specific headers
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
 
-auto A_gpu = pogs::make_gpu_matrix<double>(m, n);
-auto solver = pogs::make_gpu_solver<double>(std::move(A_gpu));
-
-auto result = solver.solve(f, g);
+// Create solver (GPU version if built with CUDA)
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+solver.Solve(f, g);
 ```
 
 ### GPU Limitations
@@ -183,10 +211,12 @@ auto result = solver.solve(f, g);
 
 ```cpp
 // Double precision (default)
-auto solver_d = pogs::make_solver<double>(std::move(A));
+pogs::MatrixDense<double> A_d('r', m, n, A_data_d);
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver_d(A_d);
 
 // Single precision (faster, less accurate)
-auto solver_f = pogs::make_solver<float>(std::move(A));
+pogs::MatrixDense<float> A_f('r', m, n, A_data_f);
+pogs::PogsDirect<float, pogs::MatrixDense<float>> solver_f(A_f);
 ```
 
 **Use single precision when:**
@@ -206,29 +236,33 @@ auto solver_f = pogs::make_solver<float>(std::move(A));
 ### Verbose Output
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .verbose = true
-};
+solver.SetVerbose(2);  // 0=quiet, 1=summary, 2=progress, 3=detailed
 ```
 
 Output shows:
 ```
-Iter   Primal Res   Dual Res     Gap        ρ
+Iter   Primal Res   Dual Res     Gap        rho
   10   1.23e-02    4.56e-03    8.90e-02   1.00
   20   3.45e-03    1.23e-03    2.34e-02   1.00
   ...
- 186   9.12e-05    3.45e-05    1.23e-04   1.00  ✓ Converged
+ 186   9.12e-05    3.45e-05    1.23e-04   1.00
 ```
 
-### Extracting Residuals
+### Extracting Results
 
 ```cpp
-auto result = solver.solve(f, g);
+PogsStatus status = solver.Solve(f, g);
 
-// Result contains convergence information
-std::cout << "Iterations: " << result.iterations << "\n";
-std::cout << "Primal objective: " << result.primal_obj.value() << "\n";
-std::cout << "Dual objective: " << result.dual_obj.value() << "\n";
+// Result information
+printf("Iterations: %u\n", solver.GetFinalIter());
+printf("Optimal value: %f\n", solver.GetOptval());
+printf("Final rho: %f\n", solver.GetRho());
+
+// Solution vectors
+const double* x = solver.GetX();
+const double* y = solver.GetY();
+const double* lambda = solver.GetLambda();
+const double* mu = solver.GetMu();
 ```
 
 ---
@@ -278,13 +312,13 @@ If the solver reports infeasibility:
 4. **Check for unboundedness**: Add bounds if needed
 
 ```cpp
-if (result.status == pogs::Status::InfeasibleOrUnbounded) {
+if (status == POGS_INFEASIBLE || status == POGS_UNBOUNDED) {
     // Try with relaxed tolerances
-    config.abs_tol = 1e-3;
-    config.rel_tol = 1e-2;
-    config.max_iter = 5000;
+    solver.SetAbsTol(1e-3);
+    solver.SetRelTol(1e-2);
+    solver.SetMaxIter(5000);
 
-    auto result2 = solver.solve(f, g, config);
+    PogsStatus status2 = solver.Solve(f, g);
 }
 ```
 
@@ -302,13 +336,13 @@ Adjust based on problem:
 
 ```cpp
 // High accuracy
-config.abs_tol = 1e-6;
-config.rel_tol = 1e-6;
+solver.SetAbsTol(1e-6);
+solver.SetRelTol(1e-6);
 
 // Fast approximate solution
-config.abs_tol = 1e-2;
-config.rel_tol = 1e-2;
-config.max_iter = 100;
+solver.SetAbsTol(1e-2);
+solver.SetRelTol(1e-2);
+solver.SetMaxIter(100);
 ```
 
 ---
@@ -318,18 +352,19 @@ config.max_iter = 100;
 ### For Fastest Solve Time
 
 1. Use sparse matrices when applicable
-2. Enable adaptive ρ
+2. Enable adaptive rho
 3. Use single precision if accuracy permits
 4. Warm start for sequences of problems
 5. Scale your data properly
+6. Try Anderson acceleration
 
 ### For Highest Accuracy
 
 1. Use double precision
 2. Tighten tolerances (1e-6 or better)
 3. Increase max iterations
-4. Disable early stopping (`gap_stop = false`)
-5. Start with smaller ρ
+4. Disable early stopping (`SetGapStop(false)`)
+5. Start with smaller rho
 
 ---
 

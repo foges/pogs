@@ -48,12 +48,12 @@ In POGS notation:
 ## C++ Implementation
 
 ```cpp
-#include <pogs/pogs.hpp>
-#include <pogs/types.hpp>
-#include <pogs/config.hpp>
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
 #include <iostream>
 #include <vector>
 #include <random>
+#include <cmath>
 
 int main() {
     // Problem dimensions
@@ -74,54 +74,49 @@ int main() {
         b_data[i] = dist(gen);
     }
 
-    // Create matrix
-    auto A = std::make_unique<pogs::MatrixDense<double>>(m, n);
-    // Copy data to matrix... (implementation specific)
+    // Create matrix and solver
+    pogs::MatrixDense<double> A('r', m, n, A_data.data());
+    pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+
+    // Configure solver
+    solver.SetRho(1.0);
+    solver.SetAbsTol(1e-4);
+    solver.SetRelTol(1e-3);
+    solver.SetMaxIter(1000);
+    solver.SetVerbose(2);
+    solver.SetAdaptiveRho(true);
 
     // Define objective functions
-    std::vector<pogs::FunctionObj<double>> f(m);
-    std::vector<pogs::FunctionObj<double>> g(n);
+    std::vector<FunctionObj<double>> f(m);
+    std::vector<FunctionObj<double>> g(n);
 
     // f_i(y_i) = (1/2) * y_i^2 - b_i * y_i
     for (size_t i = 0; i < m; ++i) {
-        f[i].type = pogs::FunctionType::Square;
-        f[i].c = 0.5;
+        f[i].h = kSquare;
+        f[i].c = 1.0;
         f[i].d = -b_data[i];
     }
 
     // g_j(x_j) = lambda * |x_j|
     double lambda = 0.1;
     for (size_t j = 0; j < n; ++j) {
-        g[j].type = pogs::FunctionType::Abs;
+        g[j].h = kAbs;
         g[j].c = lambda;
     }
 
-    // Configure solver
-    auto config = pogs::SolverConfig{
-        .rho = 1.0,
-        .abs_tol = 1e-4,
-        .rel_tol = 1e-3,
-        .max_iter = 1000,
-        .verbose = true,
-        .adaptive_rho = true
-    };
-
-    // Create solver
-    auto solver = pogs::make_solver<double>(std::move(A));
-    solver.configure(config);
-
     // Solve
-    auto result = solver.solve(f, g);
+    PogsStatus status = solver.Solve(f, g);
 
     // Check result
-    if (result.status == pogs::Status::Success) {
-        std::cout << "\nConverged in " << result.iterations << " iterations\n";
-        std::cout << "Optimal value: " << result.primal_obj.value() << "\n";
+    if (status == POGS_SUCCESS) {
+        std::cout << "\nConverged in " << solver.GetFinalIter() << " iterations\n";
+        std::cout << "Optimal value: " << solver.GetOptval() << "\n";
 
         // Count non-zeros (sparsity)
+        const double* x = solver.GetX();
         size_t nnz = 0;
         for (size_t j = 0; j < n; ++j) {
-            if (std::abs(result.x[j]) > 1e-4) {
+            if (std::abs(x[j]) > 1e-4) {
                 nnz++;
             }
         }
@@ -130,11 +125,10 @@ int main() {
         // Print first 10 coefficients
         std::cout << "\nFirst 10 coefficients:\n";
         for (size_t j = 0; j < std::min(n, size_t(10)); ++j) {
-            std::cout << "x[" << j << "] = " << result.x[j] << "\n";
+            std::cout << "x[" << j << "] = " << x[j] << "\n";
         }
     } else {
-        std::cerr << "Solver failed with status "
-                  << static_cast<int>(result.status) << "\n";
+        std::cerr << "Solver failed with status " << status << "\n";
         return 1;
     }
 
@@ -172,8 +166,8 @@ objective = cp.Minimize(
 # Create problem
 prob = cp.Problem(objective)
 
-# Solve with POGS
-prob.solve(solver='POGS', verbose=True)
+# Solve (use POGS if installed, else ECOS)
+prob.solve(verbose=True)
 
 # Print results
 print(f"\nStatus: {prob.status}")
@@ -186,32 +180,30 @@ print(f"\nFirst 10 coefficients:\n{x.value[:10]}")
 
 ## Parameter Tuning
 
-### Regularization Parameter (λ)
+### Regularization Parameter (lambda)
 
-- **Large λ** (e.g., 1.0): Strong sparsity, many zeros
-- **Small λ** (e.g., 0.01): Less sparsity, closer to least squares
-- **λ = 0**: Reduces to ordinary least squares
+- **Large lambda** (e.g., 1.0): Strong sparsity, many zeros
+- **Small lambda** (e.g., 0.01): Less sparsity, closer to least squares
+- **lambda = 0**: Reduces to ordinary least squares
 
 ### Solver Parameters
 
 For Lasso, try:
 
 ```cpp
-auto config = pogs::SolverConfig{
-    .rho = 1.0,           // Good default for Lasso
-    .abs_tol = 1e-4,      // Standard accuracy
-    .rel_tol = 1e-3,
-    .max_iter = 1000,
-    .adaptive_rho = true  // Helps convergence
-};
+solver.SetRho(1.0);           // Good default for Lasso
+solver.SetAbsTol(1e-4);       // Standard accuracy
+solver.SetRelTol(1e-3);
+solver.SetMaxIter(1000);
+solver.SetAdaptiveRho(true);  // Helps convergence
 ```
 
 For high accuracy:
 
 ```cpp
-config.abs_tol = 1e-6;
-config.rel_tol = 1e-6;
-config.max_iter = 2000;
+solver.SetAbsTol(1e-6);
+solver.SetRelTol(1e-6);
+solver.SetMaxIter(2000);
 ```
 
 ---
@@ -219,11 +211,11 @@ config.max_iter = 2000;
 ## Expected Output
 
 ```
-Iter   Primal Res   Dual Res     Gap        ρ
+Iter   Primal Res   Dual Res     Gap        rho
   10   1.23e-02    4.56e-03    8.90e-02   1.00
   20   3.45e-03    1.23e-03    2.34e-02   1.00
   50   7.89e-04    2.34e-04    4.56e-03   1.00
- 100   9.12e-05    3.45e-05    1.23e-04   1.00  ✓ Converged
+ 100   9.12e-05    3.45e-05    1.23e-04   1.00
 
 Converged in 100 iterations
 Optimal value: 45.2341
@@ -254,9 +246,9 @@ This is useful for:
 - **Interpretability**: Simpler models
 - **Regularization**: Prevent overfitting
 
-### Choosing λ
+### Choosing lambda
 
-Use cross-validation to choose λ:
+Use cross-validation to choose lambda:
 
 ```python
 from sklearn.model_selection import cross_val_score
@@ -288,13 +280,18 @@ $$
 ```cpp
 // f_i(y_i) = (1/2) * y_i^2 - b_i * y_i
 for (size_t i = 0; i < m; ++i) {
-    f[i].type = pogs::FunctionType::Square;
-    f[i].c = 0.5;
+    f[i].h = kSquare;
+    f[i].c = 1.0;
     f[i].d = -b_data[i];
 }
 
 // g_j(x_j) = lambda1 * |x_j| + (lambda2/2) * x_j^2
-// Split into two terms or use combined function
+// Use the 'e' parameter for quadratic term
+for (size_t j = 0; j < n; ++j) {
+    g[j].h = kAbs;
+    g[j].c = lambda1;
+    g[j].e = lambda2 / 2.0;  // Adds (lambda2/2) * x^2
+}
 ```
 
 ### Non-Negative Lasso
@@ -302,10 +299,10 @@ for (size_t i = 0; i < m; ++i) {
 Add non-negativity constraint:
 
 ```cpp
-// Use indicator function instead of Abs
+// Use indicator function for non-negativity
 for (size_t j = 0; j < n; ++j) {
-    g[j].type = pogs::FunctionType::IndGe0;
-    g[j].c = lambda;
+    g[j].h = kIndGe0;  // Constraint x >= 0
+    // Note: L1 penalty is implicit via projection
 }
 ```
 

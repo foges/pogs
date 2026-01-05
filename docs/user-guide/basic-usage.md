@@ -30,80 +30,138 @@ $$
 
 ## C++ Interface
 
-### 1. Define the Problem Data
+### 1. Include Headers and Create Matrix
 
 ```cpp
-#include <pogs/pogs.hpp>
-#include <vector>
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
 
 const size_t m = 100;  // Number of samples
 const size_t n = 50;   // Number of features
 
-// Create matrix A (dense example)
+// Create matrix A (row-major, m x n)
 std::vector<double> A_data(m * n);
 // ... fill A_data ...
 
-auto A = std::make_unique<pogs::MatrixDense<double>>(m, n);
-// Copy data to matrix
+pogs::MatrixDense<double> A('r', m, n, A_data.data());
 ```
 
-### 2. Define Objective Functions
+### 2. Create the Solver
 
 ```cpp
-#include <pogs/types.hpp>
+// PogsDirect - uses direct factorization (dense problems)
+pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
 
-std::vector<pogs::FunctionObj<double>> f(m);
-std::vector<pogs::FunctionObj<double>> g(n);
+// Alternative: PogsCgls - uses iterative method (large/sparse problems)
+// pogs::PogsCgls<double, pogs::MatrixDense<double>> solver(A);
+```
 
-// Example: Least squares + L1 regularization
+### 3. Define Objective Functions
+
+```cpp
+// f_i(y_i) and g_j(x_j) are defined using FunctionObj
+std::vector<FunctionObj<double>> f(m);
+std::vector<FunctionObj<double>> g(n);
+
+// Example: Lasso (least squares + L1 regularization)
 // f_i(y_i) = (1/2) * y_i^2 - b_i * y_i  (for ||Ax - b||^2)
 for (size_t i = 0; i < m; ++i) {
-    f[i].type = pogs::FunctionType::Square;
-    f[i].c = 0.5;
-    f[i].d = -b[i];
+    f[i].h = kSquare;   // Base function: (1/2) x^2
+    f[i].c = 1.0;       // Scaling
+    f[i].d = -b[i];     // Linear term: creates ||y - b||^2
 }
 
 // g_j(x_j) = lambda * |x_j|  (L1 regularization)
 double lambda = 0.1;
 for (size_t j = 0; j < n; ++j) {
-    g[j].type = pogs::FunctionType::Abs;
-    g[j].c = lambda;
+    g[j].h = kAbs;      // Base function: |x|
+    g[j].c = lambda;    // Regularization weight
 }
 ```
 
-### 3. Configure the Solver
+### 4. Configure the Solver
 
 ```cpp
-#include <pogs/config.hpp>
-
-// Using C++20 designated initializers
-auto config = pogs::SolverConfig{
-    .rho = 1.0,
-    .abs_tol = 1e-4,
-    .rel_tol = 1e-3,
-    .max_iter = 1000,
-    .verbose = true,
-    .adaptive_rho = true,
-    .gap_stop = true
-};
+solver.SetRho(1.0);           // ADMM penalty parameter
+solver.SetAbsTol(1e-4);       // Absolute tolerance
+solver.SetRelTol(1e-3);       // Relative tolerance
+solver.SetMaxIter(1000);      // Maximum iterations
+solver.SetVerbose(2);         // Show progress
+solver.SetAdaptiveRho(true);  // Enable adaptive rho
 ```
 
-### 4. Solve the Problem
+### 5. Solve and Get Results
 
 ```cpp
-auto solver = pogs::make_solver<double>(std::move(A));
-solver.configure(config);
+PogsStatus status = solver.Solve(f, g);
 
-auto result = solver.solve(f, g);
-
-if (result.status == pogs::Status::Success) {
-    std::cout << "Converged in " << result.iterations << " iterations\n";
-    std::cout << "Optimal value: " << result.primal_obj.value() << "\n";
+if (status == POGS_SUCCESS) {
+    printf("Converged in %u iterations\n", solver.GetFinalIter());
+    printf("Optimal value: %f\n", solver.GetOptval());
 
     // Access solution
+    const double* x = solver.GetX();
     for (size_t j = 0; j < n; ++j) {
-        std::cout << "x[" << j << "] = " << result.x[j] << "\n";
+        printf("x[%zu] = %f\n", j, x[j]);
     }
+}
+```
+
+---
+
+## Complete Example
+
+```cpp
+#include "pogs.h"
+#include "matrix/matrix_dense.h"
+#include <vector>
+#include <cstdio>
+#include <cstdlib>
+
+int main() {
+    const size_t m = 100;  // samples
+    const size_t n = 50;   // features
+    const double lambda = 0.1;
+
+    // Generate random data
+    std::vector<double> A_data(m * n);
+    std::vector<double> b(m);
+    for (size_t i = 0; i < m * n; ++i)
+        A_data[i] = (double)rand() / RAND_MAX - 0.5;
+    for (size_t i = 0; i < m; ++i)
+        b[i] = (double)rand() / RAND_MAX - 0.5;
+
+    // Create matrix and solver
+    pogs::MatrixDense<double> A('r', m, n, A_data.data());
+    pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+
+    // Configure
+    solver.SetAbsTol(1e-4);
+    solver.SetRelTol(1e-3);
+    solver.SetMaxIter(1000);
+    solver.SetVerbose(2);
+
+    // Define objective functions
+    std::vector<FunctionObj<double>> f(m), g(n);
+    for (size_t i = 0; i < m; ++i) {
+        f[i].h = kSquare;
+        f[i].d = -b[i];
+    }
+    for (size_t j = 0; j < n; ++j) {
+        g[j].h = kAbs;
+        g[j].c = lambda;
+    }
+
+    // Solve
+    PogsStatus status = solver.Solve(f, g);
+
+    if (status == POGS_SUCCESS) {
+        printf("Converged! Optimal value: %f\n", solver.GetOptval());
+    } else {
+        printf("Failed with status: %d\n", status);
+    }
+
+    return 0;
 }
 ```
 
@@ -111,39 +169,62 @@ if (result.status == pogs::Status::Success) {
 
 ## Function Types
 
-POGS supports many common functions:
-
-### Identity and Zero
-
-| Function | Mathematical Form | Use Case |
-|----------|------------------|----------|
-| `Zero` | $f(x) = 0$ | Unconstrained variables |
-| `Identity` | $f(x) = x$ | Linear objectives |
+POGS supports many common functions via the `Function` enum:
 
 ### Norms and Regularization
 
-| Function | Mathematical Form | Use Case |
-|----------|------------------|----------|
-| `Abs` | $f(x) = c\|x\|$ | L1 regularization (Lasso) |
-| `Square` | $f(x) = (c/2)x^2$ | Least squares, L2 penalty |
+| Enum | Mathematical Form | Use Case |
+|------|------------------|----------|
+| `kAbs` | $\|x\|$ | L1 regularization (Lasso) |
+| `kSquare` | $(1/2)x^2$ | Least squares, L2 penalty |
+| `kHuber` | Huber loss | Robust regression |
 
-### Indicators (Constraints)
+### Indicator Functions (Constraints)
 
-| Function | Mathematical Form | Use Case |
-|----------|------------------|----------|
-| `IndBox01` | $I_{[0,1]}(x)$ | Box constraints |
-| `IndEq0` | $I_{\{0\}}(x)$ | Equality to zero |
-| `IndGe0` | $I_{[0,\infty)}(x)$ | Non-negativity |
-| `IndLe0` | $I_{(-\infty,0]}(x)$ | Non-positivity |
+| Enum | Mathematical Form | Use Case |
+|------|------------------|----------|
+| `kIndBox01` | $I_{[0,1]}(x)$ | Box constraints |
+| `kIndEq0` | $I_{\{0\}}(x)$ | Equality to zero |
+| `kIndGe0` | $I_{[0,\infty)}(x)$ | Non-negativity |
+| `kIndLe0` | $I_{(-\infty,0]}(x)$ | Non-positivity |
 
 ### Nonlinear Functions
 
-| Function | Mathematical Form | Use Case |
-|----------|------------------|----------|
-| `Logistic` | $f(x) = \log(1 + e^x)$ | Logistic regression |
-| `Huber` | Huber loss | Robust regression |
-| `NegLog` | $f(x) = -\log(x)$ | Barrier functions |
-| `Exp` | $f(x) = e^x$ | Exponential objectives |
+| Enum | Mathematical Form | Use Case |
+|------|------------------|----------|
+| `kLogistic` | $\log(1 + e^x)$ | Logistic regression |
+| `kNegLog` | $-\log(x)$ | Barrier functions |
+| `kExp` | $e^x$ | Exponential objectives |
+| `kIdentity` | $x$ | Linear terms |
+| `kZero` | $0$ | Unconstrained |
+
+---
+
+## FunctionObj Parameters
+
+Each `FunctionObj<T>` represents:
+
+$$
+c \cdot h(ax - b) + d \cdot x + e \cdot x^2
+$$
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `h` | `kZero` | Base function type |
+| `a` | `1.0` | Input scaling |
+| `b` | `0.0` | Input shift |
+| `c` | `1.0` | Output scaling |
+| `d` | `0.0` | Linear term coefficient |
+| `e` | `0.0` | Quadratic term coefficient |
+
+**Example:**
+```cpp
+FunctionObj<double> obj;
+obj.h = kSquare;  // h(x) = (1/2)x^2
+obj.c = 0.5;      // Scale by 0.5
+obj.d = -b[i];    // Add linear term -b[i]*x
+// Result: 0.5 * (1/2) * x^2 - b[i] * x = (1/4)x^2 - b[i]*x
+```
 
 ---
 
@@ -156,16 +237,12 @@ $$
 $$
 
 ```cpp
-// f_i(y_i) = (1/2) * y_i^2 - b_i * y_i
 for (size_t i = 0; i < m; ++i) {
-    f[i].type = pogs::FunctionType::Square;
-    f[i].c = 0.5;
+    f[i].h = kSquare;
     f[i].d = -b[i];
 }
-
-// g_j(x_j) = lambda * |x_j|
 for (size_t j = 0; j < n; ++j) {
-    g[j].type = pogs::FunctionType::Abs;
+    g[j].h = kAbs;
     g[j].c = lambda;
 }
 ```
@@ -177,16 +254,12 @@ $$
 $$
 
 ```cpp
-// f_i(y_i) = y_i^2 - 2*b_i*y_i
 for (size_t i = 0; i < m; ++i) {
-    f[i].type = pogs::FunctionType::Square;
-    f[i].c = 1.0;
+    f[i].h = kSquare;
     f[i].d = -2.0 * b[i];
 }
-
-// g_j(x_j) = lambda * x_j^2
 for (size_t j = 0; j < n; ++j) {
-    g[j].type = pogs::FunctionType::Square;
+    g[j].h = kSquare;
     g[j].c = lambda;
 }
 ```
@@ -201,115 +274,60 @@ $$
 $$
 
 ```cpp
-// f_i(y_i) = y_i^2 - 2*b_i*y_i
 for (size_t i = 0; i < m; ++i) {
-    f[i].type = pogs::FunctionType::Square;
-    f[i].c = 1.0;
+    f[i].h = kSquare;
     f[i].d = -2.0 * b[i];
 }
-
-// g_j(x_j) = I_{x >= 0}(x_j)
 for (size_t j = 0; j < n; ++j) {
-    g[j].type = pogs::FunctionType::IndGe0;
+    g[j].h = kIndGe0;  // Non-negativity constraint
 }
 ```
+
+---
+
+## Status Codes
+
+| Status | Meaning |
+|--------|---------|
+| `POGS_SUCCESS` | Converged successfully |
+| `POGS_MAX_ITER` | Maximum iterations reached |
+| `POGS_NAN_FOUND` | Numerical error (NaN) |
+| `POGS_INFEASIBLE` | Problem likely infeasible |
+| `POGS_UNBOUNDED` | Problem likely unbounded |
+| `POGS_ERROR` | Generic error |
 
 ---
 
 ## Solver Parameters
 
-### Penalty Parameter (ρ)
+### Penalty Parameter (rho)
 
 - Controls the weight of the augmented Lagrangian term
 - Default: `1.0`
-- Try range: `0.1` to `10.0`
-- Larger ρ: Faster convergence but potentially less accurate
-- Smaller ρ: More accurate but slower convergence
+- Larger rho: Faster convergence but potentially less accurate
+- Smaller rho: More accurate but slower convergence
 
 ### Tolerances
 
-**Absolute tolerance** (`abs_tol`):
-- Default: `1e-4`
-- For high accuracy: `1e-6` or smaller
+**Absolute tolerance** (`abs_tol`): Default `1e-4`
 
-**Relative tolerance** (`rel_tol`):
-- Default: `1e-3`
-- For high accuracy: `1e-5` or smaller
+**Relative tolerance** (`rel_tol`): Default `1e-3`
 
-### Convergence Criteria
-
-The solver stops when:
-
+The solver stops when primal and dual residuals satisfy:
 $$
-\begin{align}
-\text{Primal residual:} \quad & \|r\|_2 \leq \epsilon_{\text{abs}} + \epsilon_{\text{rel}} \cdot \max(\|Ax\|_2, \|y\|_2) \\
-\text{Dual residual:} \quad & \|s\|_2 \leq \epsilon_{\text{abs}} + \epsilon_{\text{rel}} \cdot \|A^T\lambda\|_2
-\end{align}
+\|r\|_2 \leq \epsilon_{\text{abs}} + \epsilon_{\text{rel}} \cdot \max(\|Ax\|_2, \|y\|_2)
 $$
 
-### Adaptive ρ
+### Adaptive Rho
 
-When `adaptive_rho = true`, ρ is automatically adjusted based on residuals:
-
-- If primal residual >> dual residual: increase ρ
-- If dual residual >> primal residual: decrease ρ
-
-This can significantly improve convergence for difficult problems.
-
----
-
-## Matrix Formats
-
-### Dense Matrices
-
-```cpp
-auto A = std::make_unique<pogs::MatrixDense<double>>(m, n);
-// Column-major or row-major storage
-```
-
-Best for:
-- Small to medium problems (< 10,000 variables)
-- Most matrix elements are non-zero
-
-### Sparse Matrices
-
-```cpp
-auto A = std::make_unique<pogs::MatrixSparse<double>>(m, n, nnz);
-// CSR or CSC format
-```
-
-Best for:
-- Large problems (> 10,000 variables)
-- Most matrix elements are zero
-- Significant memory savings
-
----
-
-## Checking Convergence
-
-```cpp
-auto result = solver.solve(f, g);
-
-switch (result.status) {
-    case pogs::Status::Success:
-        std::cout << "Converged successfully\n";
-        break;
-    case pogs::Status::MaxIterations:
-        std::cout << "Maximum iterations reached\n";
-        break;
-    case pogs::Status::NumericalError:
-        std::cout << "Numerical error encountered\n";
-        break;
-    case pogs::Status::InfeasibleOrUnbounded:
-        std::cout << "Problem is infeasible or unbounded\n";
-        break;
-}
-```
+When `SetAdaptiveRho(true)`, rho is automatically adjusted:
+- If primal residual >> dual residual: increase rho
+- If dual residual >> primal residual: decrease rho
 
 ---
 
 ## Next Steps
 
-- [Advanced Features](advanced-features.md) - Warm starting, custom functions
+- [Advanced Features](advanced-features.md) - Warm starting, Anderson acceleration
 - [Cone Problems](cone-problems.md) - LP, QP, SOCP, SDP formulations
 - [Examples](../examples/lasso.md) - Complete working examples
