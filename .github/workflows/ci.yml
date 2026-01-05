@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, main, cone]
+    branches: [master, main]
   pull_request:
     branches: [master, main]
   workflow_dispatch:
@@ -70,13 +70,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install MkDocs
-        run: pip install mkdocs-material pymdown-extensions
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Build docs
-        run: mkdocs build --strict
+        run: uvx --with mkdocs-material mkdocs build --strict

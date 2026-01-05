@@ -24,22 +24,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for proper git info
+          fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install mkdocs-material
-          pip install mkdocs-gen-files
-          pip install pymdown-extensions
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Build documentation
-        run: mkdocs build --strict
+        run: uvx --with mkdocs-material mkdocs build --strict
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
