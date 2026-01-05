@@ -68,24 +68,229 @@ inline bool ValidCone(const std::vector<ConeConstraint>& cones, size_t dim) {
 // Shared GPU/CPU code.
 const double kExp1 = 2.718281828459045;
 
+// Helper: solve t*exp(t) = rhs using Newton's method (Lambert W function)
+template <typename T>
+__DEVICE__ T SolveTExpT(T rhs) {
+  // Find t such that t * exp(t) = rhs
+  // This is the Lambert W function: t = W(rhs)
+  if (rhs < static_cast<T>(0)) return static_cast<T>(0);
+  if (rhs < static_cast<T>(1e-10)) return rhs;  // t ≈ rhs for small rhs
+
+  // Initial guess
+  T t = (rhs < static_cast<T>(1)) ? rhs : Log(rhs + static_cast<T>(1));
+
+  for (int i = 0; i < 50; ++i) {
+    T exp_t = Exp(t);
+    T f = t * exp_t - rhs;
+    T df = exp_t * (t + static_cast<T>(1));
+    if (Abs(df) < static_cast<T>(1e-15)) break;
+    T step = f / df;
+    t -= step;
+    if (Abs(step) < static_cast<T>(1e-12) * (static_cast<T>(1) + Abs(t))) break;
+  }
+  return t;
+}
+
 template <typename T>
 __DEVICE__ void ProjectExpPrimalCone(const CONE_IDX *idx, T *v) {
-  T &x = v[idx[0]];
-  T &y = v[idx[1]];
-  T &z = v[idx[2]];
-  if (x > 0 && x * Exp(y / z) <= -kExp1 * z) {
-    x = y = z = static_cast<T>(0);
-  } else if (x < 0 && y < 0) {
-    x = static_cast<T>(0);
-    y = Max(static_cast<T>(0), y);
-  } else if (!(y > 0 && y * Exp(x / y) <= z)) {
-    assert(false && "TODO");
+  // Exponential cone: K_exp = { (r, s, t) : s > 0, s*e^(r/s) <= t }
+  //                         U { (r, s, t) : r <= 0, s = 0, t >= 0 }
+  // Following SCS notation and algorithm
+  T r = v[idx[0]], s = v[idx[1]], t = v[idx[2]];
+  const T tol = static_cast<T>(1e-8);
+
+  // Case 1: Point is in the cone
+  if ((s > tol && s * Exp(r / s) <= t + tol) ||
+      (Abs(s) <= tol && r <= tol && t >= -tol)) {
+    // Already in cone, ensure boundary conditions
+    if (Abs(s) <= tol && r <= tol) {
+      v[idx[0]] = Min(r, static_cast<T>(0));
+      v[idx[1]] = static_cast<T>(0);
+      v[idx[2]] = Max(t, static_cast<T>(0));
+    }
+    return;
   }
+
+  // Case 2: Point is in polar/dual cone - project to origin
+  // Polar cone: { (r, s, t) : r > 0, r*e^(s/r) <= -e*t }
+  if (r > tol && t < -tol) {
+    T val = r * Exp(s / r);
+    if (val <= -kExp1 * t + tol) {
+      v[idx[0]] = v[idx[1]] = v[idx[2]] = static_cast<T>(0);
+      return;
+    }
+  }
+
+  // Case 3: General projection using the algorithm from SCS
+  // The projection onto exp cone boundary satisfies:
+  //   s* * exp(r*/s*) = t*  (on boundary)
+  //   (r - r*, s - s*, t - t*) = mu * (exp(r*/s*), exp(r*/s*)*(1-r*/s*), -1)
+  // for some mu >= 0
+  //
+  // This gives: t* = t + mu, and exp(r*/s*) = t*/s*
+  // Let u = r*/s*, then exp(u) = t*/s*, so s* = t*/exp(u)
+  // And r* = u * s* = u * t* / exp(u)
+  //
+  // From r - r* = mu * exp(u) = mu * t*/s*:
+  //   r - u*t*/exp(u) = mu * t* / (t*/exp(u)) = mu * exp(u)
+  //
+  // From t* = t + mu:
+  //   r - u*(t+mu)/exp(u) = mu * exp(u)
+  //   r*exp(u) - u*t - u*mu = mu * exp(2u)
+  //   r*exp(u) - u*t = mu * (exp(2u) + u)
+  //   mu = (r*exp(u) - u*t) / (exp(2u) + u)
+  //
+  // From s - s* = mu * exp(u) * (1 - u):
+  //   s - (t+mu)/exp(u) = mu * exp(u) * (1 - u)
+  //   s*exp(u) - t - mu = mu * exp(2u) * (1 - u)
+  //   s*exp(u) - t = mu * (1 + exp(2u)*(1-u))
+  //
+  // We need to find u. Substituting mu:
+  //   s*exp(u) - t = ((r*exp(u) - u*t) / (exp(2u) + u)) * (1 + exp(2u)*(1-u))
+  //
+  // This is a nonlinear equation in u. Use bisection for robustness.
+
+  // Bisection bounds: u typically in [-50, 50] for reasonable inputs
+  T u_lo = static_cast<T>(-50);
+  T u_hi = static_cast<T>(50);
+
+  // Residual function: given u, compute the constraint violation
+  auto residual = [r, s, t](T u) -> T {
+    T exp_u = Exp(u);
+    T exp_2u = exp_u * exp_u;
+    T denom = exp_2u + u;
+    if (Abs(denom) < static_cast<T>(1e-15)) return static_cast<T>(1e10);
+
+    T mu = (r * exp_u - u * t) / denom;
+    if (mu < static_cast<T>(0)) return static_cast<T>(1e10) * (static_cast<T>(1) - mu);
+
+    T lhs = s * exp_u - t;
+    T rhs = mu * (static_cast<T>(1) + exp_2u * (static_cast<T>(1) - u));
+    return lhs - rhs;
+  };
+
+  // Find sign change
+  T f_lo = residual(u_lo);
+  T f_hi = residual(u_hi);
+
+  // If no sign change, try to find better bounds
+  if (f_lo * f_hi > 0) {
+    // Try Newton from a central point
+    T u = static_cast<T>(0);
+    for (int i = 0; i < 50; ++i) {
+      T exp_u = Exp(u);
+      T exp_2u = exp_u * exp_u;
+      T denom = exp_2u + u;
+      if (Abs(denom) < static_cast<T>(1e-15)) break;
+
+      T mu = (r * exp_u - u * t) / denom;
+      if (mu < 0) mu = static_cast<T>(0);
+
+      T t_star = t + mu;
+      T s_star = t_star / exp_u;
+      T r_star = u * s_star;
+
+      // Check if this is a valid projection
+      if (s_star > 0 && Abs(s_star * Exp(r_star / s_star) - t_star) < tol) {
+        v[idx[0]] = r_star;
+        v[idx[1]] = s_star;
+        v[idx[2]] = t_star;
+        return;
+      }
+
+      // Newton step based on KKT conditions
+      // Gradient of objective: 2*(r_star - r, s_star - s, t_star - t)
+      // must equal lambda * gradient of constraint
+      T grad_r = static_cast<T>(2) * (r_star - r);
+      T grad_s = static_cast<T>(2) * (s_star - s);
+
+      T target_ratio = (static_cast<T>(1) - u);
+      T actual_ratio = (Abs(grad_r) > tol) ? grad_s / grad_r : target_ratio;
+
+      T du = (target_ratio - actual_ratio) * static_cast<T>(0.5);
+      u += du;
+      u = Max(static_cast<T>(-50), Min(static_cast<T>(50), u));
+
+      if (Abs(du) < static_cast<T>(1e-10)) break;
+    }
+  }
+
+  // Bisection
+  T u = (u_lo + u_hi) / static_cast<T>(2);
+  for (int i = 0; i < 100; ++i) {
+    T f = residual(u);
+    if (Abs(f) < tol || (u_hi - u_lo) < tol) break;
+
+    if (f * f_lo < 0) {
+      u_hi = u;
+      f_hi = f;
+    } else {
+      u_lo = u;
+      f_lo = f;
+    }
+    u = (u_lo + u_hi) / static_cast<T>(2);
+  }
+
+  // Compute projection from u
+  T exp_u = Exp(u);
+  T exp_2u = exp_u * exp_u;
+  T denom = exp_2u + u;
+  T mu = Max((r * exp_u - u * t) / denom, static_cast<T>(0));
+
+  T t_star = t + mu;
+  T s_star = Max(t_star / exp_u, static_cast<T>(1e-12));
+  T r_star = u * s_star;
+
+  v[idx[0]] = r_star;
+  v[idx[1]] = s_star;
+  v[idx[2]] = t_star;
 }
 
 template <typename T>
 __DEVICE__ void ProjectExpDualCone(const CONE_IDX *idx, T *v) {
-  assert(false && "TODO");
+  // Dual exponential cone: K_exp* = { (u, v, w) : u < 0, -u*e^(v/u) <= e*w }
+  //                               U { (u, v, w) : u = 0, v >= 0, w >= 0 }
+  T u = v[idx[0]], s = v[idx[1]], w = v[idx[2]];
+  const T tol = static_cast<T>(1e-8);
+
+  // Check if already in dual cone
+  // Case 1: Main body - u < 0, -u*e^(v/u) <= e*w
+  if (u < -tol && w > tol) {
+    T val = -u * Exp(s / u);
+    if (val <= kExp1 * w + tol) {
+      return;  // Already in dual cone
+    }
+  }
+
+  // Case 2: Boundary ray - u = 0, v >= 0, w >= 0
+  if (Abs(u) <= tol && s >= -tol && w >= -tol) {
+    v[idx[0]] = static_cast<T>(0);
+    v[idx[1]] = Max(s, static_cast<T>(0));
+    v[idx[2]] = Max(w, static_cast<T>(0));
+    return;
+  }
+
+  // Case 3: Polar cone of K_exp* (which is -K_exp) - project to origin
+  // -K_exp = { (-r, -s, -t) : s > 0, s*e^(r/s) <= t } U { r >= 0, s = 0, t <= 0 }
+  // So if (u, s, w) is in -K_exp, project to (0,0,0)
+  if ((s < -tol && (-s) * Exp(u / (-s)) <= (-w) + tol) ||
+      (Abs(s) <= tol && u >= -tol && w <= tol)) {
+    v[idx[0]] = v[idx[1]] = v[idx[2]] = static_cast<T>(0);
+    return;
+  }
+
+  // Case 4: General case - use Moreau decomposition
+  // proj_K*(x) = x + proj_K(-x) where K is the primal exponential cone
+  T neg[3] = {-u, -s, -w};
+  CONE_IDX temp_idx[3] = {0, 1, 2};
+
+  // Project negated point onto primal cone
+  ProjectExpPrimalCone(temp_idx, neg);
+
+  // Add the projection to original point
+  v[idx[0]] = u + neg[0];
+  v[idx[1]] = s + neg[1];
+  v[idx[2]] = w + neg[2];
 }
 
 // CPU code.
@@ -397,24 +602,32 @@ inline void ProxConeSdpGpu(const ConeConstraintRaw& cone_constr, T *v,
   assert(false && "SDP Not implemented on GPU");
 }
 
+// GPU kernel for exponential primal cone projection
+template <typename T>
+__global__
+void __ProjectExpPrimalConeKernel(const CONE_IDX *idx, T *v) {
+  ProjectExpPrimalCone(idx, v);
+}
+
+// GPU kernel for exponential dual cone projection
+template <typename T>
+__global__
+void __ProjectExpDualConeKernel(const CONE_IDX *idx, T *v) {
+  ProjectExpDualCone(idx, v);
+}
+
 template <typename T>
 inline void ProxConeExpPrimalGpu(const ConeConstraintRaw& cone_constr, T *v,
                                  const cudaStream_t &stream) {
-  // TODO
-  // CONE_IDX *idx = cone_constr.idx;
-  // auto f = [idx, v](){ ProjectExpPrimalCone(idx, v); };
-  // __Execute<<<1, 1, 0, stream>>>(f);
-  assert(false && "not implemented");
+  // Launch single thread kernel - exponential cone has only 3 elements
+  __ProjectExpPrimalConeKernel<<<1, 1, 0, stream>>>(cone_constr.idx, v);
 }
 
 template <typename T>
 inline void ProxConeExpDualGpu(const ConeConstraintRaw& cone_constr, T *v,
                                const cudaStream_t &stream) {
-  // TODO
-  // CONE_IDX *idx = cone_constr.idx;
-  // auto f = [idx, v]() { ProjectExpDualCone(idx, v); };
-  // __Execute<<<1, 1, 0, stream>>>(f);
-  assert(false && "not implemented");
+  // Launch single thread kernel - exponential cone has only 3 elements
+  __ProjectExpDualConeKernel<<<1, 1, 0, stream>>>(cone_constr.idx, v);
 }
 
 template <typename T>
