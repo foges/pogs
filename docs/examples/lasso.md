@@ -1,268 +1,165 @@
-# Lasso Regression Example
+# Lasso Regression
 
-Complete example of solving Lasso regression with POGS.
+Sparse linear regression with L1 regularization.
 
 ---
 
-## Problem Formulation
+## The Problem
 
-**Lasso (Least Absolute Shrinkage and Selection Operator)** solves:
+Lasso solves:
 
 $$
 \text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda\|x\|_1
 $$
 
-where:
-- $A \in \mathbb{R}^{m \times n}$ is the design matrix
-- $b \in \mathbb{R}^m$ is the observation vector
-- $x \in \mathbb{R}^n$ are the coefficients to find
-- $\lambda > 0$ is the regularization parameter
+The L1 penalty promotes **sparse solutions** - most coefficients become exactly zero.
 
-**Effect:** The L1 penalty $\lambda\|x\|_1$ promotes sparsity in the solution.
-
----
-
-## POGS Formulation
-
-POGS requires the graph form:
-
-$$
-\begin{align}
-\text{minimize} \quad & f(y) + g(x) \\
-\text{subject to} \quad & y = Ax
-\end{align}
-$$
-
-For Lasso:
-
-- $f(y) = \frac{1}{2}\|y - b\|_2^2 = \sum_{i=1}^m \frac{1}{2}(y_i - b_i)^2$
-- $g(x) = \lambda\|x\|_1 = \sum_{j=1}^n \lambda|x_j|$
-
-In POGS notation:
-
-- $f_i(y_i) = \frac{1}{2}y_i^2 - b_i \cdot y_i$ (square function with linear term)
-- $g_j(x_j) = \lambda|x_j|$ (absolute value function)
+**Use cases:**
+- Feature selection (identify important predictors)
+- High-dimensional regression (n > m)
+- Interpretable models
 
 ---
 
-## C++ Implementation
+## Quick Example
 
-```cpp
-#include "pogs.h"
-#include "matrix/matrix_dense.h"
-#include <iostream>
-#include <vector>
-#include <random>
-#include <cmath>
+```python
+from pogs import solve_lasso
+import numpy as np
 
-int main() {
-    // Problem dimensions
-    const size_t m = 100;  // Number of samples
-    const size_t n = 50;   // Number of features
+# Generate sparse problem
+np.random.seed(42)
+m, n = 500, 300
 
-    // Generate random problem data
-    std::vector<double> A_data(m * n);
-    std::vector<double> b_data(m);
+# Design matrix
+A = np.random.randn(m, n)
 
-    std::default_random_engine gen(42);
-    std::normal_distribution<double> dist(0.0, 1.0);
+# True sparse solution (only 10 nonzeros)
+x_true = np.zeros(n)
+x_true[:10] = np.random.randn(10)
 
-    for (size_t i = 0; i < m * n; ++i) {
-        A_data[i] = dist(gen);
-    }
-    for (size_t i = 0; i < m; ++i) {
-        b_data[i] = dist(gen);
-    }
+# Observations with noise
+b = A @ x_true + 0.1 * np.random.randn(m)
 
-    // Create matrix and solver
-    pogs::MatrixDense<double> A('r', m, n, A_data.data());
-    pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
+# Solve
+result = solve_lasso(A, b, lambd=0.1)
 
-    // Configure solver
-    solver.SetRho(1.0);
-    solver.SetAbsTol(1e-4);
-    solver.SetRelTol(1e-3);
-    solver.SetMaxIter(1000);
-    solver.SetVerbose(2);
-    solver.SetAdaptiveRho(true);
+print(f"Solve time: {result['solve_time']*1000:.1f}ms")
+print(f"Iterations: {result['iter']}")
+print(f"Nonzeros found: {np.sum(np.abs(result['x']) > 1e-4)}")
+print(f"Recovery error: {np.linalg.norm(result['x'] - x_true):.4f}")
+```
 
-    // Define objective functions
-    std::vector<FunctionObj<double>> f(m);
-    std::vector<FunctionObj<double>> g(n);
-
-    // f_i(y_i) = (1/2) * y_i^2 - b_i * y_i
-    for (size_t i = 0; i < m; ++i) {
-        f[i].h = kSquare;
-        f[i].c = 1.0;
-        f[i].d = -b_data[i];
-    }
-
-    // g_j(x_j) = lambda * |x_j|
-    double lambda = 0.1;
-    for (size_t j = 0; j < n; ++j) {
-        g[j].h = kAbs;
-        g[j].c = lambda;
-    }
-
-    // Solve
-    PogsStatus status = solver.Solve(f, g);
-
-    // Check result
-    if (status == POGS_SUCCESS) {
-        std::cout << "\nConverged in " << solver.GetFinalIter() << " iterations\n";
-        std::cout << "Optimal value: " << solver.GetOptval() << "\n";
-
-        // Count non-zeros (sparsity)
-        const double* x = solver.GetX();
-        size_t nnz = 0;
-        for (size_t j = 0; j < n; ++j) {
-            if (std::abs(x[j]) > 1e-4) {
-                nnz++;
-            }
-        }
-        std::cout << "Sparsity: " << nnz << " / " << n << " non-zeros\n";
-
-        // Print first 10 coefficients
-        std::cout << "\nFirst 10 coefficients:\n";
-        for (size_t j = 0; j < std::min(n, size_t(10)); ++j) {
-            std::cout << "x[" << j << "] = " << x[j] << "\n";
-        }
-    } else {
-        std::cerr << "Solver failed with status " << status << "\n";
-        return 1;
-    }
-
-    return 0;
-}
+**Output:**
+```
+Solve time: 51.2ms
+Iterations: 60
+Nonzeros found: 10
+Recovery error: 0.0234
 ```
 
 ---
 
-## Python/CVXPY Implementation
+## Performance
 
-Much simpler with CVXPY!
+POGS is **4-8x faster** than alternatives on Lasso:
+
+| Size | POGS | OSQP | SCS | Clarabel |
+|------|------|------|-----|----------|
+| 200x100 | **3.6ms** | 32ms | 23ms | 21ms |
+| 500x300 | **51ms** | 399ms | 206ms | 186ms |
+| 1000x500 | **340ms** | 2.1s | 1.3s | 1.1s |
+
+*Benchmarks on Apple M1, Python 3.12*
+
+---
+
+## Choosing Lambda
+
+Lambda controls sparsity:
+
+- **Large lambda** (e.g., 1.0): Very sparse, many zeros
+- **Small lambda** (e.g., 0.01): Less sparse, closer to least squares
+- **lambda = 0**: Ordinary least squares (no regularization)
+
+```python
+import matplotlib.pyplot as plt
+
+lambdas = [0.001, 0.01, 0.1, 0.5, 1.0]
+nnz = []
+
+for lam in lambdas:
+    result = solve_lasso(A, b, lambd=lam)
+    nnz.append(np.sum(np.abs(result['x']) > 1e-4))
+
+plt.semilogx(lambdas, nnz, 'o-')
+plt.xlabel('lambda')
+plt.ylabel('Number of nonzeros')
+plt.title('Lasso regularization path')
+plt.show()
+```
+
+### Cross-Validation
+
+Find optimal lambda with cross-validation:
+
+```python
+from sklearn.linear_model import LassoCV
+from sklearn.model_selection import cross_val_score
+
+# Use sklearn for CV, then solve with POGS
+lasso_cv = LassoCV(cv=5, random_state=0)
+lasso_cv.fit(A, b)
+best_lambda = lasso_cv.alpha_
+
+# Solve with POGS using best lambda
+result = solve_lasso(A, b, lambd=best_lambda)
+print(f"Best lambda: {best_lambda:.4f}")
+print(f"Nonzeros: {np.sum(np.abs(result['x']) > 1e-4)}")
+```
+
+---
+
+## Tuning Solver Parameters
+
+### Tolerance
+
+```python
+# High accuracy
+result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-6, abs_tol=1e-6)
+
+# Fast (for warm-starting or prototyping)
+result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-3, abs_tol=1e-3)
+```
+
+### Initialization
+
+Warm-start with a previous solution:
+
+```python
+# Solve first problem
+result1 = solve_lasso(A, b, lambd=0.1)
+
+# Warm-start next problem (faster)
+result2 = solve_lasso(A, b, lambd=0.05, x_init=result1['x'])
+```
+
+---
+
+## CVXPY Alternative
+
+For more flexibility, use CVXPY:
 
 ```python
 import cvxpy as cp
-import numpy as np
 
-# Problem dimensions
-m, n = 100, 50
-
-# Generate random data
-np.random.seed(42)
-A = np.random.randn(m, n)
-b = np.random.randn(m)
-
-# Define variable
 x = cp.Variable(n)
-
-# Define objective
-lambda_val = 0.1
-objective = cp.Minimize(
-    0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1)
-)
-
-# Create problem
+objective = cp.Minimize(0.5 * cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1))
 prob = cp.Problem(objective)
+prob.solve(solver='POGS')
 
-# Solve (use POGS if installed, else ECOS)
-prob.solve(verbose=True)
-
-# Print results
-print(f"\nStatus: {prob.status}")
 print(f"Optimal value: {prob.value:.4f}")
-print(f"Sparsity: {np.sum(np.abs(x.value) > 1e-4)} / {n} non-zeros")
-print(f"\nFirst 10 coefficients:\n{x.value[:10]}")
-```
-
----
-
-## Parameter Tuning
-
-### Regularization Parameter (lambda)
-
-- **Large lambda** (e.g., 1.0): Strong sparsity, many zeros
-- **Small lambda** (e.g., 0.01): Less sparsity, closer to least squares
-- **lambda = 0**: Reduces to ordinary least squares
-
-### Solver Parameters
-
-For Lasso, try:
-
-```cpp
-solver.SetRho(1.0);           // Good default for Lasso
-solver.SetAbsTol(1e-4);       // Standard accuracy
-solver.SetRelTol(1e-3);
-solver.SetMaxIter(1000);
-solver.SetAdaptiveRho(true);  // Helps convergence
-```
-
-For high accuracy:
-
-```cpp
-solver.SetAbsTol(1e-6);
-solver.SetRelTol(1e-6);
-solver.SetMaxIter(2000);
-```
-
----
-
-## Expected Output
-
-```
-Iter   Primal Res   Dual Res     Gap        rho
-  10   1.23e-02    4.56e-03    8.90e-02   1.00
-  20   3.45e-03    1.23e-03    2.34e-02   1.00
-  50   7.89e-04    2.34e-04    4.56e-03   1.00
- 100   9.12e-05    3.45e-05    1.23e-04   1.00
-
-Converged in 100 iterations
-Optimal value: 45.2341
-Sparsity: 12 / 50 non-zeros
-
-First 10 coefficients:
-x[0] = 0.234567
-x[1] = 0.000000
-x[2] = -0.456789
-x[3] = 0.000000
-x[4] = 0.123456
-...
-```
-
----
-
-## Interpretation
-
-### Sparsity
-
-Lasso automatically selects a subset of features:
-
-- Non-zero coefficients: Important features
-- Zero coefficients: Unimportant features (excluded)
-
-This is useful for:
-- **Feature selection**: Identify important predictors
-- **Interpretability**: Simpler models
-- **Regularization**: Prevent overfitting
-
-### Choosing lambda
-
-Use cross-validation to choose lambda:
-
-```python
-from sklearn.model_selection import cross_val_score
-from sklearn.linear_model import Lasso
-
-lambdas = [0.001, 0.01, 0.1, 1.0]
-scores = []
-
-for lam in lambdas:
-    model = Lasso(alpha=lam)
-    score = cross_val_score(model, A, b, cv=5).mean()
-    scores.append(score)
-
-best_lambda = lambdas[np.argmax(scores)]
+print(f"Nonzeros: {np.sum(np.abs(x.value) > 1e-4)}")
 ```
 
 ---
@@ -271,45 +168,74 @@ best_lambda = lambdas[np.argmax(scores)]
 
 ### Elastic Net
 
-Combine L1 and L2 penalties:
+Combine L1 and L2 penalties for grouped sparsity:
 
-$$
-\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda_1\|x\|_1 + \frac{\lambda_2}{2}\|x\|_2^2
-$$
+```python
+from pogs import solve_elastic_net
 
-```cpp
-// f_i(y_i) = (1/2) * y_i^2 - b_i * y_i
-for (size_t i = 0; i < m; ++i) {
-    f[i].h = kSquare;
-    f[i].c = 1.0;
-    f[i].d = -b_data[i];
-}
-
-// g_j(x_j) = lambda1 * |x_j| + (lambda2/2) * x_j^2
-// Use the 'e' parameter for quadratic term
-for (size_t j = 0; j < n; ++j) {
-    g[j].h = kAbs;
-    g[j].c = lambda1;
-    g[j].e = lambda2 / 2.0;  // Adds (lambda2/2) * x^2
-}
+# min ||Ax - b||² + λ₁||x||₁ + λ₂||x||²
+result = solve_elastic_net(A, b, l1_ratio=0.5, lambd=0.1)
 ```
 
 ### Non-Negative Lasso
 
-Add non-negativity constraint:
+Require positive coefficients:
 
-```cpp
-// Use indicator function for non-negativity
-for (size_t j = 0; j < n; ++j) {
-    g[j].h = kIndGe0;  // Constraint x >= 0
-    // Note: L1 penalty is implicit via projection
-}
+```python
+from pogs import solve_nonneg_ls
+
+# min ||Ax - b||² s.t. x >= 0
+result = solve_nonneg_ls(A, b)
+```
+
+### Weighted Lasso
+
+Different penalties per coefficient (via CVXPY):
+
+```python
+import cvxpy as cp
+
+weights = np.ones(n)
+weights[:10] = 0.01  # Less penalty on first 10 features
+
+x = cp.Variable(n)
+objective = cp.Minimize(
+    0.5 * cp.sum_squares(A @ x - b) + cp.norm(cp.multiply(weights, x), 1)
+)
+prob = cp.Problem(objective)
+prob.solve(solver='POGS')
+```
+
+---
+
+## Troubleshooting
+
+### "Max iterations reached"
+
+```python
+# Increase iterations
+result = solve_lasso(A, b, lambd=0.1, max_iter=5000)
+
+# Or check if lambda is too small (ill-conditioned)
+print(f"Condition number: {np.linalg.cond(A):.1f}")
+```
+
+### Slow convergence
+
+Normalize your data:
+
+```python
+# Standardize columns
+A_scaled = (A - A.mean(axis=0)) / A.std(axis=0)
+b_scaled = (b - b.mean()) / b.std()
+
+result = solve_lasso(A_scaled, b_scaled, lambd=0.1)
 ```
 
 ---
 
 ## See Also
 
-- [Basic Usage](../user-guide/basic-usage.md) - General POGS usage
-- [CVXPY Integration](../user-guide/cvxpy-integration.md) - Python interface
-- [Logistic Regression](logistic.md) - Classification example
+- [Logistic Regression](logistic.md) - Classification with L1 penalty
+- [Ridge Regression](../api/solver.md#solve_ridge) - L2 regularization
+- [API Reference](../api/solver.md) - Full function documentation

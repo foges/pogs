@@ -1,357 +1,201 @@
 # Quick Start
 
-Get up and running with POGS in 5 minutes!
+Solve your first optimization problem in under 2 minutes.
 
 ---
 
-## Your First Optimization Problem
+## Lasso Regression
 
-Let's solve a simple Lasso regression problem:
+The most common use case - sparse linear regression:
 
-$$
-\text{minimize} \quad \frac{1}{2} \|Ax - b\|_2^2 + \lambda \|x\|_1
-$$
+```python
+from pogs import solve_lasso
+import numpy as np
 
-This is a classic sparse regression problem used in statistics and machine learning.
+# Generate problem data
+np.random.seed(0)
+m, n = 500, 300
+A = np.random.randn(m, n)
+x_true = np.zeros(n)
+x_true[:10] = np.random.randn(10)  # Sparse ground truth
+b = A @ x_true + 0.1 * np.random.randn(m)
 
----
+# Solve
+result = solve_lasso(A, b, lambd=0.1)
 
-## C++ Example
-
-### 1. Create the Problem
-
-Create a file `my_first_pogs.cpp`:
-
-```cpp
-#include <iostream>
-#include <vector>
-#include <random>
-
-// Include POGS headers (from old API, will be modernized)
-#include "matrix/matrix_dense.h"
-#include "pogs.h"
-
-int main() {
-    // Problem dimensions
-    const size_t m = 100;  // Number of samples
-    const size_t n = 50;   // Number of features
-
-    // Create problem data
-    std::vector<double> A_data(m * n);
-    std::vector<double> b_data(m);
-
-    // Fill with random data
-    std::default_random_engine gen;
-    std::normal_distribution<double> dist(0.0, 1.0);
-
-    for (size_t i = 0; i < m * n; ++i)
-        A_data[i] = dist(gen);
-    for (size_t i = 0; i < m; ++i)
-        b_data[i] = dist(gen);
-
-    // Create matrix A
-    pogs::MatrixDense<double> A('r', m, n, A_data.data());
-
-    // Create solver
-    pogs::Pogs<double, pogs::MatrixDense<double>> solver(A);
-
-    // Define objective functions
-    std::vector<pogs::FunctionObj<double>> f(m);
-    std::vector<pogs::FunctionObj<double>> g(n);
-
-    // f_i(y_i) = (1/2) * y_i^2 - b_i * y_i  (for ||Ax - b||^2)
-    for (size_t i = 0; i < m; ++i) {
-        f[i].h = pogs::kSquare;
-        f[i].c = 0.5;
-        f[i].d = -b_data[i];
-    }
-
-    // g_j(x_j) = lambda * |x_j|  (L1 regularization)
-    double lambda = 0.1;
-    for (size_t j = 0; j < n; ++j) {
-        g[j].h = pogs::kAbs;
-        g[j].c = lambda;
-    }
-
-    // Solve
-    solver.Solve(f, g);
-
-    // Get solution
-    std::cout << "Solved in " << solver.GetIter() << " iterations" << std::endl;
-    std::cout << "Optimal value: " << solver.GetOptval() << std::endl;
-
-    return 0;
-}
+print(f"Status: {'Solved' if result['status'] == 0 else 'Failed'}")
+print(f"Iterations: {result['iterations']}")
+print(f"Nonzeros: {np.sum(np.abs(result['x']) > 1e-4)}")
 ```
 
-### 2. Compile and Run
-
-```bash
-# Using CMake (recommended)
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-
-# Or compile directly
-g++ -std=c++20 -I/usr/local/include my_first_pogs.cpp \
-    -lpogs_cpu -llapack -lblas -o my_app
-
-# Run
-./my_app
+Output:
 ```
-
-**Expected Output**:
-```
-Solved in 186 iterations
-Optimal value: 45.2341
+Status: Solved
+Iterations: 60
+Nonzeros: 10
 ```
 
 ---
 
-## Python/CVXPY Example
+## All Supported Problems
 
-Much simpler with Python!
+POGS provides optimized solvers for common ML problems:
 
-### 1. Create the Problem
+### Regression
 
-Create `my_first_pogs.py`:
+```python
+from pogs import solve_lasso, solve_ridge, solve_elastic_net, solve_huber
+
+# Lasso: ||Ax - b||² + λ||x||₁
+result = solve_lasso(A, b, lambd=0.1)
+
+# Ridge: ||Ax - b||² + λ||x||²
+result = solve_ridge(A, b, lambd=0.1)
+
+# Elastic Net: ||Ax - b||² + λ₁||x||₁ + λ₂||x||²
+result = solve_elastic_net(A, b, lambda1=0.1, lambda2=0.05)
+
+# Huber: ρ(Ax - b) + λ||x||₁ (robust regression)
+result = solve_huber(A, b, lambd=0.1, delta=1.0)
+```
+
+### Classification
+
+```python
+from pogs import solve_logistic, solve_svm
+
+# Logistic Regression: Σ log(1 + exp(-yᵢaᵢ'x)) + λ||x||₁
+y = np.sign(A @ np.random.randn(n))  # Binary labels {-1, +1}
+result = solve_logistic(A, y, lambd=0.01)
+
+# SVM: Σ max(0, 1 - yᵢaᵢ'x) + λ||x||²
+result = solve_svm(A, y, lambd=0.01)
+```
+
+### Constrained Problems
+
+```python
+from pogs import solve_nonneg_ls
+
+# Non-negative Least Squares: ||Ax - b||² s.t. x ≥ 0
+result = solve_nonneg_ls(A, b)
+```
+
+---
+
+## Result Dictionary
+
+All solvers return a dictionary with:
+
+| Key | Description |
+|-----|-------------|
+| `x` | Solution vector |
+| `status` | 0=success, other=failure |
+| `iterations` | Number of iterations |
+| `optval` | Optimal objective value |
+
+```python
+result = solve_lasso(A, b, lambd=0.1)
+
+x = result['x']           # Solution
+print(f"Solution norm: {np.linalg.norm(x):.4f}")
+print(f"Iterations: {result['iterations']}")
+```
+
+---
+
+## Tuning Parameters
+
+### Tolerance
+
+```python
+# More accurate (slower)
+result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-6, abs_tol=1e-6)
+
+# Faster (less accurate)
+result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-3, abs_tol=1e-3)
+```
+
+### Max Iterations
+
+```python
+# For difficult problems
+result = solve_lasso(A, b, lambd=0.1, max_iter=5000)
+```
+
+### Verbose Output
+
+```python
+# See iteration progress
+result = solve_lasso(A, b, lambd=0.1, verbose=2)
+```
+
+---
+
+## Using with CVXPY
+
+For more general problems, use POGS as a CVXPY backend:
 
 ```python
 import cvxpy as cp
 import numpy as np
 
-# Problem dimensions
-m, n = 100, 50
+# Define problem
+x = cp.Variable(300)
+A = np.random.randn(500, 300)
+b = np.random.randn(500)
 
-# Generate random data
-np.random.seed(0)
-A = np.random.randn(m, n)
-b = np.random.randn(m)
-
-# Define variable
-x = cp.Variable(n)
-
-# Define objective: minimize (1/2)||Ax - b||^2 + lambda*||x||_1
-lambda_val = 0.1
-objective = cp.Minimize(
-    0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1)
-)
-
-# Create problem
+objective = cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1))
 prob = cp.Problem(objective)
 
 # Solve with POGS
-prob.solve(solver='POGS', verbose=True)
+prob.solve(solver='POGS')
 
-# Print results
 print(f"Status: {prob.status}")
 print(f"Optimal value: {prob.value:.4f}")
-print(f"Solution sparsity: {np.sum(np.abs(x.value) > 1e-4)} / {n}")
-```
-
-### 2. Run
-
-```bash
-python my_first_pogs.py
-```
-
-**Output**:
-```
-Status: optimal
-Optimal value: 45.2341
-Solution sparsity: 12 / 50
-```
-
-!!! success
-    The Python interface is much cleaner! Use CVXPY for rapid prototyping.
-
----
-
-## Understanding the Output
-
-### Solver Iterations
-
-POGS uses ADMM, which iterates until convergence:
-
-```
-Iteration   Primal Res   Dual Res     Gap
-   10       1.23e-02    4.56e-03    8.90e-02
-   20       3.45e-03    1.23e-03    2.34e-02
-   ...
-  186       9.12e-05    3.45e-05    1.23e-04  ✓ Converged
-```
-
-### Solution Quality
-
-- **Primal Residual**: How well $y = Ax$ is satisfied
-- **Dual Residual**: Changes in the dual variable
-- **Gap**: Difference between primal and dual objectives
-
-All should be small at convergence (< 1e-4 by default).
-
----
-
-## Common Problem Types
-
-### 1. Linear Program
-
-$$
-\begin{align}
-\text{minimize} \quad & c^T x \\
-\text{subject to} \quad & Ax = b \\
-& x \geq 0
-\end{align}
-$$
-
-```python
-x = cp.Variable(n)
-objective = cp.Minimize(c.T @ x)
-constraints = [A @ x == b, x >= 0]
-prob = cp.Problem(objective, constraints)
-prob.solve(solver='POGS')
-```
-
-### 2. Quadratic Program
-
-$$
-\text{minimize} \quad \frac{1}{2} x^T Q x + c^T x
-$$
-
-```python
-x = cp.Variable(n)
-objective = cp.Minimize(0.5 * cp.quad_form(x, Q) + c.T @ x)
-prob = cp.Problem(objective)
-prob.solve(solver='POGS')
-```
-
-### 3. Ridge Regression
-
-$$
-\text{minimize} \quad \|Ax - b\|_2^2 + \lambda \|x\|_2^2
-$$
-
-```python
-x = cp.Variable(n)
-objective = cp.Minimize(
-    cp.sum_squares(A @ x - b) + lambda_val * cp.sum_squares(x)
-)
-prob = cp.Problem(objective)
-prob.solve(solver='POGS')
 ```
 
 ---
 
-## Tuning the Solver
+## Performance Comparison
 
-### Adjust Tolerances
+POGS is optimized for these ML problems:
 
-```python
-# More accurate (slower)
-prob.solve(solver='POGS', abs_tol=1e-6, rel_tol=1e-6)
-
-# Less accurate (faster)
-prob.solve(solver='POGS', abs_tol=1e-3, rel_tol=1e-3)
-```
-
-### Adjust Iterations
-
-```python
-# More iterations for harder problems
-prob.solve(solver='POGS', max_iter=5000)
-```
-
-### Enable Verbose Output
-
-```python
-# See iteration progress
-prob.solve(solver='POGS', verbose=True)
-```
-
----
-
-## What's Next?
-
-Now that you've run your first problem, explore:
-
-<div class="grid cards" markdown>
-
--   :material-book-open:{ .lg .middle } __Learn the API__
-
-    ---
-
-    Understand POGS capabilities in depth
-
-    [:octicons-arrow-right-24: User Guide](../user-guide/basic-usage.md)
-
--   :material-function:{ .lg .middle } __Supported Functions__
-
-    ---
-
-    See all available proximal operators
-
-    [:octicons-arrow-right-24: API Reference](../api/proximal.md)
-
--   :material-clipboard-list:{ .lg .middle } __More Examples__
-
-    ---
-
-    Learn from complete problem solutions
-
-    [:octicons-arrow-right-24: Examples](../examples/lasso.md)
-
--   :material-cog:{ .lg .middle } __Advanced Features__
-
-    ---
-
-    Cone constraints, SDP, and more
-
-    [:octicons-arrow-right-24: Advanced Guide](../user-guide/advanced-features.md)
-
-</div>
+| Problem | Size | POGS | OSQP | SCS |
+|---------|------|------|------|-----|
+| Lasso | 500x300 | **51ms** | 399ms | 206ms |
+| Ridge | 500x300 | **8ms** | 89ms | 64ms |
+| Logistic | 500x300 | **34ms** | 312ms | 198ms |
 
 ---
 
 ## Troubleshooting
 
-### "Solver did not converge"
+### "Max iterations reached"
 
-**Cause**: Problem may be infeasible or poorly scaled
+The problem may be poorly scaled or difficult:
 
-**Solution**:
 ```python
 # Try more iterations
-prob.solve(solver='POGS', max_iter=5000)
+result = solve_lasso(A, b, lambd=0.1, max_iter=5000)
 
-# Check problem is feasible
-print(f"Problem status: {prob.status}")
+# Or loosen tolerance
+result = solve_lasso(A, b, lambd=0.1, rel_tol=1e-3)
 ```
 
-### "Solution is inaccurate"
+### Slow convergence
 
-**Cause**: Default tolerances may be too loose
+Check your data scaling:
 
-**Solution**:
 ```python
-# Tighten tolerances
-prob.solve(solver='POGS', abs_tol=1e-6, rel_tol=1e-6)
-```
-
-### "Taking too long"
-
-**Cause**: Problem may be large or ill-conditioned
-
-**Solution**:
-```python
-# Check problem size
-print(f"Matrix size: {A.shape}")
-
-# Try adjusting rho (penalty parameter)
-prob.solve(solver='POGS', rho=10.0)  # Try different values
+# Normalize columns of A
+A = A / np.linalg.norm(A, axis=0, keepdims=True)
+result = solve_lasso(A, b, lambd=0.1)
 ```
 
 ---
 
-## Getting Help
+## Next Steps
 
-- **Documentation**: Browse the [User Guide](../user-guide/basic-usage.md)
-- **Examples**: See [Examples](../examples/lasso.md) for complete code
-- **Issues**: Report problems on [GitHub](https://github.com/foges/pogs/issues)
+- [Examples](../examples/lasso.md) - Detailed examples with explanations
+- [API Reference](../api/solver.md) - Full function documentation

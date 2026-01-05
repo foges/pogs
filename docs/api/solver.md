@@ -1,278 +1,349 @@
-# Solver API
+# Python API Reference
 
-Reference for the POGS solver classes.
+Complete reference for POGS Python functions.
 
 ---
 
-## Graph Form Solvers
+## Installation
 
-POGS provides templated solver classes for graph form problems:
-
-$$
-\begin{align}
-\text{minimize} \quad & f(y) + g(x) \\
-\text{subject to} \quad & y = Ax
-\end{align}
-$$
-
-### PogsDirect
-
-Direct factorization solver (recommended for dense problems).
-
-```cpp
-namespace pogs {
-
-template<typename T, typename M>
-class PogsDirect {
-public:
-    explicit PogsDirect(const M& A);
-    ~PogsDirect();
-
-    // Solve the optimization problem
-    PogsStatus Solve(const std::vector<FunctionObj<T>>& f,
-                     const std::vector<FunctionObj<T>>& g);
-
-    // Configuration
-    void SetRho(T rho);
-    void SetAbsTol(T abs_tol);
-    void SetRelTol(T rel_tol);
-    void SetMaxIter(unsigned int max_iter);
-    void SetVerbose(unsigned int verbose);
-    void SetAdaptiveRho(bool adaptive_rho);
-    void SetGapStop(bool gap_stop);
-
-    // Results
-    T GetOptval() const;
-    const T* GetX() const;
-    const T* GetY() const;
-    const T* GetLambda() const;
-    const T* GetMu() const;
-    unsigned int GetIter() const;
-};
-
-} // namespace pogs
-```
-
-### PogsCgls
-
-Iterative solver using CGLS (better for large sparse problems).
-
-```cpp
-namespace pogs {
-
-template<typename T, typename M>
-class PogsCgls {
-public:
-    explicit PogsCgls(const M& A);
-    // Same interface as PogsDirect
-};
-
-} // namespace pogs
+```bash
+pip install pogs
 ```
 
 ---
 
-## Cone Form Solvers
+## Quick Reference
 
-For cone form problems:
-
-$$
-\begin{align}
-\text{minimize} \quad & c^T x \\
-\text{subject to} \quad & Ax + s = b, \quad s \in \mathcal{K}
-\end{align}
-$$
-
-### PogsDirectCone
-
-```cpp
-namespace pogs {
-
-template<typename T, typename M>
-class PogsDirectCone {
-public:
-    PogsDirectCone(const M& A,
-                   const std::vector<ConeConstraint>& Kx,
-                   const std::vector<ConeConstraint>& Ky);
-
-    PogsStatus Solve(const std::vector<T>& b,
-                     const std::vector<T>& c);
-
-    // Configuration (same as PogsDirect)
-    void SetRho(T rho);
-    void SetAbsTol(T abs_tol);
-    void SetRelTol(T rel_tol);
-    void SetMaxIter(unsigned int max_iter);
-    void SetVerbose(unsigned int verbose);
-    void SetAdaptiveRho(bool adaptive_rho);
-    void SetGapStop(bool gap_stop);
-
-    // Results
-    T GetOptval() const;
-    const T* GetX() const;
-    const T* GetY() const;
-};
-
-} // namespace pogs
-```
+| Function | Problem |
+|----------|---------|
+| `solve_lasso` | Sparse regression (L1) |
+| `solve_ridge` | Ridge regression (L2) |
+| `solve_elastic_net` | L1 + L2 regularization |
+| `solve_logistic` | Logistic regression |
+| `solve_svm` | Support vector machine |
+| `solve_huber` | Robust regression |
+| `solve_nonneg_ls` | Non-negative least squares |
 
 ---
 
-## Status Codes
+## solve_lasso
 
-```cpp
-namespace pogs {
+Solve L1-regularized least squares (Lasso):
 
-enum PogsStatus {
-    POGS_SUCCESS = 0,      // Converged successfully
-    POGS_INFEASIBLE,       // Problem infeasible
-    POGS_UNBOUNDED,        // Problem unbounded
-    POGS_MAX_ITER,         // Maximum iterations reached
-    POGS_NAN_FOUND,        // NaN encountered
-    POGS_ERROR             // Other error
-};
+$$\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda\|x\|_1$$
 
-} // namespace pogs
-```
+```python
+from pogs import solve_lasso
 
----
-
-## Matrix Classes
-
-### MatrixDense
-
-```cpp
-namespace pogs {
-
-template<typename T>
-class MatrixDense {
-public:
-    // Constructors
-    MatrixDense(char ord, size_t m, size_t n, const T* data);
-    MatrixDense(const MatrixDense& A);
-
-    // Dimensions
-    size_t Rows() const;
-    size_t Cols() const;
-
-    // Data access
-    const T* Data() const;
-};
-
-} // namespace pogs
+result = solve_lasso(A, b, lambd,
+                     abs_tol=1e-4,
+                     rel_tol=1e-4,
+                     max_iter=2500,
+                     verbose=0,
+                     rho=1.0)
 ```
 
 **Parameters:**
-- `ord`: Matrix order ('r' for row-major, 'c' for column-major)
-- `m`: Number of rows
-- `n`: Number of columns
-- `data`: Pointer to matrix data
 
-### MatrixSparse
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `A` | array (m, n) | Data matrix |
+| `b` | array (m,) | Target vector |
+| `lambd` | float | L1 regularization strength |
+| `abs_tol` | float | Absolute tolerance (default: 1e-4) |
+| `rel_tol` | float | Relative tolerance (default: 1e-4) |
+| `max_iter` | int | Maximum iterations (default: 2500) |
+| `verbose` | int | 0=quiet, 1=summary, 2=progress |
+| `rho` | float | ADMM penalty parameter (default: 1.0) |
 
-```cpp
-namespace pogs {
+**Returns:** [Result dictionary](#result-dictionary)
 
-template<typename T>
-class MatrixSparse {
-public:
-    MatrixSparse(char ord, size_t m, size_t n, size_t nnz,
-                 const T* data, const int* ptr, const int* ind);
+**Example:**
+```python
+import numpy as np
+from pogs import solve_lasso
 
-    size_t Rows() const;
-    size_t Cols() const;
-    size_t Nnz() const;
-};
+A = np.random.randn(500, 300)
+b = np.random.randn(500)
 
-} // namespace pogs
+result = solve_lasso(A, b, lambd=0.1)
+print(f"Nonzeros: {np.sum(np.abs(result['x']) > 1e-4)}")
 ```
 
 ---
 
-## Configuration Defaults
+## solve_ridge
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `rho` | 1.0 | ADMM penalty parameter |
-| `abs_tol` | 1e-4 | Absolute tolerance |
-| `rel_tol` | 1e-3 | Relative tolerance |
-| `max_iter` | 2500 | Maximum iterations |
-| `verbose` | 2 | Verbosity (0=quiet, 1=summary, 2=progress) |
-| `adaptive_rho` | true | Enable adaptive penalty |
-| `gap_stop` | false | Stop on duality gap |
+Solve L2-regularized least squares (Ridge):
+
+$$\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \frac{\lambda}{2}\|x\|_2^2$$
+
+```python
+from pogs import solve_ridge
+
+result = solve_ridge(A, b, lambd,
+                     abs_tol=1e-4,
+                     rel_tol=1e-4,
+                     max_iter=2500,
+                     verbose=0,
+                     rho=1.0)
+```
+
+**Parameters:** Same as `solve_lasso`
+
+**Example:**
+```python
+result = solve_ridge(A, b, lambd=0.1)
+print(f"Solution norm: {np.linalg.norm(result['x']):.4f}")
+```
 
 ---
 
-## Usage Examples
+## solve_elastic_net
 
-### Lasso Regression
+Solve Elastic Net (L1 + L2 regularization):
 
-```cpp
-#include "pogs.h"
-#include "matrix/matrix_dense.h"
+$$\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda_1\|x\|_1 + \frac{\lambda_2}{2}\|x\|_2^2$$
 
-// Create matrix
-pogs::MatrixDense<double> A('r', m, n, A_data);
+```python
+from pogs import solve_elastic_net
 
-// Create solver
-pogs::PogsDirect<double, pogs::MatrixDense<double>> solver(A);
-
-// Configure
-solver.SetAbsTol(1e-5);
-solver.SetRelTol(1e-4);
-solver.SetMaxIter(1000);
-solver.SetVerbose(2);
-
-// Define f(y) = 0.5 * ||y - b||^2
-std::vector<FunctionObj<double>> f(m);
-for (size_t i = 0; i < m; ++i) {
-    f[i].h = kSquare;
-    f[i].c = 0.5;
-    f[i].d = -b[i];
-}
-
-// Define g(x) = lambda * ||x||_1
-std::vector<FunctionObj<double>> g(n);
-for (size_t j = 0; j < n; ++j) {
-    g[j].h = kAbs;
-    g[j].c = lambda;
-}
-
-// Solve
-pogs::PogsStatus status = solver.Solve(f, g);
-
-// Get results
-if (status == pogs::POGS_SUCCESS) {
-    const double* x = solver.GetX();
-    double optval = solver.GetOptval();
-}
+result = solve_elastic_net(A, b, lambda1, lambda2,
+                           abs_tol=1e-4,
+                           rel_tol=1e-4,
+                           max_iter=2500,
+                           verbose=0,
+                           rho=1.0)
 ```
 
-### Linear Program (Cone Form)
+**Parameters:**
 
-```cpp
-#include "pogs.h"
-#include "matrix/matrix_dense.h"
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `A` | array (m, n) | Data matrix |
+| `b` | array (m,) | Target vector |
+| `lambda1` | float | L1 regularization strength |
+| `lambda2` | float | L2 regularization strength |
 
-// min c'x s.t. Ax = b, x >= 0
-pogs::MatrixDense<double> A('r', m, n, A_data);
+**Example:**
+```python
+result = solve_elastic_net(A, b, lambda1=0.1, lambda2=0.05)
+```
 
-// Cone constraints
-std::vector<ConeConstraint> Kx = {{kConeNonNeg, {0, 1, 2, ..., n-1}}};
-std::vector<ConeConstraint> Ky = {{kConeZero, {0, 1, 2, ..., m-1}}};
+---
 
-// Create solver
-pogs::PogsDirectCone<double, pogs::MatrixDense<double>> solver(A, Kx, Ky);
+## solve_logistic
 
-// Solve
-pogs::PogsStatus status = solver.Solve(b, c);
+Solve L1-regularized logistic regression:
+
+$$\text{minimize} \quad \sum_i \log(1 + e^{-y_i (a_i^T x)}) + \lambda\|x\|_1$$
+
+```python
+from pogs import solve_logistic
+
+result = solve_logistic(A, b, lambd=0.0,
+                        abs_tol=1e-4,
+                        rel_tol=1e-4,
+                        max_iter=2500,
+                        verbose=0,
+                        rho=1.0)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `A` | array (m, n) | Feature matrix |
+| `b` | array (m,) | Labels in **{-1, +1}** |
+| `lambd` | float | L1 regularization (default: 0.0) |
+
+**Example:**
+```python
+y = np.sign(A @ np.random.randn(n))  # Labels in {-1, +1}
+result = solve_logistic(A, y, lambd=0.01)
+
+# Predict
+pred = np.sign(A @ result['x'])
+accuracy = np.mean(pred == y)
+```
+
+---
+
+## solve_svm
+
+Solve L2-regularized SVM (hinge loss):
+
+$$\text{minimize} \quad \sum_i \max(0, 1 - y_i (a_i^T x)) + \frac{\lambda}{2}\|x\|_2^2$$
+
+```python
+from pogs import solve_svm
+
+result = solve_svm(A, b, lambd=1.0,
+                   abs_tol=1e-4,
+                   rel_tol=1e-4,
+                   max_iter=2500,
+                   verbose=0,
+                   rho=1.0)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `A` | array (m, n) | Feature matrix |
+| `b` | array (m,) | Labels in **{-1, +1}** |
+| `lambd` | float | L2 regularization (default: 1.0) |
+
+**Example:**
+```python
+y = np.sign(A @ np.random.randn(n))
+result = solve_svm(A, y, lambd=0.1)
+```
+
+---
+
+## solve_huber
+
+Solve robust regression with Huber loss:
+
+$$\text{minimize} \quad \sum_i \text{huber}_\delta(a_i^T x - b_i) + \lambda\|x\|_1$$
+
+where $\text{huber}_\delta(r) = \begin{cases} \frac{1}{2}r^2 & |r| \le \delta \\ \delta|r| - \frac{1}{2}\delta^2 & |r| > \delta \end{cases}$
+
+```python
+from pogs import solve_huber
+
+result = solve_huber(A, b, delta=1.0, lambd=0.0,
+                     abs_tol=1e-4,
+                     rel_tol=1e-4,
+                     max_iter=2500,
+                     verbose=0,
+                     rho=1.0)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `A` | array (m, n) | Data matrix |
+| `b` | array (m,) | Target vector |
+| `delta` | float | Huber threshold (default: 1.0) |
+| `lambd` | float | L1 regularization (default: 0.0) |
+
+**Example:**
+```python
+# Add outliers to data
+b_noisy = b.copy()
+b_noisy[:10] += 100  # Outliers
+
+result = solve_huber(A, b_noisy, delta=1.0)
+```
+
+---
+
+## solve_nonneg_ls
+
+Solve non-negative least squares:
+
+$$\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 \quad \text{subject to} \quad x \ge 0$$
+
+```python
+from pogs import solve_nonneg_ls
+
+result = solve_nonneg_ls(A, b,
+                         abs_tol=1e-4,
+                         rel_tol=1e-4,
+                         max_iter=2500,
+                         verbose=0,
+                         rho=1.0)
+```
+
+**Example:**
+```python
+result = solve_nonneg_ls(A, b)
+print(f"Min value: {result['x'].min():.6f}")  # Should be >= 0
+```
+
+---
+
+## Result Dictionary
+
+All solvers return a dictionary with these keys:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `x` | array (n,) | Solution vector |
+| `y` | array (m,) | y = Ax |
+| `l` | array (m,) | Dual variable |
+| `optval` | float | Optimal objective value |
+| `iterations` | int | Number of iterations |
+| `status` | int | 0=success, other=failure |
+
+**Example:**
+```python
+result = solve_lasso(A, b, lambd=0.1)
+
+x = result['x']           # Solution
+obj = result['optval']    # Objective value
+iters = result['iterations']
+
+if result['status'] == 0:
+    print(f"Solved in {iters} iterations")
+else:
+    print("Solver failed")
+```
+
+---
+
+## Common Parameters
+
+### Tolerance
+
+Controls solution accuracy:
+
+```python
+# High accuracy (slower)
+result = solve_lasso(A, b, lambd=0.1, abs_tol=1e-6, rel_tol=1e-6)
+
+# Lower accuracy (faster)
+result = solve_lasso(A, b, lambd=0.1, abs_tol=1e-3, rel_tol=1e-3)
+```
+
+### Maximum Iterations
+
+```python
+# For difficult problems
+result = solve_lasso(A, b, lambd=0.1, max_iter=5000)
+```
+
+### Verbosity
+
+```python
+result = solve_lasso(A, b, lambd=0.1, verbose=2)
+# 0 = quiet
+# 1 = summary only
+# 2 = iteration progress
+```
+
+---
+
+## Sparse Matrices
+
+All solvers support scipy sparse matrices:
+
+```python
+import scipy.sparse as sp
+
+A_sparse = sp.random(1000, 500, density=0.1, format='csr')
+b = np.random.randn(1000)
+
+result = solve_lasso(A_sparse, b, lambd=0.1)
 ```
 
 ---
 
 ## See Also
 
-- [Function Objects](types.md) - FunctionObj and function types
-- [Proximal Operators](proximal.md) - Supported functions
-- [Configuration](configuration.md) - Solver parameters
-- [C API](c-api.md) - C interface for cone problems
+- [Quick Start](../getting-started/quick-start.md) - Getting started guide
+- [Lasso Example](../examples/lasso.md) - Detailed Lasso example
+- [Logistic Example](../examples/logistic.md) - Classification example
