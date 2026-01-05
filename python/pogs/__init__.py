@@ -11,6 +11,10 @@ Example usage:
 
     # Logistic regression
     result = solve_logistic(A, y, lambd=0.01)
+
+    # With CVXPY (auto-detects graph-form patterns)
+    from pogs import pogs_solve
+    pogs_solve(problem)
 """
 
 from __future__ import annotations
@@ -30,8 +34,17 @@ from pogs.graph import (
 )
 
 
+# CVXPY integration (optional, only if cvxpy is installed)
+try:
+    from pogs.cvxpy import pogs_solve
+except ImportError:
+    pogs_solve = None  # type: ignore[assignment,misc]
+
+
 __all__ = [
     "__version__",
+    # CVXPY integration
+    "pogs_solve",
     # Graph-form solvers
     "solve_elastic_net",
     "solve_huber",

@@ -12,6 +12,7 @@ option(POGS_BUILD_GPU "Build GPU support" ON)
 option(POGS_BUILD_TESTS "Build tests" ON)
 option(POGS_BUILD_EXAMPLES "Build examples" ON)
 option(POGS_BUILD_PYTHON "Build Python bindings" OFF)
+option(POGS_USE_SCIPY_OPENBLAS "Use scipy-openblas32 for BLAS (Windows)" OFF)
 
 # Output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -19,8 +20,38 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Find dependencies
-find_package(BLAS REQUIRED)
-find_package(LAPACK REQUIRED)
+# On Windows, optionally use scipy-openblas32 for MSVC-compatible BLAS
+if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
+  # Find scipy-openblas32 via Python
+  find_package(Python COMPONENTS Interpreter REQUIRED)
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE SCIPY_OPENBLAS_RESULT
+  )
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_include_dir())"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(SCIPY_OPENBLAS_RESULT EQUAL 0)
+    message(STATUS "Found scipy-openblas32:")
+    message(STATUS "  Library dir: ${SCIPY_OPENBLAS_LIB_DIR}")
+    message(STATUS "  Include dir: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
+    # Set BLAS and LAPACK to use scipy-openblas
+    set(BLAS_LIBRARIES "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib")
+    set(LAPACK_LIBRARIES "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib")
+    set(BLAS_FOUND TRUE)
+    set(LAPACK_FOUND TRUE)
+    include_directories(${SCIPY_OPENBLAS_INCLUDE_DIR})
+  else()
+    message(FATAL_ERROR "scipy-openblas32 not found. Install with: pip install scipy-openblas32")
+  endif()
+else()
+  find_package(BLAS REQUIRED)
+  find_package(LAPACK REQUIRED)
+endif()
 
 # GPU support
 if(POGS_BUILD_GPU)

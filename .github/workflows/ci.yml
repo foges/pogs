@@ -98,9 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows disabled: OpenBLAS pre-built binaries are MinGW, not MSVC
-        # TODO: Add Windows with MSYS2/MinGW toolchain like SCS does
-        os: [ubuntu-22.04, macos-14]
+        os: [ubuntu-22.04, macos-14, windows-2022]
 
     steps:
       - uses: actions/checkout@v4
@@ -124,14 +122,15 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: >
             dnf install -y epel-release &&
             dnf install -y openblas-devel lapack-devel
-          CIBW_BEFORE_ALL_WINDOWS: >
-            curl -L -o openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
-            7z x openblas.zip -oC:\OpenBLAS -y &&
-            dir C:\OpenBLAS\lib
+          # Windows: use scipy-openblas32 for MSVC-compatible OpenBLAS
+          CIBW_BEFORE_BUILD_WINDOWS: >
+            pip install scipy-openblas32 delvewheel
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DPOGS_USE_SCIPY_OPENBLAS=ON"
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             auditwheel repair -w {dest_dir} {wheel}
             --exclude libopenblas.so.0
@@ -139,9 +138,9 @@ jobs:
             --exclude libblas.so.3
             --exclude libgfortran.so.5
             --exclude libquadmath.so.0
-          CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLAS_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib -DLAPACK_LIBRARIES=C:/OpenBLAS/lib/libopenblas.lib"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/bin -w {dest_dir} {wheel}"
+          # Windows: bundle scipy-openblas DLLs into wheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            delvewheel repair -w {dest_dir} {wheel}
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 

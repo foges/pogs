@@ -22,7 +22,7 @@ POGS is **4-14x faster** than general-purpose solvers on common ML optimization 
 pip install pogs
 ```
 
-Works on macOS (Intel & Apple Silicon) and Linux (x86_64 & ARM64).
+Works on **macOS**, **Linux**, and **Windows**.
 
 ## Quick Start
 
@@ -102,6 +102,32 @@ result['x']           # Solution vector
 result['status']      # 0 = success
 result['iterations']  # Number of iterations
 result['optval']      # Optimal objective value
+```
+
+## Using with CVXPY
+
+For CVXPY problems, import pogs to register it as a solver:
+
+```python
+import cvxpy as cp
+import numpy as np
+import pogs  # Registers POGS solver with CVXPY
+
+A = np.random.randn(100, 50)
+b = np.random.randn(100)
+
+x = cp.Variable(50)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
+prob.solve(solver='POGS')
+```
+
+Or use `pogs_solve()` for automatic graph-form detection (faster):
+
+```python
+from pogs import pogs_solve
+
+# Detects Lasso pattern and uses fast graph-form solver
+pogs_solve(prob)
 ```
 
 ## C++ Library
