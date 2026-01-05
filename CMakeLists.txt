@@ -39,12 +39,15 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
     message(STATUS "Found scipy-openblas32:")
     message(STATUS "  Library dir: ${SCIPY_OPENBLAS_LIB_DIR}")
     message(STATUS "  Include dir: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
-    # Set BLAS and LAPACK to use scipy-openblas
-    set(BLAS_LIBRARIES "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib")
-    set(LAPACK_LIBRARIES "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib")
+    # Create BLAS::BLAS imported target for scipy-openblas
+    add_library(BLAS::BLAS SHARED IMPORTED)
+    set_target_properties(BLAS::BLAS PROPERTIES
+      IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas64_.dll"
+      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib"
+      INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
+    )
     set(BLAS_FOUND TRUE)
     set(LAPACK_FOUND TRUE)
-    include_directories(${SCIPY_OPENBLAS_INCLUDE_DIR})
   else()
     message(FATAL_ERROR "scipy-openblas32 not found. Install with: pip install scipy-openblas32")
   endif()
