@@ -24,7 +24,7 @@ __version__ = "0.4.2"
 
 # Graph-form solvers (main API)
 # CVXPY integration (cvxpy checked at runtime, not import time)
-from pogs.cvxpy import pogs_solve, register
+from pogs.cvxpy import pogs_solve
 from pogs.graph import (
     solve_elastic_net,
     solve_huber,
@@ -40,7 +40,6 @@ __all__ = [
     "__version__",
     # CVXPY integration
     "pogs_solve",
-    "register",
     # Graph-form solvers
     "solve_elastic_net",
     "solve_huber",

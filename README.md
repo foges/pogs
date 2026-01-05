@@ -106,31 +106,30 @@ result['optval']      # Optimal objective value
 
 ## Using with CVXPY
 
-Register POGS with CVXPY, then use `method='POGS'`:
+POGS can solve CVXPY problems directly:
 
 ```python
 import cvxpy as cp
 import numpy as np
-from pogs import register
-
-register()  # One-time registration
+from pogs import pogs_solve
 
 A = np.random.randn(100, 50)
 b = np.random.randn(100)
 
 x = cp.Variable(50)
 prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm(x, 1)))
-prob.solve(method='POGS')  # Auto-detects Lasso, uses fast solver
 
+pogs_solve(prob)  # Auto-detects Lasso pattern, uses fast solver
 print(x.value)
 ```
 
-Or call `pogs_solve()` directly without registration:
+Or register it as a solve method:
 
 ```python
 from pogs import pogs_solve
+cp.Problem.register_solve("POGS", pogs_solve)
 
-pogs_solve(prob)  # Same result, no registration needed
+prob.solve(method="POGS")  # Now works like any other solver
 ```
 
 ## C++ Library

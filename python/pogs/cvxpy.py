@@ -1,18 +1,19 @@
 """
 CVXPY integration for POGS.
 
-Provides:
-- pogs_solve(): Solve CVXPY problems with automatic graph-form detection
-- register(): Register POGS with CVXPY so problem.solve(method='POGS') works
+Provides pogs_solve() to solve CVXPY problems with automatic graph-form detection.
 
 Usage:
     import cvxpy as cp
-    from pogs.cvxpy import register
+    from pogs import pogs_solve
 
-    register()  # One-time registration
+    x = cp.Variable(100)
+    problem = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm1(x)))
+    pogs_solve(problem)  # Auto-detects Lasso, uses fast solver
 
-    problem = cp.Problem(...)
-    problem.solve(method='POGS')  # Uses POGS!
+Or register as a solve method:
+    cp.Problem.register_solve("POGS", pogs_solve)
+    problem.solve(method="POGS")
 """
 
 from __future__ import annotations
@@ -435,26 +436,3 @@ def _solve_graph_form_detected(detection, solver_opts):
     return result
 
 
-def register():
-    """
-    Register POGS as a CVXPY solve method.
-
-    After calling this, you can use problem.solve(method='POGS').
-
-    Example
-    -------
-    >>> import cvxpy as cp
-    >>> from pogs.cvxpy import register
-    >>> register()
-    >>> x = cp.Variable(100)
-    >>> prob = cp.Problem(cp.Minimize(cp.sum_squares(A @ x - b) + 0.1 * cp.norm1(x)))
-    >>> prob.solve(method="POGS")
-    """
-    try:
-        import cvxpy as cp
-
-        cp.Problem.register_solve("POGS", pogs_solve)
-    except ImportError as e:
-        raise ImportError(
-            "CVXPY is required for register(). Install with: pip install cvxpy"
-        ) from e
