@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <memory>
 
 #include "gsl/cblas.h"
 #include "gsl/gsl_blas.h"
@@ -17,8 +18,9 @@ namespace {
 
 template<typename T>
 struct CpuData {
-  T *AA, *L, s;
-  CpuData() : AA(0), L(0), s(static_cast<T>(-1.)) { }
+  std::unique_ptr<T[]> AA, L;
+  T s;
+  CpuData() : AA(), L(), s(static_cast<T>(-1.)) { }
 };
 
 }  // namespace
@@ -34,19 +36,9 @@ ProjectorDirect<T, M>::ProjectorDirect(const M& A)
 template <typename T, typename M>
 ProjectorDirect<T, M>::~ProjectorDirect() {
   CpuData<T> *info = reinterpret_cast<CpuData<T>*>(this->_info);
-
-  if (info->AA) {
-    delete [] info->AA;
-    info->AA = 0;
-  }
-
-  if (info->L) {
-    delete [] info->L;
-    info->L = 0;
-  }
-
   delete info;
-  this->_info = 0;
+  this->_info = nullptr;
+  // AA and L are automatically cleaned up by unique_ptr
 }
 
 template <typename T, typename M>
@@ -60,12 +52,12 @@ int ProjectorDirect<T, M>::Init() {
 
   size_t min_dim = std::min(_A.Rows(), _A.Cols());
 
-  info->AA = new T[min_dim * min_dim];
-  ASSERT(info->AA != 0);
-  info->L = new T[min_dim * min_dim];
-  ASSERT(info->L != 0);
-  memset(info->AA, 0, min_dim * min_dim * sizeof(T));
-  memset(info->L, 0, min_dim * min_dim * sizeof(T));
+  info->AA = std::make_unique<T[]>(min_dim * min_dim);
+  ASSERT(info->AA != nullptr);
+  info->L = std::make_unique<T[]>(min_dim * min_dim);
+  ASSERT(info->L != nullptr);
+  memset(info->AA.get(), 0, min_dim * min_dim * sizeof(T));
+  memset(info->L.get(), 0, min_dim * min_dim * sizeof(T));
 
   CBLAS_TRANSPOSE_t op_type = _A.Rows() > _A.Cols() ? CblasTrans : CblasNoTrans;
 
@@ -75,7 +67,7 @@ int ProjectorDirect<T, M>::Init() {
         gsl::matrix_view_array<T, CblasRowMajor>
         (_A.Data(), _A.Rows(), _A.Cols());
     gsl::matrix<T, CblasRowMajor> AA = gsl::matrix_view_array<T, CblasRowMajor>
-        (info->AA, min_dim, min_dim);
+        (info->AA.get(), min_dim, min_dim);
     gsl::blas_syrk(CblasLower, op_type,
         static_cast<T>(1.), &A, static_cast<T>(0.), &AA);
   } else {
@@ -83,7 +75,7 @@ int ProjectorDirect<T, M>::Init() {
         gsl::matrix_view_array<T, CblasColMajor>
         (_A.Data(), _A.Rows(), _A.Cols());
     gsl::matrix<T, CblasColMajor> AA = gsl::matrix_view_array<T, CblasColMajor>
-        (info->AA, min_dim, min_dim);
+        (info->AA.get(), min_dim, min_dim);
     gsl::blas_syrk(CblasLower, op_type,
         static_cast<T>(1.), &A, static_cast<T>(0.), &AA);
   }
@@ -117,9 +109,9 @@ int ProjectorDirect<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
         gsl::matrix_view_array<T, CblasRowMajor>
         (_A.Data(), _A.Rows(), _A.Cols());
     gsl::matrix<T, CblasRowMajor> AA = gsl::matrix_view_array<T, CblasRowMajor>
-        (info->AA, min_dim, min_dim);
+        (info->AA.get(), min_dim, min_dim);
     gsl::matrix<T, CblasRowMajor> L = gsl::matrix_view_array<T, CblasRowMajor>
-        (info->L, min_dim, min_dim);
+        (info->L.get(), min_dim, min_dim);
 
     if (s != info->s) {
       gsl::matrix_memcpy(&L, &AA);
@@ -146,9 +138,9 @@ int ProjectorDirect<T, M>::Project(const T *x0, const T *y0, T s, T *x, T *y,
         gsl::matrix_view_array<T, CblasColMajor>
         (_A.Data(), _A.Rows(), _A.Cols());
     gsl::matrix<T, CblasColMajor> AA = gsl::matrix_view_array<T, CblasColMajor>
-        (info->AA, min_dim, min_dim);
+        (info->AA.get(), min_dim, min_dim);
     gsl::matrix<T, CblasColMajor> L = gsl::matrix_view_array<T, CblasColMajor>
-        (info->L, min_dim, min_dim);
+        (info->L.get(), min_dim, min_dim);
 
     if (s != info->s) {
       gsl::matrix_memcpy(&L, &AA);

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstring>
 #include <functional>
+#include <memory>
 
 #include "gsl/gsl_blas.h"
 #include "gsl/gsl_matrix.h"
@@ -46,18 +47,17 @@ void MultDiag(const T *d, const T *e, size_t m, size_t n,
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 MatrixDense<T>::MatrixDense(char ord, size_t m, size_t n, const T *data)
-    : Matrix<T>(m, n), _data(0) {
+    : Matrix<T>(m, n), _data(), _ord((ord == 'r' || ord == 'R') ? ROW : COL) {
   ASSERT(ord == 'r' || ord == 'R' || ord == 'c' || ord == 'C');
-  _ord = (ord == 'r' || ord == 'R') ? ROW : COL;
 
-  // Set GPU specific _info.
+  // Set CPU specific _info.
   CpuData<T> *info = new CpuData<T>(data);
   this->_info = reinterpret_cast<void*>(info);
 }
 
 template <typename T>
 MatrixDense<T>::MatrixDense(const MatrixDense<T>& A)
-    : Matrix<T>(A._m, A._n), _data(0), _ord(A._ord) {
+    : Matrix<T>(A._m, A._n), _data(), _ord(A._ord) {
 
   CpuData<T> *info_A = reinterpret_cast<CpuData<T>*>(A._info);
   CpuData<T> *info = new CpuData<T>(info_A->orig_data);
@@ -68,11 +68,8 @@ template <typename T>
 MatrixDense<T>::~MatrixDense() {
   CpuData<T> *info = reinterpret_cast<CpuData<T>*>(this->_info);
   delete info;
-  this->_info = 0;
-  if (this->_data) {
-    delete _data;
-    this->_data = 0;
-  }
+  this->_info = nullptr;
+  // _data is automatically cleaned up by unique_ptr
 }
 
 template <typename T>
@@ -84,10 +81,10 @@ int MatrixDense<T>::Init() {
 
   CpuData<T> *info = reinterpret_cast<CpuData<T>*>(this->_info);
 
-  // Copy Matrix to GPU.
-  _data = new T[this->_m * this->_n];
-  ASSERT(_data != 0);
-  memcpy(_data, info->orig_data, this->_m * this->_n * sizeof(T));
+  // Copy matrix data.
+  _data = std::make_unique<T[]>(this->_m * this->_n);
+  ASSERT(_data != nullptr);
+  memcpy(_data.get(), info->orig_data, this->_m * this->_n * sizeof(T));
 
   return 0;
 }
@@ -103,12 +100,12 @@ int MatrixDense<T>::Mul(char trans, T alpha, const T *x, T beta, T *y) const {
 
   if (_ord == ROW) {
     gsl::matrix<T, CblasRowMajor> A =
-        gsl::matrix_view_array<T, CblasRowMajor>(_data, this->_m, this->_n);
+        gsl::matrix_view_array<T, CblasRowMajor>(_data.get(), this->_m, this->_n);
     gsl::blas_gemv(OpToCblasOp(trans), alpha, &A, &x_vec, beta,
         &y_vec);
   } else {
     gsl::matrix<T, CblasColMajor> A =
-        gsl::matrix_view_array<T, CblasColMajor>(_data, this->_m, this->_n);
+        gsl::matrix_view_array<T, CblasColMajor>(_data.get(), this->_m, this->_n);
     gsl::blas_gemv(OpToCblasOp(trans), alpha, &A, &x_vec, beta, &y_vec);
   }
 
@@ -128,27 +125,26 @@ int MatrixDense<T>::Equil(T *d, T *e,
 
   // Create bit-vector with signs of entries in A and then let A = f(A),
   // where f = |A| or f = |A|.^2.
-  unsigned char *sign = 0;
   size_t num_sign_bytes = (num_el + 7) / 8;
-  sign = new unsigned char[num_sign_bytes];
-  ASSERT(sign != 0);
+  auto sign = std::make_unique<unsigned char[]>(num_sign_bytes);
+  ASSERT(sign != nullptr);
 
   // Fill sign bits, assigning each thread a multiple of 8 elements.
   size_t num_chars = num_el / 8;
   if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-    SetSign(_data, sign, num_chars, SquareF<T>());
+    SetSign(_data.get(), sign.get(), num_chars, SquareF<T>());
   } else {
-    SetSign(_data, sign, num_chars, AbsF<T>());
+    SetSign(_data.get(), sign.get(), num_chars, AbsF<T>());
   }
 
   // If numel(A) is not a multiple of 8, then we need to set the last couple
   // of sign bits too.
   if (num_el > num_chars * 8) {
     if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-      SetSignSingle(_data + num_chars * 8, sign + num_chars,
+      SetSignSingle(_data.get() + num_chars * 8, sign.get() + num_chars,
           num_el - num_chars * 8, SquareF<T>());
     } else {
-      SetSignSingle(_data + num_chars * 8, sign + num_chars,
+      SetSignSingle(_data.get() + num_chars * 8, sign.get() + num_chars,
           num_el - num_chars * 8, AbsF<T>());
     }
   }
@@ -159,18 +155,18 @@ int MatrixDense<T>::Equil(T *d, T *e,
   // Transform A = sign(A) .* sqrt(A) if 2-norm equilibration was performed,
   // or A = sign(A) .* A if the 1-norm was equilibrated.
   if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-    UnSetSign(_data, sign, num_chars, SqrtF<T>());
+    UnSetSign(_data.get(), sign.get(), num_chars, SqrtF<T>());
   } else {
-    UnSetSign(_data, sign, num_chars, IdentityF<T>());
+    UnSetSign(_data.get(), sign.get(), num_chars, IdentityF<T>());
   }
 
   // Deal with last few entries if num_el is not a multiple of 8.
   if (num_el > num_chars * 8) {
     if (kNormEquilibrate == kNorm2 || kNormEquilibrate == kNormFro) {
-     UnSetSignSingle(_data + num_chars * 8, sign + num_chars,
+     UnSetSignSingle(_data.get() + num_chars * 8, sign.get() + num_chars,
           num_el - num_chars * 8, SqrtF<T>());
     } else {
-      UnSetSignSingle(_data + num_chars * 8, sign + num_chars,
+      UnSetSignSingle(_data.get() + num_chars * 8, sign.get() + num_chars,
           num_el - num_chars * 8, IdentityF<T>());
     }
   }
@@ -182,11 +178,11 @@ int MatrixDense<T>::Equil(T *d, T *e,
   }
 
   // Compute A := D * A * E.
-  MultDiag(d, e, this->_m, this->_n, _ord, _data);
+  MultDiag(d, e, this->_m, this->_n, _ord, _data.get());
 
   // Scale A to have norm of 1 (in the kNormNormalize norm).
   T normA = NormEst(kNormNormalize, *this);
-  gsl::vector<T> a_vec = gsl::vector_view_array(_data, num_el);
+  gsl::vector<T> a_vec = gsl::vector_view_array(_data.get(), num_el);
   gsl::vector_scale(&a_vec, 1 / normA);
 
   // Scale d and e to account for normalization of A.
@@ -198,7 +194,7 @@ int MatrixDense<T>::Equil(T *d, T *e,
   DEBUG_PRINTF("norm A = %e, normd = %e, norme = %e\n", normA,
       gsl::blas_nrm2(&d_vec), gsl::blas_nrm2(&e_vec));
 
-  delete [] sign;
+  // sign is automatically cleaned up by unique_ptr
 
   return 0;
 }
