@@ -16,7 +16,7 @@ Example usage:
 from __future__ import annotations
 
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 # Graph-form solvers (main API)
 from pogs.graph import (
