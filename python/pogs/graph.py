@@ -26,13 +26,22 @@ except ImportError:
 
 
 def _find_shared_library():
-    """Locate a shared POGS library built by CMake."""
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    """Locate a shared POGS library built by CMake or installed via wheel."""
+    pkg_dir = os.path.dirname(__file__)
+    # When installed via wheel, library is at ../lib/ relative to package
+    wheel_root = os.path.abspath(os.path.join(pkg_dir, ".."))
+    # When running from source, library is in build/lib/
+    source_root = os.path.abspath(os.path.join(pkg_dir, "..", ".."))
+
     candidates = [
-        os.path.join(root, "build", "lib", "libpogs_cpu.dylib"),
-        os.path.join(root, "build", "lib", "libpogs_cpu.so"),
-        os.path.join(root, "src", "build", "libpogs_cpu.dylib"),
-        os.path.join(root, "src", "build", "libpogs_cpu.so"),
+        # Wheel install locations
+        os.path.join(wheel_root, "lib", "libpogs_cpu.dylib"),
+        os.path.join(wheel_root, "lib", "libpogs_cpu.so"),
+        # Source build locations
+        os.path.join(source_root, "build", "lib", "libpogs_cpu.dylib"),
+        os.path.join(source_root, "build", "lib", "libpogs_cpu.so"),
+        os.path.join(source_root, "src", "build", "libpogs_cpu.dylib"),
+        os.path.join(source_root, "src", "build", "libpogs_cpu.so"),
     ]
     for path in candidates:
         if os.path.exists(path):

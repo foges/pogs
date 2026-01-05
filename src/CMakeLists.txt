@@ -142,7 +142,7 @@ else()
 endif()
 
 # Installation
-install(TARGETS pogs_cpu
+install(TARGETS pogs_cpu pogs_cpu_shared
         EXPORT POGSTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

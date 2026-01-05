@@ -20,7 +20,6 @@ __version__ = "0.4.0"
 
 # Graph-form solvers (main API)
 from pogs.graph import (
-    solve_bounded_ls,
     solve_elastic_net,
     solve_huber,
     solve_lasso,
@@ -32,12 +31,10 @@ from pogs.graph import (
 
 
 __all__ = [
-    # Version
     "__version__",
-    "solve_bounded_ls",
+    # Graph-form solvers
     "solve_elastic_net",
     "solve_huber",
-    # Graph-form solvers
     "solve_lasso",
     "solve_logistic",
     "solve_nonneg_ls",
