@@ -6,17 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Modern C++20 convex optimization solver using ADMM">
+        <meta name="description" content="Fast convex optimization for machine learning">
       
       
       
         <link rel="canonical" href="https://foges.github.io/pogs/migration/v0.3-to-v0.4/">
       
       
-        <link rel="prev" href="../../developer/modernization/">
-      
-      
-        <link rel="next" href="../../about/changelog/">
       
       
         
@@ -27,7 +23,7 @@
     
     
       
-        <title>v0.3 to v0.4 - POGS - Proximal Operator Graph Solver</title>
+        <title>Migration Guide: v0.3 to v0.4 - POGS</title>
       
     
     
@@ -98,7 +94,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-header__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-header__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,13 +108,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            POGS - Proximal Operator Graph Solver
+            POGS
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              v0.3 to v0.4
+              Migration Guide: v0.3 to v0.4
             
           </span>
         </div>
@@ -277,31 +273,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/basic-usage/" class="md-tabs__link">
+        <a href="../../user-guide/cvxpy-integration/" class="md-tabs__link">
           
   
   
   User Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../api/solver/" class="md-tabs__link">
-          
-  
-  
-  API Reference
 
         </a>
       </li>
@@ -337,33 +313,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../developer/architecture/" class="md-tabs__link">
+        <a href="../../api/solver/" class="md-tabs__link">
           
   
   
-  Developer Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    
-    
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
-          
-  
-  
-  Migration
+  API Reference
 
         </a>
       </li>
@@ -413,13 +367,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-nav__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-nav__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    POGS - Proximal Operator Graph Solver
+    POGS
   </label>
   
     <div class="md-nav__source">
@@ -641,90 +595,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/basic-usage/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Basic Usage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/advanced-features/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Advanced Features
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/cone-problems/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cone Problems
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../user-guide/cvxpy-integration/" class="md-nav__link">
         
   
@@ -733,34 +603,6 @@
     
   
     CVXPY Integration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/c-interface/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C Interface
   
 
     
@@ -813,7 +655,7 @@
   <span class="md-ellipsis">
     
   
-    API Reference
+    Examples
   
 
     
@@ -826,207 +668,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    API Reference
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/solver/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Core Solver
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Types
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/proximal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Proximal Operators
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/c-api/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C API
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1092,21 +733,46 @@
 
               
             
-              
-                
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
   
   
   
   
-    <li class="md-nav__item">
-      <a href="../../examples/sdp/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
         
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
     
   
-    SDP Problems
+    API Reference
   
 
     
@@ -1114,11 +780,19 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
   
 
-              
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -1127,14 +801,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/anderson/" class="md-nav__link">
+      <a href="../../api/solver/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Anderson Acceleration
+    Python API
   
 
     
@@ -1187,7 +861,7 @@
   <span class="md-ellipsis">
     
   
-    Developer Guide
+    About
   
 
     
@@ -1200,879 +874,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Developer Guide
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/building/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Building from Source
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/contributing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contributing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/modernization/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Modernization
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Migration
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Migration
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    v0.3 to v0.4
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    v0.3 to v0.4
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#build-system-migration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Build System Migration
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Build System Migration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#old-v03-makefiles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Old (v0.3): Makefiles
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-v04-cmake" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New (v0.4): CMake
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#integration-into-your-project" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Integration into Your Project
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compiler-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compiler Requirements
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Compiler Requirements">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#old-v03" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Old (v0.3)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-v04" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New (v0.4)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#matlab-interface-removal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MATLAB Interface Removal
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MATLAB Interface Removal">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#old-v03-matlab-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Old (v0.3): MATLAB Interface
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-v04-pythoncvxpy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New (v0.4): Python/CVXPY
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#c-api-current-legacy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        C++ API (Current - Legacy)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="C++ API (Current - Legacy)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#graph-form-unchanged" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Graph Form (Unchanged)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cone-form-unchanged" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cone Form (Unchanged)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-modern-api-preview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Modern API (Preview)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Future Modern API (Preview)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#future-modern-c20-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future: Modern C++20 API
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-migration-scenarios" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common Migration Scenarios
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Migration Scenarios">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scenario-1-simple-lasso-regression" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scenario 1: Simple Lasso Regression
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scenario-2-custom-problem-in-c" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scenario 2: Custom Problem in C++
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scenario-3-logistic-regression" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scenario 3: Logistic Regression
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#installation-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation Changes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation Changes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#old-v03_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Old (v0.3)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-v04_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New (v0.4)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#custom-installation-location" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Custom Installation Location
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation Changes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Documentation Changes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#old-v03_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Old (v0.3)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-v04_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        New (v0.4)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#platform-specific-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Platform-Specific Notes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Platform-Specific Notes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#macos" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        macOS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#linux" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Linux
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Windows
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#no-such-file-pogsh" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "No such file: pogs.h"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#undefined-reference-to-pogs-functions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Undefined reference to POGS functions"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#matlab-interface-not-found" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "MATLAB interface not found"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#compiler-doesnt-support-c20" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "Compiler doesn't support C++20"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cmake-cant-find-pogs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        "CMake can't find POGS"
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Notes
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Performance Notes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#no-performance-regression" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        No Performance Regression
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#compiler-optimizations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compiler Optimizations
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deprecation-timeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Deprecation Timeline
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-help" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Getting Help
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary-checklist" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary Checklist
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#questions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Questions?
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    About
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2125,34 +926,6 @@
     
   
     License
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/authors/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Authors
   
 
     
@@ -2777,46 +1550,6 @@
 
   
 
-
-  <nav class="md-path" aria-label="Navigation" >
-    <ol class="md-path__list">
-      
-        
-  
-  
-    <li class="md-path__item">
-      <a href="../.." class="md-path__link">
-        
-  <span class="md-ellipsis">
-    Home
-  </span>
-
-      </a>
-    </li>
-  
-
-      
-      
-        
-  
-  
-    
-    
-      <li class="md-path__item">
-        <a href="./" class="md-path__link">
-          
-  <span class="md-ellipsis">
-    Migration
-  </span>
-
-        </a>
-      </li>
-    
-  
-
-      
-    </ol>
-  </nav>
 
               
               <article class="md-content__inner md-typeset">

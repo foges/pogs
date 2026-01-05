@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Modern C++20 convex optimization solver using ADMM">
+        <meta name="description" content="Fast convex optimization for machine learning">
       
       
       
         <link rel="canonical" href="https://foges.github.io/pogs/api/solver/">
       
       
-        <link rel="prev" href="../../user-guide/c-interface/">
+        <link rel="prev" href="../../examples/logistic/">
       
       
-        <link rel="next" href="../types/">
+        <link rel="next" href="../../about/changelog/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Core Solver - POGS - Proximal Operator Graph Solver</title>
+        <title>Python API - POGS</title>
       
     
     
@@ -98,7 +98,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-header__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-header__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,13 +112,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            POGS - Proximal Operator Graph Solver
+            POGS
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Core Solver
+              Python API
             
           </span>
         </div>
@@ -277,33 +277,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/basic-usage/" class="md-tabs__link">
+        <a href="../../user-guide/cvxpy-integration/" class="md-tabs__link">
           
   
   
   User Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    
-    
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
-          
-  
-  
-  API Reference
 
         </a>
       </li>
@@ -335,35 +313,17 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../developer/architecture/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
-  Developer Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../migration/v0.3-to-v0.4/" class="md-tabs__link">
-          
-  
-  
-  Migration
+  API Reference
 
         </a>
       </li>
@@ -413,13 +373,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-nav__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-nav__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    POGS - Proximal Operator Graph Solver
+    POGS
   </label>
   
     <div class="md-nav__source">
@@ -641,90 +601,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/basic-usage/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Basic Usage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/advanced-features/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Advanced Features
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/cone-problems/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cone Problems
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../user-guide/cvxpy-integration/" class="md-nav__link">
         
   
@@ -733,467 +609,6 @@
     
   
     CVXPY Integration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/c-interface/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C Interface
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    API Reference
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    API Reference
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Core Solver
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Core Solver
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_lasso" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_lasso
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_ridge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_ridge
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_elastic_net" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_elastic_net
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_logistic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_logistic
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_svm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_svm
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_huber" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_huber
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solve_nonneg_ls" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        solve_nonneg_ls
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#result-dictionary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Result Dictionary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common Parameters
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Parameters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#tolerance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tolerance
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#maximum-iterations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Maximum Iterations
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verbosity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verbosity
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sparse-matrices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sparse Matrices
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Types
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../proximal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Proximal Operators
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../c-api/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C API
   
 
     
@@ -1236,10 +651,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -1257,8 +672,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1324,62 +739,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/sdp/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    SDP Problems
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/anderson/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Anderson Acceleration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1391,35 +750,38 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Developer Guide
+    API Reference
   
 
     
@@ -1430,12 +792,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Developer Guide
+    API Reference
   
 
           </label>
@@ -1445,154 +807,26 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
     
   
-    Architecture
-  
-
-    
-  </span>
   
   
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/building/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Building from Source
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/contributing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contributing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/modernization/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Modernization
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
+    <li class="md-nav__item md-nav__item--active">
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
         
       
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
-        
-        
+        <label class="md-nav__link md-nav__link--active" for="__toc">
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
   
   
   <span class="md-ellipsis">
     
   
-    Migration
+    Python API
   
 
     
@@ -1600,35 +834,17 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Migration
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../migration/v0.3-to-v0.4/" class="md-nav__link">
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    v0.3 to v0.4
+    Python API
   
 
     
@@ -1637,175 +853,8 @@
   
 
       </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
       
         
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    About
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    About
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/changelog/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Changelog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/license/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    License
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/authors/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Authors
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
 
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
@@ -1819,17 +868,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation
-      
-    </span>
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#quick-reference" class="md-nav__link">
@@ -1985,6 +1023,358 @@
     <span class="md-ellipsis">
       
         Sparse Matrices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pogs_solve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pogs_solve
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    About
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_lasso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_lasso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_ridge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_ridge
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_elastic_net" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_elastic_net
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_logistic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_logistic
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_svm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_svm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_huber" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_huber
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solve_nonneg_ls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_nonneg_ls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#result-dictionary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result Dictionary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tolerance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tolerance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maximum-iterations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maximum Iterations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbosity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verbosity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sparse-matrices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sparse Matrices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pogs_solve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pogs_solve
       
     </span>
   </a>
@@ -2073,46 +1463,46 @@
 <h1 id="python-api-reference">Python API Reference<a class="headerlink" href="#python-api-reference" title="Permanent link">&para;</a></h1>
 <p>Complete reference for POGS Python functions.</p>
 <hr />
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pogs
-</span></code></pre></div>
-<hr />
 <h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Function</th>
-<th>Problem</th>
+<th style="text-align: left;">Function</th>
+<th style="text-align: left;">Problem</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>solve_lasso</code></td>
-<td>Sparse regression (L1)</td>
+<td style="text-align: left;"><a href="#solve_lasso"><code>solve_lasso</code></a></td>
+<td style="text-align: left;">Sparse regression (L1)</td>
 </tr>
 <tr>
-<td><code>solve_ridge</code></td>
-<td>Ridge regression (L2)</td>
+<td style="text-align: left;"><a href="#solve_ridge"><code>solve_ridge</code></a></td>
+<td style="text-align: left;">Ridge regression (L2)</td>
 </tr>
 <tr>
-<td><code>solve_elastic_net</code></td>
-<td>L1 + L2 regularization</td>
+<td style="text-align: left;"><a href="#solve_elastic_net"><code>solve_elastic_net</code></a></td>
+<td style="text-align: left;">L1 + L2 regularization</td>
 </tr>
 <tr>
-<td><code>solve_logistic</code></td>
-<td>Logistic regression</td>
+<td style="text-align: left;"><a href="#solve_logistic"><code>solve_logistic</code></a></td>
+<td style="text-align: left;">Logistic regression</td>
 </tr>
 <tr>
-<td><code>solve_svm</code></td>
-<td>Support vector machine</td>
+<td style="text-align: left;"><a href="#solve_svm"><code>solve_svm</code></a></td>
+<td style="text-align: left;">Support vector machine</td>
 </tr>
 <tr>
-<td><code>solve_huber</code></td>
-<td>Robust regression</td>
+<td style="text-align: left;"><a href="#solve_huber"><code>solve_huber</code></a></td>
+<td style="text-align: left;">Robust regression</td>
 </tr>
 <tr>
-<td><code>solve_nonneg_ls</code></td>
-<td>Non-negative least squares</td>
+<td style="text-align: left;"><a href="#solve_nonneg_ls"><code>solve_nonneg_ls</code></a></td>
+<td style="text-align: left;">Non-negative least squares</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="#pogs_solve"><code>pogs_solve</code></a></td>
+<td style="text-align: left;">CVXPY integration</td>
 </tr>
 </tbody>
 </table>
@@ -2120,14 +1510,14 @@
 <h2 id="solve_lasso">solve_lasso<a class="headerlink" href="#solve_lasso" title="Permanent link">&para;</a></h2>
 <p>Solve L1-regularized least squares (Lasso):</p>
 <div class="arithmatex">\[\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda\|x\|_1\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2183,45 +1573,45 @@
 </table>
 <p><strong>Returns:</strong> <a href="#result-dictionary">Result dictionary</a></p>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nonzeros: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">1e-4</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nonzeros: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">1e-4</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_ridge">solve_ridge<a class="headerlink" href="#solve_ridge" title="Permanent link">&para;</a></h2>
 <p>Solve L2-regularized least squares (Ridge):</p>
 <div class="arithmatex">\[\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \frac{\lambda}{2}\|x\|_2^2\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ridge</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_ridge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ridge</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_ridge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong> Same as <code>solve_lasso</code></p>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_ridge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution norm: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_ridge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution norm: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_elastic_net">solve_elastic_net<a class="headerlink" href="#solve_elastic_net" title="Permanent link">&para;</a></h2>
 <p>Solve Elastic Net (L1 + L2 regularization):</p>
 <div class="arithmatex">\[\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 + \lambda_1\|x\|_1 + \frac{\lambda_2}{2}\|x\|_2^2\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_elastic_net</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_elastic_net</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambda1</span><span class="p">,</span> <span class="n">lambda2</span><span class="p">,</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>                           <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>                           <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>                           <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>                           <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>                           <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_elastic_net</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_elastic_net</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambda1</span><span class="p">,</span> <span class="n">lambda2</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                           <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>                           <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                           <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                           <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                           <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2256,20 +1646,20 @@
 </tbody>
 </table>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_elastic_net</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambda1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">lambda2</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_elastic_net</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambda1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">lambda2</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_logistic">solve_logistic<a class="headerlink" href="#solve_logistic" title="Permanent link">&para;</a></h2>
 <p>Solve L1-regularized logistic regression:</p>
 <div class="arithmatex">\[\text{minimize} \quad \sum_i \log(1 + e^{-y_i (a_i^T x)}) + \lambda\|x\|_1\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_logistic</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>                        <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>                        <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>                        <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>                        <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>                        <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_logistic</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>                        <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>                        <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>                        <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>                        <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>                        <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2299,25 +1689,25 @@
 </tbody>
 </table>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>  <span class="c1"># Labels in {-1, +1}</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Predict</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">accuracy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pred</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>  <span class="c1"># Labels in {-1, +1}</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Predict</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">])</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">accuracy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pred</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_svm">solve_svm<a class="headerlink" href="#solve_svm" title="Permanent link">&para;</a></h2>
 <p>Solve L2-regularized SVM (hinge loss):</p>
 <div class="arithmatex">\[\text{minimize} \quad \sum_i \max(0, 1 - y_i (a_i^T x)) + \frac{\lambda}{2}\|x\|_2^2\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_svm</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>                   <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>                   <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>                   <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>                   <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>                   <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_svm</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>                   <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>                   <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>                   <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>                   <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>                   <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2347,22 +1737,22 @@
 </tbody>
 </table>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_huber">solve_huber<a class="headerlink" href="#solve_huber" title="Permanent link">&para;</a></h2>
 <p>Solve robust regression with Huber loss:</p>
 <div class="arithmatex">\[\text{minimize} \quad \sum_i \text{huber}_\delta(a_i^T x - b_i) + \lambda\|x\|_1\]</div>
 <p>where <span class="arithmatex">\(\text{huber}_\delta(r) = \begin{cases} \frac{1}{2}r^2 &amp; |r| \le \delta \\ \delta|r| - \frac{1}{2}\delta^2 &amp; |r| &gt; \delta \end{cases}\)</span></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_huber</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_huber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_huber</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_huber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>                     <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>                     <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>                     <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>                     <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>                     <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2397,28 +1787,28 @@
 </tbody>
 </table>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Add outliers to data</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">b_noisy</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">b_noisy</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">100</span>  <span class="c1"># Outliers</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_huber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b_noisy</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Add outliers to data</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">b_noisy</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">b_noisy</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">100</span>  <span class="c1"># Outliers</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_huber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b_noisy</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="solve_nonneg_ls">solve_nonneg_ls<a class="headerlink" href="#solve_nonneg_ls" title="Permanent link">&para;</a></h2>
 <p>Solve non-negative least squares:</p>
 <div class="arithmatex">\[\text{minimize} \quad \frac{1}{2}\|Ax - b\|_2^2 \quad \text{subject to} \quad x \ge 0\]</div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_nonneg_ls</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_nonneg_ls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>                         <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>                         <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>                         <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>                         <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>                         <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_nonneg_ls</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_nonneg_ls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>                         <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>                         <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>                         <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>                         <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>                         <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_nonneg_ls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Min value: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Should be &gt;= 0</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_nonneg_ls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Min value: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Should be &gt;= 0</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="result-dictionary">Result Dictionary<a class="headerlink" href="#result-dictionary" title="Permanent link">&para;</a></h2>
@@ -2465,51 +1855,146 @@
 </tbody>
 </table>
 <p><strong>Example:</strong>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">x</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>           <span class="c1"># Solution</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">obj</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;optval&#39;</span><span class="p">]</span>    <span class="c1"># Objective value</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">iters</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solved in </span><span class="si">{</span><span class="n">iters</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="k">else</span><span class="p">:</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solver failed&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">x</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>           <span class="c1"># Solution</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">obj</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;optval&#39;</span><span class="p">]</span>    <span class="c1"># Objective value</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">iters</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solved in </span><span class="si">{</span><span class="n">iters</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="k">else</span><span class="p">:</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solver failed&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 <hr />
 <h2 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">&para;</a></h2>
 <h3 id="tolerance">Tolerance<a class="headerlink" href="#tolerance" title="Permanent link">&para;</a></h3>
 <p>Controls solution accuracy:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># High accuracy (slower)</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Lower accuracy (faster)</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># High accuracy (slower)</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Lower accuracy (faster)</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="maximum-iterations">Maximum Iterations<a class="headerlink" href="#maximum-iterations" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># For difficult problems</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># For difficult problems</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="verbosity">Verbosity<a class="headerlink" href="#verbosity" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># 0 = quiet</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># 1 = summary only</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># 2 = iteration progress</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># 0 = quiet</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1"># 1 = summary only</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># 2 = iteration progress</span>
 </span></code></pre></div>
 <hr />
 <h2 id="sparse-matrices">Sparse Matrices<a class="headerlink" href="#sparse-matrices" title="Permanent link">&para;</a></h2>
 <p>All solvers support scipy sparse matrices:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">A_sparse</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A_sparse</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="pogs_solve">pogs_solve<a class="headerlink" href="#pogs_solve" title="Permanent link">&para;</a></h2>
+<p>Solve CVXPY problems with automatic pattern detection:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">pogs_solve</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">A_sparse</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A_sparse</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">optval</span> <span class="o">=</span> <span class="n">pogs_solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_opts</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>problem</code></td>
+<td style="text-align: left;">cvxpy.Problem</td>
+<td style="text-align: left;">The CVXPY problem to solve</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbose</code></td>
+<td style="text-align: left;">bool</td>
+<td style="text-align: left;">Print solver output (default: False)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>abs_tol</code></td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">Absolute tolerance (default: 1e-4)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rel_tol</code></td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">Relative tolerance (default: 1e-4)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_iter</code></td>
+<td style="text-align: left;">int</td>
+<td style="text-align: left;">Maximum iterations (default: 2500)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rho</code></td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">ADMM penalty parameter (default: 1.0)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong> float - optimal objective value</p>
+<p><strong>Supported Patterns:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Pattern</th>
+<th style="text-align: left;">CVXPY Expression</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Lasso</td>
+<td style="text-align: left;"><code>sum_squares(A @ x - b) + λ * norm(x, 1)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;"><code>sum_squares(A @ x - b) + λ * sum_squares(x)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">NNLS</td>
+<td style="text-align: left;"><code>sum_squares(A @ x - b)</code> with <code>x &gt;= 0</code></td>
+</tr>
+</tbody>
+</table>
+<p>For unsupported patterns, falls back to CVXPY's default solver.</p>
+<p><strong>Example:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">cvxpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">pogs_solve</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="n">x</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">cp</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="n">pogs_solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="c1"># Output: POGS: Detected lasso pattern, using fast graph-form solver</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Solution is stored in the variable</span>
+</span></code></pre></div>
+<p><strong>Registering as a Method:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="o">.</span><span class="n">register_solve</span><span class="p">(</span><span class="s2">&quot;POGS&quot;</span><span class="p">,</span> <span class="n">pogs_solve</span><span class="p">)</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;POGS&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../getting-started/quick-start/">Quick Start</a> - Getting started guide</li>
+<li><a href="../../user-guide/cvxpy-integration/">CVXPY Integration</a> - Detailed CVXPY usage</li>
 <li><a href="../../examples/lasso/">Lasso Example</a> - Detailed Lasso example</li>
 <li><a href="../../examples/logistic/">Logistic Example</a> - Classification example</li>
 </ul>

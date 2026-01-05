@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Modern C++20 convex optimization solver using ADMM">
+        <meta name="description" content="Fast convex optimization for machine learning">
       
       
       
@@ -16,7 +16,7 @@
         <link rel="prev" href="../installation/">
       
       
-        <link rel="next" href="../../user-guide/basic-usage/">
+        <link rel="next" href="../../user-guide/cvxpy-integration/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Quick Start - POGS - Proximal Operator Graph Solver</title>
+        <title>Quick Start - POGS</title>
       
     
     
@@ -98,7 +98,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-header__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-header__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +112,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            POGS - Proximal Operator Graph Solver
+            POGS
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -279,31 +279,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/basic-usage/" class="md-tabs__link">
+        <a href="../../user-guide/cvxpy-integration/" class="md-tabs__link">
           
   
   
   User Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../api/solver/" class="md-tabs__link">
-          
-  
-  
-  API Reference
 
         </a>
       </li>
@@ -339,31 +319,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../developer/architecture/" class="md-tabs__link">
+        <a href="../../api/solver/" class="md-tabs__link">
           
   
   
-  Developer Guide
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../migration/v0.3-to-v0.4/" class="md-tabs__link">
-          
-  
-  
-  Migration
+  API Reference
 
         </a>
       </li>
@@ -413,13 +373,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="POGS - Proximal Operator Graph Solver" class="md-nav__button md-logo" aria-label="POGS - Proximal Operator Graph Solver" data-md-component="logo">
+    <a href="../.." title="POGS" class="md-nav__button md-logo" aria-label="POGS" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    POGS - Proximal Operator Graph Solver
+    POGS
   </label>
   
     <div class="md-nav__source">
@@ -626,15 +586,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#all-supported-problems" class="md-nav__link">
+  <a href="#all-solvers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        All Supported Problems
+        All Solvers
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="All Supported Problems">
+    <nav class="md-nav" aria-label="All Solvers">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -660,10 +620,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#constrained-problems" class="md-nav__link">
+  <a href="#constrained" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constrained Problems
+        Constrained
       
     </span>
   </a>
@@ -699,10 +659,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tolerance" class="md-nav__link">
+  <a href="#higher-accuracy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tolerance
+        Higher Accuracy
       
     </span>
   </a>
@@ -710,10 +670,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#max-iterations" class="md-nav__link">
+  <a href="#faster-lower-accuracy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Max Iterations
+        Faster (Lower Accuracy)
       
     </span>
   </a>
@@ -737,21 +697,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-with-cvxpy" class="md-nav__link">
+  <a href="#cvxpy-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using with CVXPY
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-comparison" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Comparison
+        CVXPY Integration
       
     </span>
   </a>
@@ -885,90 +834,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/basic-usage/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Basic Usage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/advanced-features/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Advanced Features
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/cone-problems/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cone Problems
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../user-guide/cvxpy-integration/" class="md-nav__link">
         
   
@@ -977,34 +842,6 @@
     
   
     CVXPY Integration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../user-guide/c-interface/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C Interface
   
 
     
@@ -1057,7 +894,7 @@
   <span class="md-ellipsis">
     
   
-    API Reference
+    Examples
   
 
     
@@ -1070,207 +907,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    API Reference
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/solver/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Core Solver
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Types
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/proximal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Proximal Operators
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/c-api/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    C API
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1336,21 +972,46 @@
 
               
             
-              
-                
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
   
   
   
   
-    <li class="md-nav__item">
-      <a href="../../examples/sdp/" class="md-nav__link">
+    
+    
+    
+    
+      
+      
         
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
     
   
-    SDP Problems
+    API Reference
   
 
     
@@ -1358,11 +1019,19 @@
   
   
 
-      </a>
-    </li>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
   
 
-              
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -1371,14 +1040,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/anderson/" class="md-nav__link">
+      <a href="../../api/solver/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Anderson Acceleration
+    Python API
   
 
     
@@ -1431,7 +1100,7 @@
   <span class="md-ellipsis">
     
   
-    Developer Guide
+    About
   
 
     
@@ -1444,268 +1113,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Developer Guide
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/building/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Building from Source
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/contributing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contributing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/modernization/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Modernization
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Migration
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Migration
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../migration/v0.3-to-v0.4/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    v0.3 to v0.4
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    About
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1771,34 +1178,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/authors/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Authors
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1844,15 +1223,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#all-supported-problems" class="md-nav__link">
+  <a href="#all-solvers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        All Supported Problems
+        All Solvers
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="All Supported Problems">
+    <nav class="md-nav" aria-label="All Solvers">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1878,10 +1257,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#constrained-problems" class="md-nav__link">
+  <a href="#constrained" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Constrained Problems
+        Constrained
       
     </span>
   </a>
@@ -1917,10 +1296,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tolerance" class="md-nav__link">
+  <a href="#higher-accuracy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tolerance
+        Higher Accuracy
       
     </span>
   </a>
@@ -1928,10 +1307,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#max-iterations" class="md-nav__link">
+  <a href="#faster-lower-accuracy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Max Iterations
+        Faster (Lower Accuracy)
       
     </span>
   </a>
@@ -1955,21 +1334,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-with-cvxpy" class="md-nav__link">
+  <a href="#cvxpy-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using with CVXPY
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance-comparison" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance Comparison
+        CVXPY Integration
       
     </span>
   </a>
@@ -2095,10 +1463,10 @@
 
 
 <h1 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h1>
-<p>Solve your first optimization problem in under 2 minutes.</p>
+<p>Solve your first optimization problem in under a minute.</p>
 <hr />
 <h2 id="lasso-regression">Lasso Regression<a class="headerlink" href="#lasso-regression" title="Permanent link">&para;</a></h2>
-<p>The most common use case - sparse linear regression:</p>
+<p>The most common use case—sparse linear regression:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -2110,7 +1478,7 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">x_true</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># Sparse ground truth</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">b</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">x_true</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Solve</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Solve: minimize ½||Ax - b||² + λ||x||₁</span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="s1">&#39;Solved&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;Failed&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2123,169 +1491,137 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Nonzeros: 10
 </span></code></pre></div></p>
 <hr />
-<h2 id="all-supported-problems">All Supported Problems<a class="headerlink" href="#all-supported-problems" title="Permanent link">&para;</a></h2>
+<h2 id="all-solvers">All Solvers<a class="headerlink" href="#all-solvers" title="Permanent link">&para;</a></h2>
 <p>POGS provides optimized solvers for common ML problems:</p>
 <h3 id="regression">Regression<a class="headerlink" href="#regression" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_lasso</span><span class="p">,</span> <span class="n">solve_ridge</span><span class="p">,</span> <span class="n">solve_elastic_net</span><span class="p">,</span> <span class="n">solve_huber</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Lasso: ||Ax - b||² + λ||x||₁</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Lasso: ½||Ax - b||² + λ||x||₁</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># Ridge: ||Ax - b||² + λ||x||²</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># Ridge: ½||Ax - b||² + λ||x||²</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_ridge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Elastic Net: ||Ax - b||² + λ₁||x||₁ + λ₂||x||²</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Elastic Net: ½||Ax - b||² + λ₁||x||₁ + λ₂||x||²</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_elastic_net</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambda1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">lambda2</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># Huber: ρ(Ax - b) + λ||x||₁ (robust regression)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># Huber: Σ huber(Aᵢx - bᵢ) + λ||x||₁</span>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_huber</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="classification">Classification<a class="headerlink" href="#classification" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_logistic</span><span class="p">,</span> <span class="n">solve_svm</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Logistic Regression: Σ log(1 + exp(-yᵢaᵢ&#39;x)) + λ||x||₁</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>  <span class="c1"># Binary labels {-1, +1}</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># SVM: Σ max(0, 1 - yᵢaᵢ&#39;x) + λ||x||²</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Labels in {-1, +1}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Logistic: Σ log(1 + exp(-yᵢaᵢᵀx)) + λ||x||₁</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_logistic</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># SVM: Σ max(0, 1 - yᵢaᵢᵀx) + λ||x||²</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_svm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="constrained-problems">Constrained Problems<a class="headerlink" href="#constrained-problems" title="Permanent link">&para;</a></h3>
+<h3 id="constrained">Constrained<a class="headerlink" href="#constrained" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_nonneg_ls</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Non-negative Least Squares: ||Ax - b||² s.t. x ≥ 0</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Non-negative Least Squares: ½||Ax - b||² s.t. x ≥ 0</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_nonneg_ls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="result-dictionary">Result Dictionary<a class="headerlink" href="#result-dictionary" title="Permanent link">&para;</a></h2>
-<p>All solvers return a dictionary with:</p>
+<p>All solvers return a dictionary:</p>
 <table>
 <thead>
 <tr>
-<th>Key</th>
-<th>Description</th>
+<th style="text-align: left;">Key</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>x</code></td>
-<td>Solution vector</td>
+<td style="text-align: left;"><code>x</code></td>
+<td style="text-align: left;">ndarray</td>
+<td style="text-align: left;">Solution vector</td>
 </tr>
 <tr>
-<td><code>status</code></td>
-<td>0=success, other=failure</td>
+<td style="text-align: left;"><code>status</code></td>
+<td style="text-align: left;">int</td>
+<td style="text-align: left;">0=converged, 1=max_iter, 2=error</td>
 </tr>
 <tr>
-<td><code>iterations</code></td>
-<td>Number of iterations</td>
+<td style="text-align: left;"><code>iterations</code></td>
+<td style="text-align: left;">int</td>
+<td style="text-align: left;">Number of ADMM iterations</td>
 </tr>
 <tr>
-<td><code>optval</code></td>
-<td>Optimal objective value</td>
+<td style="text-align: left;"><code>optval</code></td>
+<td style="text-align: left;">float</td>
+<td style="text-align: left;">Optimal objective value</td>
 </tr>
 </tbody>
 </table>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">x</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>           <span class="c1"># Solution</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solution norm: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iterations: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">status</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="c1"># 0 = success</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">iters</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
 </span></code></pre></div>
 <hr />
 <h2 id="tuning-parameters">Tuning Parameters<a class="headerlink" href="#tuning-parameters" title="Permanent link">&para;</a></h2>
-<h3 id="tolerance">Tolerance<a class="headerlink" href="#tolerance" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># More accurate (slower)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Faster (less accurate)</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<p>All solvers accept the same parameters:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>       <span class="c1"># Regularization strength</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>    <span class="c1"># Absolute tolerance (default)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>    <span class="c1"># Relative tolerance (default)</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">max_iter</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span>   <span class="c1"># Maximum iterations (default)</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>       <span class="c1"># 0=quiet, 1=summary, 2=per-iteration</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="max-iterations">Max Iterations<a class="headerlink" href="#max-iterations" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># For difficult problems</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<h3 id="higher-accuracy">Higher Accuracy<a class="headerlink" href="#higher-accuracy" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="faster-lower-accuracy">Faster (Lower Accuracy)<a class="headerlink" href="#faster-lower-accuracy" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">abs_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="verbose-output">Verbose Output<a class="headerlink" href="#verbose-output" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># See iteration progress</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="using-with-cvxpy">Using with CVXPY<a class="headerlink" href="#using-with-cvxpy" title="Permanent link">&para;</a></h2>
-<p>For more general problems, use POGS as a CVXPY backend:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">cvxpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Define problem</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">x</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">300</span><span class="p">)</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">objective</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">cp</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="c1"># Solve with POGS</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="s1">&#39;POGS&#39;</span><span class="p">)</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal value: </span><span class="si">{</span><span class="n">prob</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<h2 id="cvxpy-integration">CVXPY Integration<a class="headerlink" href="#cvxpy-integration" title="Permanent link">&para;</a></h2>
+<p>For more complex problems, use <code>pogs_solve()</code> with CVXPY:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">cvxpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pogs</span><span class="w"> </span><span class="kn">import</span> <span class="n">pogs_solve</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">x</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">cp</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">pogs_solve</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>  <span class="c1"># Auto-detects Lasso</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </span></code></pre></div>
-<hr />
-<h2 id="performance-comparison">Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permanent link">&para;</a></h2>
-<p>POGS is optimized for these ML problems:</p>
-<table>
-<thead>
-<tr>
-<th>Problem</th>
-<th>Size</th>
-<th>POGS</th>
-<th>OSQP</th>
-<th>SCS</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Lasso</td>
-<td>500x300</td>
-<td><strong>51ms</strong></td>
-<td>399ms</td>
-<td>206ms</td>
-</tr>
-<tr>
-<td>Ridge</td>
-<td>500x300</td>
-<td><strong>8ms</strong></td>
-<td>89ms</td>
-<td>64ms</td>
-</tr>
-<tr>
-<td>Logistic</td>
-<td>500x300</td>
-<td><strong>34ms</strong></td>
-<td>312ms</td>
-<td>198ms</td>
-</tr>
-</tbody>
-</table>
+<p>See <a href="../../user-guide/cvxpy-integration/">CVXPY Integration</a> for details.</p>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="max-iterations-reached">"Max iterations reached"<a class="headerlink" href="#max-iterations-reached" title="Permanent link">&para;</a></h3>
 <p>The problem may be poorly scaled or difficult:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Try more iterations</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Or loosen tolerance</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Try more iterations</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Or loosen tolerance</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="slow-convergence">Slow convergence<a class="headerlink" href="#slow-convergence" title="Permanent link">&para;</a></h3>
-<p>Check your data scaling:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Normalize columns of A</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<p>Normalize your data:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Normalize columns of A</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_lasso</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../examples/lasso/">Examples</a> - Detailed examples with explanations</li>
-<li><a href="../../api/solver/">API Reference</a> - Full function documentation</li>
+<li><a href="../../examples/lasso/">Lasso Example</a> - Detailed Lasso walkthrough</li>
+<li><a href="../../examples/logistic/">Logistic Example</a> - Classification example</li>
+<li><a href="../../api/solver/">API Reference</a> - Full documentation</li>
 </ul>
 
 
