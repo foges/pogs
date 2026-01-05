@@ -16,22 +16,25 @@ Datasets used:
 Reference: https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/
 """
 
-import numpy as np
-import time
-import sys
-import os
-import urllib.request
+from __future__ import annotations
+
 import bz2
-from pathlib import Path
+import os
+import sys
+import time
+import urllib.request
 from dataclasses import dataclass
-from typing import Optional
-from scipy import sparse
+from pathlib import Path
+
+import numpy as np
+
 
 # Add pogs to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -39,6 +42,7 @@ except ImportError:
 
 try:
     from pogs_graph import solve_lasso, solve_ridge, solve_svm
+
     HAS_POGS = True
 except ImportError as e:
     HAS_POGS = False
@@ -52,13 +56,11 @@ LIBSVM_DATASETS = {
     "a9a": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/a9a",
     "w1a": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/w1a",
     "w8a": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/w8a",
-
     # Medium datasets
     "mushrooms": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/mushrooms",
     "phishing": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/phishing",
     "madelon": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/madelon",
     "gisette": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/gisette_scale.bz2",
-
     # Large datasets
     "rcv1": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2",
     "real-sim": "https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/real-sim.bz2",
@@ -67,10 +69,10 @@ LIBSVM_DATASETS = {
 
 # Datasets to use in benchmark (ordered by size)
 BENCHMARK_DATASETS = [
-    "a1a",       # 1,605 x 123
-    "a9a",       # 32,561 x 123
-    "w1a",       # 2,477 x 300
-    "mushrooms", # 8,124 x 112
+    "a1a",  # 1,605 x 123
+    "a9a",  # 32,561 x 123
+    "w1a",  # 2,477 x 300
+    "mushrooms",  # 8,124 x 112
     "phishing",  # 11,055 x 68
 ]
 
@@ -78,12 +80,13 @@ BENCHMARK_DATASETS = [
 @dataclass
 class BenchmarkResult:
     """Result from solving a benchmark problem."""
+
     solver: str
     time_sec: float
     optval: float
     status: str
-    iterations: Optional[int] = None
-    error: Optional[str] = None
+    iterations: int | None = None
+    error: str | None = None
 
 
 def get_cache_dir() -> Path:
@@ -98,7 +101,7 @@ def download_dataset(name: str) -> Path:
     cache_dir = get_cache_dir()
 
     url = LIBSVM_DATASETS[name]
-    is_compressed = url.endswith('.bz2')
+    is_compressed = url.endswith(".bz2")
 
     # Local filename
     local_name = name + (".bz2" if is_compressed else "")
@@ -114,8 +117,8 @@ def download_dataset(name: str) -> Path:
     # Decompress if needed
     if is_compressed:
         print(f"Decompressing {name}...")
-        with bz2.open(local_path, 'rt') as f_in:
-            with open(final_path, 'w') as f_out:
+        with bz2.open(local_path, "rt") as f_in:
+            with open(final_path, "w") as f_out:
                 f_out.write(f_in.read())
         local_path.unlink()  # Remove compressed file
 
@@ -153,8 +156,8 @@ def load_libsvm(path: Path) -> tuple[np.ndarray, np.ndarray]:
 
             features = {}
             for item in parts[1:]:
-                if ':' in item:
-                    idx, val = item.split(':')
+                if ":" in item:
+                    idx, val = item.split(":")
                     idx = int(idx)
                     features[idx] = float(val)
                     max_idx = max(max_idx, idx)
@@ -166,22 +169,23 @@ def load_libsvm(path: Path) -> tuple[np.ndarray, np.ndarray]:
     X = np.zeros((m, n))
     for i, features in enumerate(rows):
         for idx, val in features.items():
-            X[i, idx-1] = val  # LIBSVM is 1-indexed
+            X[i, idx - 1] = val  # LIBSVM is 1-indexed
 
     y = np.array(labels)
     return X, y
 
 
-def solve_lasso_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
-                      solver_name: str, verbose: bool = False) -> BenchmarkResult:
+def solve_lasso_cvxpy(
+    X: np.ndarray, y: np.ndarray, lambd: float, solver_name: str, verbose: bool = False
+) -> BenchmarkResult:
     """Solve Lasso using CVXPY with specified solver."""
     if not HAS_CVXPY:
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="CVXPY not installed"
+            error="CVXPY not installed",
         )
 
     solver_map = {
@@ -195,13 +199,13 @@ def solve_lasso_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error=f"Unknown solver: {solver_name}"
+            error=f"Unknown solver: {solver_name}",
         )
 
     try:
-        m, n = X.shape
+        _m, n = X.shape
         w = cp.Variable(n)
 
         # Lasso: min 0.5||Xw - y||^2 + lambda * ||w||_1
@@ -215,30 +219,27 @@ def solve_lasso_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=prob.value if prob.value is not None else float('nan'),
+            optval=prob.value if prob.value is not None else float("nan"),
             status=prob.status,
-            iterations=getattr(prob.solver_stats, 'num_iters', None) if prob.solver_stats else None
+            iterations=getattr(prob.solver_stats, "num_iters", None) if prob.solver_stats else None,
         )
     except Exception as e:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="error",
-            error=str(e)
+            solver=solver_name, time_sec=0, optval=float("nan"), status="error", error=str(e)
         )
 
 
-def solve_lasso_pogs(X: np.ndarray, y: np.ndarray, lambd: float,
-                     verbose: bool = False) -> BenchmarkResult:
+def solve_lasso_pogs(
+    X: np.ndarray, y: np.ndarray, lambd: float, verbose: bool = False
+) -> BenchmarkResult:
     """Solve Lasso using POGS."""
     if not HAS_POGS:
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="POGS not installed"
+            error="POGS not installed",
         )
 
     try:
@@ -249,18 +250,19 @@ def solve_lasso_pogs(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver="pogs",
             time_sec=elapsed,
-            optval=result['optval'],
-            status="optimal" if result['status'] == 0 else "error",
-            iterations=result['num_iters']
+            optval=result["optval"],
+            status="optimal" if result["status"] == 0 else "error",
+            iterations=result["num_iters"],
         )
     except Exception as e:
         import traceback
+
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="error",
-            error=str(e) + "\n" + traceback.format_exc()
+            error=str(e) + "\n" + traceback.format_exc(),
         )
 
 
@@ -311,7 +313,7 @@ def run_benchmark():
             for solver in solvers:
                 r = results[solver]
                 if r.status in ["optimal", "optimal_inaccurate"]:
-                    print(f" {r.time_sec*1000:>8.1f}ms", end="")
+                    print(f" {r.time_sec * 1000:>8.1f}ms", end="")
                     times[solver] = r.time_sec
                 else:
                     print(f" {'FAIL':>10}", end="")
@@ -338,10 +340,11 @@ def run_benchmark():
     print("=" * 80)
 
     # Count wins
-    wins = {s: 0 for s in solvers}
+    wins = dict.fromkeys(solvers, 0)
     times_by_solver = {s: [] for s in solvers}
 
     from collections import defaultdict
+
     datasets_results = defaultdict(dict)
     for dname, m, n, result in all_results:
         datasets_results[dname][result.solver] = result
@@ -349,8 +352,11 @@ def run_benchmark():
             times_by_solver[result.solver].append(result.time_sec)
 
     for dname, dresults in datasets_results.items():
-        valid_times = {s: r.time_sec for s, r in dresults.items()
-                      if r.status in ["optimal", "optimal_inaccurate"]}
+        valid_times = {
+            s: r.time_sec
+            for s, r in dresults.items()
+            if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if valid_times:
             winner = min(valid_times, key=valid_times.get)
             wins[winner] += 1
@@ -369,8 +375,11 @@ def run_benchmark():
     print("\nPOGS Speedups (vs second-best solver):")
     pogs_speedups = []
     for dname, dresults in datasets_results.items():
-        valid_times = {s: r.time_sec for s, r in dresults.items()
-                      if r.status in ["optimal", "optimal_inaccurate"]}
+        valid_times = {
+            s: r.time_sec
+            for s, r in dresults.items()
+            if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if "pogs" in valid_times and len(valid_times) > 1:
             pogs_time = valid_times["pogs"]
             other_times = [t for s, t in valid_times.items() if s != "pogs"]

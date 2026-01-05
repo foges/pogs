@@ -41,16 +41,13 @@ def generate(n_assets=50, gamma=1.0, seed=None):
     objective = cp.Minimize(risk - gamma * expected_return)
     constraints = [
         cp.sum(w) == 1,  # Fully invested
-        w >= 0           # Long only
+        w >= 0,  # Long only
     ]
     problem = cp.Problem(objective, constraints)
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"Portfolio (n={n_assets}, gamma={gamma:.1f})"
-    problem._custom_size_metrics = {
-        "n_assets": n_assets,
-        "gamma": gamma
-    }
+    problem._custom_size_metrics = {"n_assets": n_assets, "gamma": gamma}
 
     return problem
 

@@ -1,0 +1,119 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.12"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pogs"
+version = "0.4.0"
+description = "Proximal Operator Graph Solver - High-performance convex optimization using ADMM"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Chris Fougner", email = "fougner@stanford.edu"},
+]
+keywords = ["optimization", "convex", "ADMM", "solver", "machine-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+cvxpy = [
+    "cvxpy>=1.4.0",
+    "scipy>=1.10.0",
+]
+benchmark = [
+    "cvxpy>=1.4.0",
+    "scipy>=1.10.0",
+    "clarabel>=0.6.0",
+    "osqp>=0.6.0",
+    "scs>=3.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/foges/pogs"
+Documentation = "https://foges.github.io/pogs/"
+Repository = "https://github.com/foges/pogs"
+Issues = "https://github.com/foges/pogs/issues"
+
+[tool.scikit-build]
+cmake.args = ["-DPOGS_BUILD_GPU=OFF", "-DPOGS_BUILD_TESTS=OFF", "-DPOGS_BUILD_PYTHON=ON"]
+wheel.packages = ["python/pogs"]
+build-dir = "build/{wheel_tag}"
+
+[tool.scikit-build.cmake.define]
+CMAKE_BUILD_TYPE = "Release"
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "python"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["python"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "TID",    # flake8-tidy-imports (includes ban on relative imports)
+    "RUF",    # ruff-specific rules
+]
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "E731",   # Do not assign a lambda expression
+    "RUF012", # Mutable class attributes (needed for ctypes)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"python/benchmarks/*" = [
+    "T20",    # Allow print statements in benchmarks
+    "E722",   # Allow bare except in benchmarks for resilience
+    "B007",   # Allow unused loop variables in benchmarks
+    "E741",   # Allow 'l' for lambda in optimization code
+    "F401",   # Conditional imports for optional dependencies
+    "RUF001", # Allow Greek letters in strings (math notation)
+    "RUF002", # Allow Greek letters in docstrings (math notation)
+    "RUF059", # Allow unused unpacked variables
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["pogs"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

@@ -32,6 +32,7 @@ def generate(m=100, n=200, density=1.0, seed=None):
         cols = np.random.randint(0, n, nnz)
         data = np.random.randn(nnz)
         from scipy.sparse import coo_matrix
+
         A = coo_matrix((data, (rows, cols)), shape=(m, n)).toarray()
     else:
         A = np.random.randn(m, n)
@@ -46,19 +47,12 @@ def generate(m=100, n=200, density=1.0, seed=None):
     # Formulate problem
     x = cp.Variable(n)
     objective = cp.Minimize(c.T @ x)
-    constraints = [
-        A @ x == b,
-        x >= 0
-    ]
+    constraints = [A @ x == b, x >= 0]
     problem = cp.Problem(objective, constraints)
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"LP (m={m}, n={n}, density={density:.2f})"
-    problem._custom_size_metrics = {
-        "m": m,
-        "n": n,
-        "density": density
-    }
+    problem._custom_size_metrics = {"m": m, "n": n, "density": density}
 
     return problem
 

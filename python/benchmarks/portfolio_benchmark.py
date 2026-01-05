@@ -20,28 +20,33 @@ Data source: Yahoo Finance via yfinance
 Reference: Markowitz, H. (1952) "Portfolio Selection", Journal of Finance
 """
 
-import numpy as np
-import time
-import sys
+from __future__ import annotations
+
 import os
-from dataclasses import dataclass
-from typing import Optional
-from pathlib import Path
 import pickle
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+
 
 # Add pogs to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
     print("Warning: CVXPY not installed")
 
 try:
-    import yfinance as yf
     import pandas as pd
+    import yfinance as yf
+
     HAS_YFINANCE = True
 except ImportError:
     HAS_YFINANCE = False
@@ -49,6 +54,7 @@ except ImportError:
 
 try:
     from pogs_graph import solve_lasso, solve_ridge
+
     HAS_POGS = True
 except ImportError as e:
     HAS_POGS = False
@@ -58,33 +64,124 @@ except ImportError as e:
 # S&P 500 tickers - using a subset of major liquid stocks
 SP500_TICKERS = [
     # Technology
-    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "AMD", "INTC", "CRM",
-    "ORCL", "ADBE", "CSCO", "IBM", "QCOM", "TXN", "AVGO", "NOW", "INTU", "AMAT",
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "NVDA",
+    "TSLA",
+    "AMD",
+    "INTC",
+    "CRM",
+    "ORCL",
+    "ADBE",
+    "CSCO",
+    "IBM",
+    "QCOM",
+    "TXN",
+    "AVGO",
+    "NOW",
+    "INTU",
+    "AMAT",
     # Finance
-    "JPM", "BAC", "WFC", "GS", "MS", "C", "AXP", "BLK", "SCHW", "USB",
-    "PNC", "TFC", "COF", "BK", "STT", "FITB", "KEY", "RF", "HBAN", "CFG",
+    "JPM",
+    "BAC",
+    "WFC",
+    "GS",
+    "MS",
+    "C",
+    "AXP",
+    "BLK",
+    "SCHW",
+    "USB",
+    "PNC",
+    "TFC",
+    "COF",
+    "BK",
+    "STT",
+    "FITB",
+    "KEY",
+    "RF",
+    "HBAN",
+    "CFG",
     # Healthcare
-    "JNJ", "UNH", "PFE", "MRK", "ABBV", "LLY", "TMO", "ABT", "DHR", "BMY",
-    "AMGN", "GILD", "MDT", "CVS", "ISRG", "SYK", "ZTS", "VRTX", "REGN", "BDX",
+    "JNJ",
+    "UNH",
+    "PFE",
+    "MRK",
+    "ABBV",
+    "LLY",
+    "TMO",
+    "ABT",
+    "DHR",
+    "BMY",
+    "AMGN",
+    "GILD",
+    "MDT",
+    "CVS",
+    "ISRG",
+    "SYK",
+    "ZTS",
+    "VRTX",
+    "REGN",
+    "BDX",
     # Consumer
-    "PG", "KO", "PEP", "WMT", "HD", "MCD", "NKE", "SBUX", "TGT", "COST",
-    "LOW", "TJX", "EL", "CL", "GIS", "KMB", "SYY", "KR", "DG", "DLTR",
+    "PG",
+    "KO",
+    "PEP",
+    "WMT",
+    "HD",
+    "MCD",
+    "NKE",
+    "SBUX",
+    "TGT",
+    "COST",
+    "LOW",
+    "TJX",
+    "EL",
+    "CL",
+    "GIS",
+    "KMB",
+    "SYY",
+    "KR",
+    "DG",
+    "DLTR",
     # Industrial
-    "CAT", "DE", "BA", "HON", "UPS", "RTX", "LMT", "GE", "MMM", "EMR",
+    "CAT",
+    "DE",
+    "BA",
+    "HON",
+    "UPS",
+    "RTX",
+    "LMT",
+    "GE",
+    "MMM",
+    "EMR",
     # Energy
-    "XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "HAL",
+    "XOM",
+    "CVX",
+    "COP",
+    "EOG",
+    "SLB",
+    "MPC",
+    "PSX",
+    "VLO",
+    "OXY",
+    "HAL",
 ]
 
 
 @dataclass
 class BenchmarkResult:
     """Result from solving a benchmark problem."""
+
     solver: str
     time_sec: float
     optval: float
     status: str
-    iterations: Optional[int] = None
-    error: Optional[str] = None
+    iterations: int | None = None
+    error: str | None = None
 
 
 def get_cache_dir() -> Path:
@@ -106,22 +203,22 @@ def download_stock_data(tickers: list, period: str = "2y") -> tuple:
 
     if cache_file.exists():
         print(f"Loading cached data from {cache_file}")
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     print(f"Downloading {len(tickers)} stocks from Yahoo Finance...")
     try:
         data = yf.download(tickers, period=period, progress=False, threads=False)
-        if 'Adj Close' in data.columns.get_level_values(0):
-            data = data['Adj Close']
+        if "Adj Close" in data.columns.get_level_values(0):
+            data = data["Adj Close"]
         else:
-            data = data['Close']
+            data = data["Close"]
     except Exception as e:
         print(f"Download error: {e}")
         raise
 
     # Drop stocks with too much missing data
-    data = data.dropna(axis=1, thresh=len(data)*0.9)
+    data = data.dropna(axis=1, thresh=len(data) * 0.9)
     data = data.dropna(axis=0)
 
     if len(data.columns) < 5:
@@ -140,16 +237,16 @@ def download_stock_data(tickers: list, period: str = "2y") -> tuple:
     result = (returns, mu, Sigma, list(data.columns))
 
     # Cache
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(result, f)
 
     print(f"Got {len(data.columns)} stocks with {len(returns)} days of data")
     return result
 
 
-def solve_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
-                          risk_aversion: float, solver_name: str,
-                          verbose: bool = False) -> BenchmarkResult:
+def solve_portfolio_cvxpy(
+    mu: np.ndarray, Sigma: np.ndarray, risk_aversion: float, solver_name: str, verbose: bool = False
+) -> BenchmarkResult:
     """Solve Markowitz portfolio optimization using CVXPY.
 
     minimize    (gamma/2) w' Σ w - μ' w
@@ -167,9 +264,9 @@ def solve_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error=f"Unknown solver: {solver_name}"
+            error=f"Unknown solver: {solver_name}",
         )
 
     try:
@@ -181,7 +278,7 @@ def solve_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
 
         constraints = [
             cp.sum(w) == 1,  # Fully invested
-            w >= 0,          # Long only
+            w >= 0,  # Long only
         ]
 
         prob = cp.Problem(cp.Minimize(objective), constraints)
@@ -193,22 +290,19 @@ def solve_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=prob.value if prob.value is not None else float('nan'),
+            optval=prob.value if prob.value is not None else float("nan"),
             status=prob.status,
-            iterations=getattr(prob.solver_stats, 'num_iters', None) if prob.solver_stats else None
+            iterations=getattr(prob.solver_stats, "num_iters", None) if prob.solver_stats else None,
         )
     except Exception as e:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="error",
-            error=str(e)
+            solver=solver_name, time_sec=0, optval=float("nan"), status="error", error=str(e)
         )
 
 
-def solve_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
-                         risk_aversion: float, verbose: bool = False) -> BenchmarkResult:
+def solve_portfolio_pogs(
+    mu: np.ndarray, Sigma: np.ndarray, risk_aversion: float, verbose: bool = False
+) -> BenchmarkResult:
     """Solve portfolio optimization using POGS.
 
     We reformulate as a ridge regression problem:
@@ -231,16 +325,16 @@ def solve_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="POGS not installed"
+            error="POGS not installed",
         )
 
     try:
         n = len(mu)
 
         # Compute Sigma^(1/2) via Cholesky
-        L = np.linalg.cholesky(Sigma + 1e-8 * np.eye(n))
+        np.linalg.cholesky(Sigma + 1e-8 * np.eye(n))
 
         # Sparse portfolio: min ||Lw||^2 - mu'w + lambda||w||_1
         # This is min ||Lw - 0||^2 + lambda||w||_1 shifted by mu
@@ -267,25 +361,26 @@ def solve_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="skipped",
-            error="Constrained QP - use CVXPY solvers"
+            error="Constrained QP - use CVXPY solvers",
         )
 
     except Exception as e:
         import traceback
+
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="error",
-            error=str(e) + "\n" + traceback.format_exc()
+            error=str(e) + "\n" + traceback.format_exc(),
         )
 
 
-def solve_sparse_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
-                                 sparsity_penalty: float,
-                                 verbose: bool = False) -> BenchmarkResult:
+def solve_sparse_portfolio_pogs(
+    mu: np.ndarray, Sigma: np.ndarray, sparsity_penalty: float, verbose: bool = False
+) -> BenchmarkResult:
     """Solve sparse portfolio (Lasso) using POGS.
 
     minimize    (1/2) w' Σ w + lambda ||w||_1
@@ -297,9 +392,9 @@ def solve_sparse_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="POGS not installed"
+            error="POGS not installed",
         )
 
     try:
@@ -321,24 +416,29 @@ def solve_sparse_portfolio_pogs(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver="pogs",
             time_sec=elapsed,
-            optval=result['optval'],
-            status="optimal" if result['status'] == 0 else "error",
-            iterations=result['num_iters']
+            optval=result["optval"],
+            status="optimal" if result["status"] == 0 else "error",
+            iterations=result["num_iters"],
         )
     except Exception as e:
         import traceback
+
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="error",
-            error=str(e) + "\n" + traceback.format_exc()
+            error=str(e) + "\n" + traceback.format_exc(),
         )
 
 
-def solve_sparse_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
-                                  sparsity_penalty: float, solver_name: str,
-                                  verbose: bool = False) -> BenchmarkResult:
+def solve_sparse_portfolio_cvxpy(
+    mu: np.ndarray,
+    Sigma: np.ndarray,
+    sparsity_penalty: float,
+    solver_name: str,
+    verbose: bool = False,
+) -> BenchmarkResult:
     """Solve sparse portfolio using CVXPY."""
     solver_map = {
         "osqp": cp.OSQP,
@@ -348,10 +448,7 @@ def solve_sparse_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
 
     if solver_name not in solver_map:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="unavailable"
+            solver=solver_name, time_sec=0, optval=float("nan"), status="unavailable"
         )
 
     try:
@@ -370,17 +467,13 @@ def solve_sparse_portfolio_cvxpy(mu: np.ndarray, Sigma: np.ndarray,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=prob.value if prob.value is not None else float('nan'),
+            optval=prob.value if prob.value is not None else float("nan"),
             status=prob.status,
-            iterations=getattr(prob.solver_stats, 'num_iters', None) if prob.solver_stats else None
+            iterations=getattr(prob.solver_stats, "num_iters", None) if prob.solver_stats else None,
         )
     except Exception as e:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="error",
-            error=str(e)
+            solver=solver_name, time_sec=0, optval=float("nan"), status="error", error=str(e)
         )
 
 
@@ -419,7 +512,7 @@ def run_benchmark():
         # Download data
         tickers = SP500_TICKERS[:n_stocks]
         try:
-            returns, mu, Sigma, actual_tickers = download_stock_data(tickers)
+            _returns, mu, Sigma, actual_tickers = download_stock_data(tickers)
             n = len(actual_tickers)
         except Exception as e:
             print(f"Error downloading data for {n_stocks} stocks: {e}")
@@ -445,7 +538,7 @@ def run_benchmark():
             for solver in solvers:
                 r = results[solver]
                 if r.status in ["optimal", "optimal_inaccurate"]:
-                    print(f" {r.time_sec*1000:>8.1f}ms", end="")
+                    print(f" {r.time_sec * 1000:>8.1f}ms", end="")
                     times[solver] = r.time_sec
                 elif r.status == "skipped":
                     print(f" {'SKIP':>10}", end="")
@@ -472,10 +565,11 @@ def run_benchmark():
     print("SUMMARY")
     print("=" * 80)
 
-    wins = {s: 0 for s in solvers}
+    wins = dict.fromkeys(solvers, 0)
     times_by_solver = {s: [] for s in solvers}
 
     from collections import defaultdict
+
     grouped = defaultdict(dict)
     for n, lam, result in all_results:
         key = (n, lam)
@@ -484,8 +578,9 @@ def run_benchmark():
             times_by_solver[result.solver].append(result.time_sec)
 
     for key, res in grouped.items():
-        valid = {s: r.time_sec for s, r in res.items()
-                if r.status in ["optimal", "optimal_inaccurate"]}
+        valid = {
+            s: r.time_sec for s, r in res.items() if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if valid:
             winner = min(valid, key=valid.get)
             wins[winner] += 1
@@ -504,8 +599,9 @@ def run_benchmark():
     print("\nPOGS Speedups (vs second-best solver):")
     pogs_speedups = []
     for key, res in grouped.items():
-        valid = {s: r.time_sec for s, r in res.items()
-                if r.status in ["optimal", "optimal_inaccurate"]}
+        valid = {
+            s: r.time_sec for s, r in res.items() if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if "pogs" in valid and len(valid) > 1:
             pogs_time = valid["pogs"]
             others = [t for s, t in valid.items() if s != "pogs"]

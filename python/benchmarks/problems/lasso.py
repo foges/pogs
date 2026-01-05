@@ -33,6 +33,7 @@ def generate(m=100, n=50, density=1.0, condition_number=1.0, seed=None):
         cols = np.random.randint(0, n, nnz)
         data = np.random.randn(nnz)
         from scipy.sparse import coo_matrix
+
         A = coo_matrix((data, (rows, cols)), shape=(m, n)).toarray()
     else:
         # Dense matrix
@@ -57,9 +58,7 @@ def generate(m=100, n=50, density=1.0, condition_number=1.0, seed=None):
 
     # Formulate problem
     x = cp.Variable(n)
-    objective = cp.Minimize(
-        0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1)
-    )
+    objective = cp.Minimize(0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1))
     problem = cp.Problem(objective)
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
@@ -68,7 +67,7 @@ def generate(m=100, n=50, density=1.0, condition_number=1.0, seed=None):
         "m": m,
         "n": n,
         "density": density,
-        "condition_number": condition_number
+        "condition_number": condition_number,
     }
 
     return problem

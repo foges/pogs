@@ -8,6 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run ruff check
+        run: uvx ruff check python/
+
+      - name: Run ruff format check
+        run: uvx ruff format --check python/
+
   build-linux:
     name: Linux (GCC)
     runs-on: ubuntu-22.04

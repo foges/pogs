@@ -46,10 +46,7 @@ def generate(n=100, m=50, seed=None):
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"QP (n={n}, m={m})"
-    problem._custom_size_metrics = {
-        "n": n,
-        "m": m
-    }
+    problem._custom_size_metrics = {"n": n, "m": m}
 
     return problem
 

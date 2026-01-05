@@ -2,16 +2,17 @@
 Test CVXPY interface for POGS solver.
 """
 
-import sys
 import os
+import sys
+
 
 # Add pogs python directory to path
 sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     import cvxpy as cp
-    import numpy as np
-    from pogs_cvxpy import POGS
+
+    from pogs_cvxpy import POGS  # noqa: F401 (registers solver with CVXPY)
 except ImportError as e:
     print(f"Missing dependency: {e}")
     print("Please install cvxpy: pip install cvxpy")
@@ -38,14 +39,11 @@ def test_lp():
 
     x = cp.Variable(2)
     objective = cp.Minimize(x[0])
-    constraints = [
-        x[0] + x[1] == 2,
-        x >= 0
-    ]
+    constraints = [x[0] + x[1] == 2, x >= 0]
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
+    prob.solve(solver="POGS", verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -55,7 +53,7 @@ def test_lp():
     print()
 
     # Verify
-    assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
+    assert prob.status == "optimal", f"Expected optimal, got {prob.status}"
     assert abs(prob.value) < 1e-3, f"Expected optimal value ~0, got {prob.value}"
     assert abs(x.value[0]) < 1e-3, f"Expected x[0] ~0, got {x.value[0]}"
     assert abs(x.value[1] - 2.0) < 1e-3, f"Expected x[1] ~2, got {x.value[1]}"
@@ -79,15 +77,11 @@ def test_lp_ineq():
 
     x = cp.Variable(2)
     objective = cp.Minimize(x[0])
-    constraints = [
-        -x[0] - x[1] <= 0,
-        x[0] - x[1] <= 0,
-        x[1] <= 2
-    ]
+    constraints = [-x[0] - x[1] <= 0, x[0] - x[1] <= 0, x[1] <= 2]
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
+    prob.solve(solver="POGS", verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -96,16 +90,10 @@ def test_lp_ineq():
     print(f"  x = {x.value}")
     print()
 
-    assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
-    assert abs(prob.value + 2.0) < 1e-3, (
-        f"Expected optimal value ~-2, got {prob.value}"
-    )
-    assert abs(x.value[0] + 2.0) < 1e-3, (
-        f"Expected x[0] ~-2, got {x.value[0]}"
-    )
-    assert abs(x.value[1] - 2.0) < 1e-3, (
-        f"Expected x[1] ~2, got {x.value[1]}"
-    )
+    assert prob.status == "optimal", f"Expected optimal, got {prob.status}"
+    assert abs(prob.value + 2.0) < 1e-3, f"Expected optimal value ~-2, got {prob.value}"
+    assert abs(x.value[0] + 2.0) < 1e-3, f"Expected x[0] ~-2, got {x.value[0]}"
+    assert abs(x.value[1] - 2.0) < 1e-3, f"Expected x[1] ~2, got {x.value[1]}"
 
     print("✓ Test passed!")
     return True
@@ -124,14 +112,11 @@ def test_qp():
 
     x = cp.Variable(2)
     objective = cp.Minimize(0.5 * cp.sum_squares(x) + x[0])
-    constraints = [
-        x[0] + x[1] == 1,
-        x >= 0
-    ]
+    constraints = [x[0] + x[1] == 1, x >= 0]
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
+    prob.solve(solver="POGS", verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -140,7 +125,7 @@ def test_qp():
     print(f"  x = {x.value}")
     print()
 
-    assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
+    assert prob.status == "optimal", f"Expected optimal, got {prob.status}"
 
     print("✓ Test passed!")
     return True
@@ -159,15 +144,12 @@ def test_soc():
 
     x = cp.Variable(3)
     objective = cp.Minimize(x[0])
-    constraints = [
-        cp.norm(x[1:], 2) <= x[0],
-        x[1] == 1
-    ]
+    constraints = [cp.norm(x[1:], 2) <= x[0], x[1] == 1]
     prob = cp.Problem(objective, constraints)
 
     try:
         # Solve with POGS
-        result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
+        prob.solve(solver="POGS", verbose=True, **SOLVER_OPTS)
 
         print()
         print("Result:")
@@ -176,7 +158,7 @@ def test_soc():
         print(f"  x = {x.value}")
         print()
 
-        assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
+        assert prob.status == "optimal", f"Expected optimal, got {prob.status}"
         print("✓ Test passed!")
         return True
 
@@ -199,14 +181,11 @@ def test_simple_feasibility():
 
     x = cp.Variable(2)
     objective = cp.Minimize(0)  # Feasibility
-    constraints = [
-        x[0] + x[1] == 1,
-        x >= 0
-    ]
+    constraints = [x[0] + x[1] == 1, x >= 0]
     prob = cp.Problem(objective, constraints)
 
     # Solve with POGS
-    result = prob.solve(solver='POGS', verbose=True, **SOLVER_OPTS)
+    prob.solve(solver="POGS", verbose=True, **SOLVER_OPTS)
 
     print()
     print("Result:")
@@ -214,7 +193,7 @@ def test_simple_feasibility():
     print(f"  x = {x.value}")
     print()
 
-    assert prob.status == 'optimal', f"Expected optimal, got {prob.status}"
+    assert prob.status == "optimal", f"Expected optimal, got {prob.status}"
 
     print("✓ Test passed!")
     return True
@@ -241,7 +220,7 @@ def main():
     passed = 0
     failed = 0
 
-    for name, test_func in tests:
+    for _name, test_func in tests:
         try:
             if test_func():
                 passed += 1
@@ -250,6 +229,7 @@ def main():
         except Exception as e:
             print(f"✗ Test failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
         print()
@@ -261,6 +241,6 @@ def main():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)

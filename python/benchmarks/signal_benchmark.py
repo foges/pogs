@@ -11,16 +11,19 @@ TV denoising solves:
 where D is the finite difference operator (gradient).
 """
 
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+
 
 # Add parent directory for pogs imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -30,6 +33,7 @@ try:
     from skimage import data as skimage_data
     from skimage.color import rgb2gray
     from skimage.transform import resize
+
     HAS_SKIMAGE = True
 except ImportError:
     HAS_SKIMAGE = False
@@ -44,30 +48,30 @@ def get_real_images():
         # Camera - classic test image (512x512 grayscale)
         try:
             img = skimage_data.camera()
-            images['camera_64'] = resize(img, (64, 64), anti_aliasing=True)
-            images['camera_128'] = resize(img, (128, 128), anti_aliasing=True)
+            images["camera_64"] = resize(img, (64, 64), anti_aliasing=True)
+            images["camera_128"] = resize(img, (128, 128), anti_aliasing=True)
         except Exception:
             pass
 
         # Astronaut - color image converted to grayscale
         try:
             img = rgb2gray(skimage_data.astronaut())
-            images['astronaut_64'] = resize(img, (64, 64), anti_aliasing=True)
-            images['astronaut_128'] = resize(img, (128, 128), anti_aliasing=True)
+            images["astronaut_64"] = resize(img, (64, 64), anti_aliasing=True)
+            images["astronaut_128"] = resize(img, (128, 128), anti_aliasing=True)
         except Exception:
             pass
 
         # Coins - grayscale image with edges
         try:
             img = skimage_data.coins()
-            images['coins_64'] = resize(img, (64, 64), anti_aliasing=True)
+            images["coins_64"] = resize(img, (64, 64), anti_aliasing=True)
         except Exception:
             pass
 
         # Moon - grayscale with smooth regions
         try:
             img = skimage_data.moon()
-            images['moon_64'] = resize(img, (64, 64), anti_aliasing=True)
+            images["moon_64"] = resize(img, (64, 64), anti_aliasing=True)
         except Exception:
             pass
 
@@ -80,24 +84,24 @@ def get_real_images():
         x[50:100] = 1.0
         x[150:200] = -0.5
         x[220:240] = 0.8
-        images['synthetic_1d'] = x
+        images["synthetic_1d"] = x
 
         # 2D blocks
         img = np.zeros((64, 64))
         img[10:30, 10:30] = 1.0
         img[35:55, 35:55] = 0.7
         img[15:45, 40:60] = -0.5
-        images['synthetic_2d'] = img
+        images["synthetic_2d"] = img
 
     return images
 
 
 def create_1d_difference_matrix(n):
     """Create 1D finite difference matrix D such that Dx gives gradients."""
-    D = np.zeros((n-1, n))
-    for i in range(n-1):
+    D = np.zeros((n - 1, n))
+    for i in range(n - 1):
         D[i, i] = -1
-        D[i, i+1] = 1
+        D[i, i + 1] = 1
     return D
 
 
@@ -153,22 +157,22 @@ def solve_tv_cvxpy(b, D, lambd, solver_name, verbose=False):
     problem = cp.Problem(objective)
 
     solver_map = {
-        'ECOS': cp.ECOS,
-        'SCS': cp.SCS,
-        'OSQP': cp.OSQP,
-        'CLARABEL': cp.CLARABEL,
+        "ECOS": cp.ECOS,
+        "SCS": cp.SCS,
+        "OSQP": cp.OSQP,
+        "CLARABEL": cp.CLARABEL,
     }
 
     if solver_name not in solver_map:
-        return None, None, 'unavailable'
+        return None, None, "unavailable"
 
     try:
         t0 = time.perf_counter()
         problem.solve(solver=solver_map[solver_name], verbose=verbose)
         solve_time = time.perf_counter() - t0
 
-        if problem.status in ['optimal', 'optimal_inaccurate']:
-            return x.value, solve_time, 'optimal'
+        if problem.status in ["optimal", "optimal_inaccurate"]:
+            return x.value, solve_time, "optimal"
         else:
             return None, solve_time, problem.status
     except Exception as e:
@@ -178,9 +182,9 @@ def solve_tv_cvxpy(b, D, lambd, solver_name, verbose=False):
 def solve_tv_pogs(b, D, lambd, verbose=False):
     """Solve TV denoising with POGS graph-form solver."""
     try:
-        from pogs_graph import solve_lasso, FunctionObj, Function, _solve_graph_form
+        from pogs_graph import Function, FunctionObj, _solve_graph_form, solve_lasso
     except ImportError:
-        return None, None, 'pogs not available'
+        return None, None, "pogs not available"
 
     # TV denoising: min 0.5||x - b||^2 + lambda*||Dx||_1
     # Reformulate as: min 0.5||x - b||^2 + lambda*||y||_1  s.t. y = Dx
@@ -192,7 +196,7 @@ def solve_tv_pogs(b, D, lambd, verbose=False):
 
     # Stack: A = [I; D]
     A = np.vstack([np.eye(n), D])
-    m = A.shape[0]
+    A.shape[0]
 
     # f_i for i < n: 0.5*(y_i - b_i)^2  => kSquare with b=b_i
     # f_i for i >= n: lambda*|y_i|  => kAbs with c=lambda
@@ -206,14 +210,15 @@ def solve_tv_pogs(b, D, lambd, verbose=False):
     g = [FunctionObj(Function.kZero) for _ in range(n)]
 
     t0 = time.perf_counter()
-    result = _solve_graph_form(A, f, g, abs_tol=1e-4, rel_tol=1e-4,
-                                max_iter=5000, verbose=5 if verbose else 0)
+    result = _solve_graph_form(
+        A, f, g, abs_tol=1e-4, rel_tol=1e-4, max_iter=5000, verbose=5 if verbose else 0
+    )
     solve_time = time.perf_counter() - t0
 
-    if result['status'] == 0:
-        return result['x'], solve_time, 'optimal'
+    if result["status"] == 0:
+        return result["x"], solve_time, "optimal"
     else:
-        return result['x'], solve_time, f"status={result['status']}"
+        return result["x"], solve_time, f"status={result['status']}"
 
 
 def run_benchmark():
@@ -227,16 +232,16 @@ def run_benchmark():
         print("No images available for benchmark")
         return
 
-    solvers = ['POGS', 'ECOS', 'SCS', 'OSQP']
+    solvers = ["POGS", "ECOS", "SCS", "OSQP"]
     results = []
 
     # Noise level and regularization
     noise_std = 0.1
 
     for img_name, img in images.items():
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Image: {img_name} (shape: {img.shape})")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Normalize image to [0, 1]
         img = (img - img.min()) / (img.max() - img.min() + 1e-10)
@@ -257,15 +262,15 @@ def run_benchmark():
         lambd = 0.1 * noise_std * np.sqrt(n)
 
         print(f"Problem size: n={n}, m_D={D.shape[0]}, lambda={lambd:.4f}")
-        print(f"Noisy PSNR: {-10*np.log10(np.mean((noisy - img)**2)):.2f} dB")
+        print(f"Noisy PSNR: {-10 * np.log10(np.mean((noisy - img) ** 2)):.2f} dB")
         print()
 
         solver_results = {}
 
         for solver in solvers:
-            print(f"  {solver:12s}: ", end='', flush=True)
+            print(f"  {solver:12s}: ", end="", flush=True)
 
-            if solver == 'POGS':
+            if solver == "POGS":
                 x_sol, t, status = solve_tv_pogs(noisy, D, lambd, verbose=False)
             else:
                 if not HAS_CVXPY:
@@ -276,18 +281,14 @@ def run_benchmark():
             if x_sol is not None:
                 x_sol = x_sol.reshape(img.shape)
                 mse = np.mean((x_sol - img) ** 2)
-                psnr = -10 * np.log10(mse) if mse > 0 else float('inf')
+                psnr = -10 * np.log10(mse) if mse > 0 else float("inf")
                 print(f"time={t:.4f}s, PSNR={psnr:.2f}dB, status={status}")
-                solver_results[solver] = {'time': t, 'psnr': psnr, 'status': status}
+                solver_results[solver] = {"time": t, "psnr": psnr, "status": status}
             else:
                 print(f"FAILED ({status})")
-                solver_results[solver] = {'time': None, 'psnr': None, 'status': status}
+                solver_results[solver] = {"time": None, "psnr": None, "status": status}
 
-        results.append({
-            'image': img_name,
-            'size': n,
-            'solvers': solver_results
-        })
+        results.append({"image": img_name, "size": n, "solvers": solver_results})
 
     # Summary
     print("\n" + "=" * 70)
@@ -298,14 +299,14 @@ def run_benchmark():
     total = 0
 
     for r in results:
-        pogs_time = r['solvers'].get('POGS', {}).get('time')
+        pogs_time = r["solvers"].get("POGS", {}).get("time")
         if pogs_time is None:
             continue
 
-        for solver, data in r['solvers'].items():
-            if solver == 'POGS':
+        for solver, data in r["solvers"].items():
+            if solver == "POGS":
                 continue
-            other_time = data.get('time')
+            other_time = data.get("time")
             if other_time is not None:
                 total += 1
                 if pogs_time < other_time:
@@ -317,8 +318,8 @@ def run_benchmark():
                     print(f"  {r['image']}: POGS {slowdown:.1f}x slower than {solver}")
 
     if total > 0:
-        print(f"\nPOGS wins: {pogs_wins}/{total} ({100*pogs_wins/total:.0f}%)")
+        print(f"\nPOGS wins: {pogs_wins}/{total} ({100 * pogs_wins / total:.0f}%)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_benchmark()

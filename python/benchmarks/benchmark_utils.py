@@ -2,17 +2,20 @@
 Utility functions for POGS benchmarks.
 """
 
-import time
+from __future__ import annotations
+
 import json
-import numpy as np
-from dataclasses import dataclass, asdict
-from typing import Optional
+import time
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+
+import numpy as np
 
 
 @dataclass
 class BenchmarkResult:
     """Results from a single benchmark run."""
+
     problem_name: str
     problem_size: dict[str, int]
     solver: str
@@ -22,9 +25,9 @@ class BenchmarkResult:
     iterations: int
     optimal_value: float
     status: str
-    primal_residual: Optional[float] = None
-    dual_residual: Optional[float] = None
-    error: Optional[str] = None
+    primal_residual: float | None = None
+    dual_residual: float | None = None
+    error: str | None = None
 
 
 def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
@@ -59,18 +62,18 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
         primal_res = None
         dual_res = None
 
-        if hasattr(problem, 'solver_stats'):
+        if hasattr(problem, "solver_stats"):
             stats = problem.solver_stats
-            setup_time = getattr(stats, 'setup_time', 0) or 0
-            iterations = getattr(stats, 'num_iters', 0) or 0
-            solve_time = getattr(stats, 'solve_time', None)
+            setup_time = getattr(stats, "setup_time", 0) or 0
+            iterations = getattr(stats, "num_iters", 0) or 0
+            solve_time = getattr(stats, "solve_time", None)
 
         if not solve_time:
             solve_time = total_time - setup_time
 
         return BenchmarkResult(
             problem_name=problem.name,
-            problem_size=getattr(problem, '_custom_size_metrics', {}),
+            problem_size=getattr(problem, "_custom_size_metrics", {}),
             solver=solver_name,
             solve_time=solve_time,
             setup_time=setup_time,
@@ -90,7 +93,7 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
 
         return BenchmarkResult(
             problem_name=problem.name,
-            problem_size=getattr(problem, '_custom_size_metrics', {}),
+            problem_size=getattr(problem, "_custom_size_metrics", {}),
             solver=solver_name,
             solve_time=total_time,
             setup_time=0,
@@ -98,19 +101,19 @@ def benchmark_solver(problem, solver_name, verbose=False, timeout=300):
             iterations=0,
             optimal_value=np.nan,
             status="ERROR",
-            error=str(e)
+            error=str(e),
         )
 
 
-def save_results(results: list[BenchmarkResult], filename='results/latest.json'):
+def save_results(results: list[BenchmarkResult], filename="results/latest.json"):
     """Save benchmark results to JSON file."""
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         json.dump([asdict(r) for r in results], f, indent=2)
 
 
-def load_results(filename='results/latest.json') -> list[BenchmarkResult]:
+def load_results(filename="results/latest.json") -> list[BenchmarkResult]:
     """Load benchmark results from JSON file."""
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         data = json.load(f)
     return [BenchmarkResult(**r) for r in data]
 
@@ -136,7 +139,7 @@ def generate_text_report(results: list[BenchmarkResult]) -> str:
     # Summary statistics
     total_problems = len(by_problem)
     total_runs = len(results)
-    solvers = sorted(set(r.solver for r in results))
+    solvers = sorted({r.solver for r in results})
 
     report_lines.append(f"Total problems: {total_problems}")
     report_lines.append(f"Total runs: {total_runs}")
@@ -164,18 +167,22 @@ def generate_text_report(results: list[BenchmarkResult]) -> str:
             by_solver[r.solver].append(r)
 
         # Table header
-        report_lines.append(f"{'Solver':<15} {'Avg Time (s)':<15} {'Iterations':<12} {'Success':<10} {'Opt Value':<15}")
-        report_lines.append(f"{'-'*15} {'-'*15} {'-'*12} {'-'*10} {'-'*15}")
+        report_lines.append(
+            f"{'Solver':<15} {'Avg Time (s)':<15} {'Iterations':<12} {'Success':<10} {'Opt Value':<15}"
+        )
+        report_lines.append(f"{'-' * 15} {'-' * 15} {'-' * 12} {'-' * 10} {'-' * 15}")
 
         for solver in sorted(by_solver.keys()):
             solver_results = by_solver[solver]
-            successful = [r for r in solver_results if r.status == 'optimal']
+            successful = [r for r in solver_results if r.status == "optimal"]
 
             if successful:
                 avg_time = np.mean([r.solve_time for r in successful])
                 avg_iters = np.mean([r.iterations for r in successful])
                 success_rate = len(successful) / len(solver_results) * 100
-                avg_optval = np.mean([r.optimal_value for r in successful if np.isfinite(r.optimal_value)])
+                avg_optval = np.mean(
+                    [r.optimal_value for r in successful if np.isfinite(r.optimal_value)]
+                )
 
                 report_lines.append(
                     f"{solver:<15} {avg_time:<15.4f} {avg_iters:<12.0f} "
@@ -185,8 +192,7 @@ def generate_text_report(results: list[BenchmarkResult]) -> str:
                 errors = [r.error for r in solver_results if r.error]
                 error_msg = errors[0][:20] if errors else "Failed"
                 report_lines.append(
-                    f"{solver:<15} {'--':<15} {'--':<12} "
-                    f"{'0%':<10} {error_msg:<15}"
+                    f"{solver:<15} {'--':<15} {'--':<12} {'0%':<10} {error_msg:<15}"
                 )
 
         report_lines.append("")
@@ -201,15 +207,15 @@ def generate_text_report(results: list[BenchmarkResult]) -> str:
         problem_results = by_problem[problem_name]
         by_solver = defaultdict(list)
         for r in problem_results:
-            if r.status == 'optimal':
+            if r.status == "optimal":
                 by_solver[r.solver].append(r.solve_time)
 
-        if 'POGS' in by_solver and by_solver['POGS']:
-            pogs_time = np.mean(by_solver['POGS'])
+        if by_solver.get("POGS"):
+            pogs_time = np.mean(by_solver["POGS"])
 
             report_lines.append(f"{problem_name}:")
             for solver in sorted(by_solver.keys()):
-                if solver == 'POGS':
+                if solver == "POGS":
                     continue
                 if by_solver[solver]:
                     solver_time = np.mean(by_solver[solver])
@@ -217,7 +223,7 @@ def generate_text_report(results: list[BenchmarkResult]) -> str:
                     if speedup > 1:
                         report_lines.append(f"  POGS {speedup:.2f}x faster than {solver}")
                     else:
-                        report_lines.append(f"  {solver} {1/speedup:.2f}x faster than POGS")
+                        report_lines.append(f"  {solver} {1 / speedup:.2f}x faster than POGS")
             report_lines.append("")
 
     return "\n".join(report_lines)
@@ -229,6 +235,6 @@ def print_summary(results: list[BenchmarkResult]):
     print(report)
 
     # Save to file
-    with open('results/summary.txt', 'w') as f:
+    with open("results/summary.txt", "w") as f:
         f.write(report)
     print("\nReport saved to results/summary.txt")

@@ -15,21 +15,22 @@ The Maros-Meszaros benchmark results show POGS struggling because:
    typical ML/statistics optimization problems where POGS shines.
 """
 
+import os
+import sys
+import time
+import urllib.request
+
 import numpy as np
 import scipy.io as sio
 import scipy.sparse as sp
-import time
-import os
-import sys
-import subprocess
-import tempfile
-import urllib.request
+
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -39,16 +40,39 @@ except ImportError:
 # Format: (name, url_suffix)
 MAROS_MESZAROS_PROBLEMS = [
     # Small problems (< 500 vars)
-    "QAFIRO", "QBANDM", "QBEACONF", "QBRANDY", "QE226",
-    "QSCAGR7", "QSCORPIO", "QSCTAP1", "QSHARE1B", "QSHARE2B",
+    "QAFIRO",
+    "QBANDM",
+    "QBEACONF",
+    "QBRANDY",
+    "QE226",
+    "QSCAGR7",
+    "QSCORPIO",
+    "QSCTAP1",
+    "QSHARE1B",
+    "QSHARE2B",
     # Medium problems (500-2000 vars)
-    "QSCAGR25", "QSCFXM1", "QSCSD1", "QSHIP04S", "QSHIP08S",
+    "QSCAGR25",
+    "QSCFXM1",
+    "QSCSD1",
+    "QSHIP04S",
+    "QSHIP08S",
     # Larger problems
-    "QSCFXM2", "QSCSD6", "QSHIP04L", "QSHIP08L",
+    "QSCFXM2",
+    "QSCSD6",
+    "QSHIP04L",
+    "QSHIP08L",
     # Classic difficult problems
-    "CVXQP1_S", "CVXQP2_S", "CVXQP3_S",
-    "DUAL1", "DUAL2", "DUAL3", "DUAL4",
-    "PRIMAL1", "PRIMAL2", "PRIMAL3", "PRIMAL4",
+    "CVXQP1_S",
+    "CVXQP2_S",
+    "CVXQP3_S",
+    "DUAL1",
+    "DUAL2",
+    "DUAL3",
+    "DUAL4",
+    "PRIMAL1",
+    "PRIMAL2",
+    "PRIMAL3",
+    "PRIMAL4",
 ]
 
 BASE_URL = "https://raw.githubusercontent.com/osqp/osqp_benchmarks/master/problem_classes/maros_meszaros_data/"
@@ -80,19 +104,19 @@ def load_qp_problem(mat_path):
     """
     data = sio.loadmat(mat_path)
 
-    P = data['P']
+    P = data["P"]
     if sp.issparse(P):
         P = P.toarray()
 
-    q = data['q'].flatten()
+    q = data["q"].flatten()
 
-    A = data['A']
+    A = data["A"]
     if sp.issparse(A):
         A = A.toarray()
 
     # Convert to float64 to avoid uint8 overflow issues
-    l = data['l'].flatten().astype(np.float64)
-    u = data['u'].flatten().astype(np.float64)
+    l = data["l"].flatten().astype(np.float64)
+    u = data["u"].flatten().astype(np.float64)
 
     return P, q, A, l, u
 
@@ -124,28 +148,28 @@ def solve_qp_cvxpy(P, q, A, l, u, solver_name, time_limit=60, verbose=False):
     problem = cp.Problem(objective, constraints)
 
     solver_opts = {}
-    if solver_name == 'SCS':
-        solver_opts = {'eps_abs': 1e-4, 'eps_rel': 1e-4, 'max_iters': 10000}
-    elif solver_name == 'OSQP':
-        solver_opts = {'eps_abs': 1e-4, 'eps_rel': 1e-4, 'max_iter': 10000}
-    elif solver_name == 'CLARABEL':
-        solver_opts = {'tol_gap_abs': 1e-4, 'tol_gap_rel': 1e-4, 'max_iter': 10000}
+    if solver_name == "SCS":
+        solver_opts = {"eps_abs": 1e-4, "eps_rel": 1e-4, "max_iters": 10000}
+    elif solver_name == "OSQP":
+        solver_opts = {"eps_abs": 1e-4, "eps_rel": 1e-4, "max_iter": 10000}
+    elif solver_name == "CLARABEL":
+        solver_opts = {"tol_gap_abs": 1e-4, "tol_gap_rel": 1e-4, "max_iter": 10000}
 
     start = time.time()
     try:
         problem.solve(solver=solver_name, verbose=verbose, **solver_opts)
         solve_time = time.time() - start
 
-        if problem.status in ['optimal', 'optimal_inaccurate']:
+        if problem.status in ["optimal", "optimal_inaccurate"]:
             return {
-                'status': 'solved',
-                'time': solve_time,
-                'optval': problem.value,
+                "status": "solved",
+                "time": solve_time,
+                "optval": problem.value,
             }
         else:
-            return {'status': problem.status, 'time': solve_time}
+            return {"status": problem.status, "time": solve_time}
     except Exception as e:
-        return {'status': f'error: {e}', 'time': time.time() - start}
+        return {"status": f"error: {e}", "time": time.time() - start}
 
 
 def solve_qp_pogs(P, q, A, l, u, time_limit=60, verbose=0):
@@ -164,7 +188,7 @@ def solve_qp_pogs(P, q, A, l, u, time_limit=60, verbose=0):
     n = P.shape[0]
     m = A.shape[0]
 
-    if np.linalg.norm(P, ord='fro') < 1e-12:
+    if np.linalg.norm(P, ord="fro") < 1e-12:
         return solve_lp_pogs(q, A, l, u, verbose=verbose)
 
     eq_rows = []
@@ -194,10 +218,10 @@ def solve_qp_pogs(P, q, A, l, u, time_limit=60, verbose=0):
 
     A_rows = []
     b_vec = []
-    for row, rhs in zip(eq_rows, eq_rhs):
+    for row, rhs in zip(eq_rows, eq_rhs, strict=False):
         A_rows.append(row)
         b_vec.append(rhs)
-    for row, rhs in zip(ineq_rows, ineq_rhs):
+    for row, rhs in zip(ineq_rows, ineq_rhs, strict=False):
         A_rows.append(row)
         b_vec.append(rhs)
 
@@ -209,44 +233,51 @@ def solve_qp_pogs(P, q, A, l, u, time_limit=60, verbose=0):
         b_cone = np.zeros(0)
 
     dims_dict = {
-        'f': len(eq_rows),
-        'l': len(ineq_rows),
-        'q': [],
-        's': [],
-        'ep': 0,
-        'ed': 0,
+        "f": len(eq_rows),
+        "l": len(ineq_rows),
+        "q": [],
+        "s": [],
+        "ep": 0,
+        "ed": 0,
     }
 
     # Solve with POGS
     start = time.time()
     try:
         result = solve_cone_problem(
-            q, A_cone, b_cone, dims_dict, P=P,
-            abs_tol=1e-4, rel_tol=1e-4, max_iter=10000, verbose=verbose
+            q,
+            A_cone,
+            b_cone,
+            dims_dict,
+            P=P,
+            abs_tol=1e-4,
+            rel_tol=1e-4,
+            max_iter=10000,
+            verbose=verbose,
         )
         solve_time = time.time() - start
 
-        if result['status'] == 0:
-            optval = result['optval']
+        if result["status"] == 0:
+            optval = result["optval"]
             return {
-                'status': 'solved',
-                'time': solve_time,
-                'optval': optval,
-                'num_iters': result.get('num_iters', 0),
-                'primal_res': result.get('primal_res'),
-                'eps_pri': result.get('eps_pri'),
-                'primal_res_ratio': result.get('primal_res_ratio'),
+                "status": "solved",
+                "time": solve_time,
+                "optval": optval,
+                "num_iters": result.get("num_iters", 0),
+                "primal_res": result.get("primal_res"),
+                "eps_pri": result.get("eps_pri"),
+                "primal_res_ratio": result.get("primal_res_ratio"),
             }
         else:
             return {
-                'status': f'pogs_status_{result["status"]}',
-                'time': solve_time,
-                'primal_res': result.get('primal_res'),
-                'eps_pri': result.get('eps_pri'),
-                'primal_res_ratio': result.get('primal_res_ratio'),
+                "status": f"pogs_status_{result['status']}",
+                "time": solve_time,
+                "primal_res": result.get("primal_res"),
+                "eps_pri": result.get("eps_pri"),
+                "primal_res_ratio": result.get("primal_res_ratio"),
             }
     except Exception as e:
-        return {'status': f'error: {e}', 'time': time.time() - start}
+        return {"status": f"error: {e}", "time": time.time() - start}
 
 
 def solve_lp_pogs(c, A, l, u, verbose=0):
@@ -295,37 +326,50 @@ def solve_lp_pogs(c, A, l, u, verbose=0):
     b_cone = np.zeros(n_cons)
 
     row = 0
-    for a_row, b_val in zip(eq_rows, eq_rhs):
+    for a_row, b_val in zip(eq_rows, eq_rhs, strict=False):
         A_cone[row] = -a_row
         b_cone[row] = -b_val
         row += 1
-    for a_row, b_val in zip(ineq_rows, ineq_rhs):
+    for a_row, b_val in zip(ineq_rows, ineq_rhs, strict=False):
         A_cone[row] = -a_row
         b_cone[row] = -b_val
         row += 1
 
-    dims_dict = {'f': num_eq, 'l': num_ineq, 'q': [], 's': [], 'ep': 0, 'ed': 0}
+    dims_dict = {"f": num_eq, "l": num_ineq, "q": [], "s": [], "ep": 0, "ed": 0}
 
     start = time.time()
     try:
         result = solve_cone_problem(
-            c, A_cone, b_cone, dims_dict,
-            abs_tol=1e-4, rel_tol=1e-4, max_iter=10000, verbose=verbose
+            c,
+            A_cone,
+            b_cone,
+            dims_dict,
+            abs_tol=1e-4,
+            rel_tol=1e-4,
+            max_iter=10000,
+            verbose=verbose,
         )
         solve_time = time.time() - start
-        if result['status'] == 0:
-            return {'status': 'solved', 'time': solve_time, 'optval': result['optval'],
-                    'num_iters': result.get('num_iters', 0),
-                    'primal_res': result.get('primal_res'),
-                    'eps_pri': result.get('eps_pri'),
-                    'primal_res_ratio': result.get('primal_res_ratio')}
+        if result["status"] == 0:
+            return {
+                "status": "solved",
+                "time": solve_time,
+                "optval": result["optval"],
+                "num_iters": result.get("num_iters", 0),
+                "primal_res": result.get("primal_res"),
+                "eps_pri": result.get("eps_pri"),
+                "primal_res_ratio": result.get("primal_res_ratio"),
+            }
         else:
-            return {'status': f'pogs_status_{result["status"]}', 'time': solve_time,
-                    'primal_res': result.get('primal_res'),
-                    'eps_pri': result.get('eps_pri'),
-                    'primal_res_ratio': result.get('primal_res_ratio')}
+            return {
+                "status": f"pogs_status_{result['status']}",
+                "time": solve_time,
+                "primal_res": result.get("primal_res"),
+                "eps_pri": result.get("eps_pri"),
+                "primal_res_ratio": result.get("primal_res_ratio"),
+            }
     except Exception as e:
-        return {'status': f'error: {e}', 'time': time.time() - start}
+        return {"status": f"error: {e}", "time": time.time() - start}
 
 
 def run_benchmarks():
@@ -335,10 +379,10 @@ def run_benchmarks():
     print("=" * 80)
 
     # Detect available solvers
-    solvers = ['POGS']  # Always include POGS
+    solvers = ["POGS"]  # Always include POGS
     if HAS_CVXPY:
         available = cp.installed_solvers()
-        for s in ['OSQP', 'SCS', 'CLARABEL']:
+        for s in ["OSQP", "SCS", "CLARABEL"]:
             if s in available:
                 solvers.append(s)
 
@@ -370,18 +414,18 @@ def run_benchmarks():
             print(f"  Failed to load: {e}")
             continue
 
-        problem_results = {'n': n, 'm': m}
+        problem_results = {"n": n, "m": m}
 
         for solver in solvers:
-            print(f"  {solver:12s} ... ", end='', flush=True)
+            print(f"  {solver:12s} ... ", end="", flush=True)
 
-            if solver == 'POGS':
+            if solver == "POGS":
                 result = solve_qp_pogs(P, q, A, l, u)
             else:
                 result = solve_qp_cvxpy(P, q, A, l, u, solver)
 
-            if result['status'] == 'solved':
-                iters = result.get('num_iters', '')
+            if result["status"] == "solved":
+                iters = result.get("num_iters", "")
                 iters_str = f"  {iters:5d} iters" if iters else ""
                 print(f"OK  {result['time']:.4f}s{iters_str}  optval={result['optval']:.6e}")
                 problem_results[solver] = result
@@ -396,29 +440,29 @@ def run_benchmarks():
     print("SUMMARY")
     print("=" * 80)
 
-    print(f"\n{'Problem':<15} {'n':>6} {'m':>6}", end='')
+    print(f"\n{'Problem':<15} {'n':>6} {'m':>6}", end="")
     for solver in solvers:
-        print(f" {solver:>12}", end='')
+        print(f" {solver:>12}", end="")
     print()
     print("-" * (30 + 13 * len(solvers)))
 
     for name, res in results.items():
-        print(f"{name:<15} {res.get('n', 0):>6} {res.get('m', 0):>6}", end='')
+        print(f"{name:<15} {res.get('n', 0):>6} {res.get('m', 0):>6}", end="")
         for solver in solvers:
-            if solver in res and res[solver].get('status') == 'solved':
-                print(f" {res[solver]['time']:>11.4f}s", end='')
+            if solver in res and res[solver].get("status") == "solved":
+                print(f" {res[solver]['time']:>11.4f}s", end="")
             else:
-                status = res.get(solver, {}).get('status', 'N/A')
-                print(f" {status[:12]:>12}", end='')
+                status = res.get(solver, {}).get("status", "N/A")
+                print(f" {status[:12]:>12}", end="")
         print()
 
     # Compute success rates
     print("\nSuccess Rates:")
     for solver in solvers:
-        solved = sum(1 for r in results.values() if r.get(solver, {}).get('status') == 'solved')
+        solved = sum(1 for r in results.values() if r.get(solver, {}).get("status") == "solved")
         total = len(results)
-        print(f"  {solver}: {solved}/{total} ({100*solved/total:.1f}%)")
+        print(f"  {solver}: {solved}/{total} ({100 * solved / total:.1f}%)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_benchmarks()

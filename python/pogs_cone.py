@@ -9,19 +9,20 @@ where K_x and K_y are Cartesian products of cones.
 """
 
 import ctypes
-import numpy as np
 import os
 from enum import IntEnum
+
+import numpy as np
 
 
 def _find_shared_library():
     """Locate a shared POGS library built by CMake or the Makefile."""
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     candidates = [
-        os.path.join(root, 'build', 'lib', 'libpogs_cpu.dylib'),
-        os.path.join(root, 'build', 'lib', 'libpogs_cpu.so'),
-        os.path.join(root, 'src', 'build', 'libpogs_cpu.dylib'),
-        os.path.join(root, 'src', 'build', 'libpogs_cpu.so'),
+        os.path.join(root, "build", "lib", "libpogs_cpu.dylib"),
+        os.path.join(root, "build", "lib", "libpogs_cpu.so"),
+        os.path.join(root, "src", "build", "libpogs_cpu.dylib"),
+        os.path.join(root, "src", "build", "libpogs_cpu.so"),
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -44,27 +45,30 @@ _lib = ctypes.CDLL(_lib_path)
 
 class Ordering(IntEnum):
     """Matrix ordering: column-major or row-major."""
+
     COL_MAJ = 0
     ROW_MAJ = 1
 
 
 class Cone(IntEnum):
     """Cone types for cone constraints."""
-    ZERO = 0        # { x : x = 0 }
-    NON_NEG = 1     # { x : x >= 0 }
-    NON_POS = 2     # { x : x <= 0 }
-    SOC = 3         # { (p, x) : ||x||_2 <= p }
-    SDP = 4         # { X : X >= 0 } (PSD matrix)
+
+    ZERO = 0  # { x : x = 0 }
+    NON_NEG = 1  # { x : x >= 0 }
+    NON_POS = 2  # { x : x <= 0 }
+    SOC = 3  # { (p, x) : ||x||_2 <= p }
+    SDP = 4  # { X : X >= 0 } (PSD matrix)
     EXP_PRIMAL = 5  # { (x, y, z) : y > 0, y e^(x/y) <= z }
-    EXP_DUAL = 6    # { (u, v, w) : u < 0, -u e^(v/u) <= ew }
+    EXP_DUAL = 6  # { (u, v, w) : u < 0, -u e^(v/u) <= ew }
 
 
 class ConeConstraintC(ctypes.Structure):
     """C structure for cone constraints."""
+
     _fields_ = [
         ("cone", ctypes.c_int),
         ("indices", ctypes.POINTER(ctypes.c_uint)),
-        ("size", ctypes.c_uint)
+        ("size", ctypes.c_uint),
     ]
 
 
@@ -175,10 +179,23 @@ _lib.PogsConeDirectQD.argtypes = [
 ]
 _lib.PogsConeDirectQD.restype = ctypes.c_int
 
-def solve_cone(A, b, c, cones_x, cones_y,
-               rho=1.0, abs_tol=1e-4, rel_tol=1e-3, max_iter=10000,
-               verbose=0, adaptive_rho=True, gap_stop=True,
-               use_direct=False, P=None):
+
+def solve_cone(
+    A,
+    b,
+    c,
+    cones_x,
+    cones_y,
+    rho=1.0,
+    abs_tol=1e-4,
+    rel_tol=1e-3,
+    max_iter=10000,
+    verbose=0,
+    adaptive_rho=True,
+    gap_stop=True,
+    use_direct=False,
+    P=None,
+):
     """
     Solve a cone form problem using POGS.
 
@@ -230,17 +247,18 @@ def solve_cone(A, b, c, cones_x, cones_y,
             Status code (0 = success)
     """
     # Convert inputs to numpy arrays
-    A = np.asarray(A, dtype=np.float64, order='C')
+    A = np.asarray(A, dtype=np.float64, order="C")
     b = np.asarray(b, dtype=np.float64)
     c = np.asarray(c, dtype=np.float64)
     if P is not None:
         try:
             import scipy.sparse as sp
+
             if sp.issparse(P):
                 P = P.toarray()
         except ImportError:
             pass
-        P = np.asarray(P, dtype=np.float64, order='C')
+        P = np.asarray(P, dtype=np.float64, order="C")
 
     m, n = A.shape
 
@@ -260,18 +278,18 @@ def solve_cone(A, b, c, cones_x, cones_y,
             c_cone = ConeConstraintC(
                 cone=int(cone_type),
                 indices=ctypes.cast(idx_array, ctypes.POINTER(ctypes.c_uint)),
-                size=len(indices)
+                size=len(indices),
             )
             c_cones.append(c_cone)
         return (ConeConstraintC * len(c_cones))(*c_cones) if c_cones else None, c_indices
 
-    c_cones_x, c_indices_x = make_cone_constraints(cones_x)
-    c_cones_y, c_indices_y = make_cone_constraints(cones_y)
+    c_cones_x, _c_indices_x = make_cone_constraints(cones_x)
+    c_cones_y, _c_indices_y = make_cone_constraints(cones_y)
 
     # Allocate output arrays
     x = np.zeros(n, dtype=np.float64)
     y = np.zeros(m, dtype=np.float64)
-    l = np.zeros(m, dtype=np.float64)
+    dual = np.zeros(m, dtype=np.float64)
     optval = ctypes.c_double()
     final_iter = ctypes.c_uint()
 
@@ -280,51 +298,67 @@ def solve_cone(A, b, c, cones_x, cones_y,
         solver_fn = _lib.PogsConeDirectD if use_direct else _lib.PogsConeD
         status = solver_fn(
             int(Ordering.ROW_MAJ),
-            m, n,
+            m,
+            n,
             A.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             b.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            c_cones_x, len(cones_x) if cones_x else 0,
-            c_cones_y, len(cones_y) if cones_y else 0,
-            rho, abs_tol, rel_tol, max_iter, verbose,
-            int(adaptive_rho), int(gap_stop),
+            c_cones_x,
+            len(cones_x) if cones_x else 0,
+            c_cones_y,
+            len(cones_y) if cones_y else 0,
+            rho,
+            abs_tol,
+            rel_tol,
+            max_iter,
+            verbose,
+            int(adaptive_rho),
+            int(gap_stop),
             x.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             y.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            l.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            dual.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             ctypes.byref(optval),
-            ctypes.byref(final_iter)
+            ctypes.byref(final_iter),
         )
     else:
         solver_fn = _lib.PogsConeDirectQD if use_direct else _lib.PogsConeQD
         status = solver_fn(
             int(Ordering.ROW_MAJ),
-            m, n,
+            m,
+            n,
             A.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             b.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             P.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            c_cones_x, len(cones_x) if cones_x else 0,
-            c_cones_y, len(cones_y) if cones_y else 0,
-            rho, abs_tol, rel_tol, max_iter, verbose,
-            int(adaptive_rho), int(gap_stop),
+            c_cones_x,
+            len(cones_x) if cones_x else 0,
+            c_cones_y,
+            len(cones_y) if cones_y else 0,
+            rho,
+            abs_tol,
+            rel_tol,
+            max_iter,
+            verbose,
+            int(adaptive_rho),
+            int(gap_stop),
             x.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             y.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            l.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            dual.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             ctypes.byref(optval),
-            ctypes.byref(final_iter)
+            ctypes.byref(final_iter),
         )
 
     return {
-        'x': x,
-        'y': y,
-        'l': l,
-        'optval': optval.value,
-        'iterations': final_iter.value,
-        'status': status
+        "x": x,
+        "y": y,
+        "l": dual,
+        "optval": optval.value,
+        "iterations": final_iter.value,
+        "status": status,
     }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Simple test: minimize x1 subject to x1 + x2 = 2, x >= 0
     print("Testing Python POGS cone interface...")
     print("Problem: minimize x1 subject to x1 + x2 = 2, x >= 0")

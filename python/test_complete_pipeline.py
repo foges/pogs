@@ -10,17 +10,16 @@ This test verifies:
 No external dependencies required (no numpy/cvxpy needed).
 """
 
-import subprocess
 import os
+import subprocess
 import sys
-import tempfile
 
 
 def run_command(cmd, description):
     """Run a command and display results."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"{description}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"Command: {' '.join(cmd)}")
     print()
 
@@ -36,22 +35,22 @@ def run_command(cmd, description):
             print(result.stderr)
         return False
     else:
-        print(f"✓ SUCCESS")
+        print("✓ SUCCESS")
         return True
 
 
 def test_cpp_sdp_cone():
     """Test C++ SDP cone projection."""
-    pogs_root = os.path.join(os.path.dirname(__file__), '..')
+    pogs_root = os.path.join(os.path.dirname(__file__), "..")
 
     # Check if test exists
-    test_exe = os.path.join(pogs_root, 'examples', 'cpp_cone', 'test_sdp')
+    test_exe = os.path.join(pogs_root, "examples", "cpp_cone", "test_sdp")
     if not os.path.exists(test_exe):
         print("Building test_sdp...")
-        os.chdir(os.path.join(pogs_root, 'examples', 'cpp_cone'))
-        if not run_command(['make', 'clean'], "Clean build directory"):
+        os.chdir(os.path.join(pogs_root, "examples", "cpp_cone"))
+        if not run_command(["make", "clean"], "Clean build directory"):
             return False
-        if not run_command(['make', 'cpu'], "Build C++ tests"):
+        if not run_command(["make", "cpu"], "Build C++ tests"):
             return False
 
     # Run test
@@ -60,9 +59,9 @@ def test_cpp_sdp_cone():
 
 def test_c_interface():
     """Test C interface."""
-    pogs_root = os.path.join(os.path.dirname(__file__), '..')
+    pogs_root = os.path.join(os.path.dirname(__file__), "..")
 
-    test_exe = os.path.join(pogs_root, 'examples', 'cpp_cone', 'test_c')
+    test_exe = os.path.join(pogs_root, "examples", "cpp_cone", "test_c")
     if not os.path.exists(test_exe):
         print("Test executable not found. Please build it first.")
         return False
@@ -72,47 +71,42 @@ def test_c_interface():
 
 def test_python_interface():
     """Test Python interface without dependencies."""
-    test_file = os.path.join(os.path.dirname(__file__), 'test_cone_simple.py')
+    test_file = os.path.join(os.path.dirname(__file__), "test_cone_simple.py")
 
     if not os.path.exists(test_file):
         print("Python test file not found.")
         return False
 
-    return run_command(['python3', test_file],
-                      "Test 3: Python Interface (No Dependencies)")
+    return run_command(["python3", test_file], "Test 3: Python Interface (No Dependencies)")
 
 
 def test_python_solver():
     """Test Python solver (requires numpy)."""
-    test_file = os.path.join(os.path.dirname(__file__), 'test_pogs_solver.py')
+    test_file = os.path.join(os.path.dirname(__file__), "test_pogs_solver.py")
 
     if not os.path.exists(test_file):
         print("Python solver test file not found.")
         return False
 
     # Check if numpy is available
-    check_numpy = subprocess.run(['python3', '-c', 'import numpy'],
-                                capture_output=True)
+    check_numpy = subprocess.run(["python3", "-c", "import numpy"], capture_output=True)
     if check_numpy.returncode != 0:
         print("\nNote: Skipping test (numpy not installed)")
         print("To run this test: pip install numpy")
         return None  # Skip, not fail
 
-    return run_command(['python3', test_file],
-                      "Test 4: Python Solver with NumPy")
+    return run_command(["python3", test_file], "Test 4: Python Solver with NumPy")
 
 
 def verify_installation():
     """Verify all components are installed."""
-    verify_script = os.path.join(os.path.dirname(__file__),
-                                 'verify_cvxpy_interface.py')
+    verify_script = os.path.join(os.path.dirname(__file__), "verify_cvxpy_interface.py")
 
     if not os.path.exists(verify_script):
         print("Verification script not found.")
         return False
 
-    return run_command(['python3', verify_script],
-                      "Verification: Check All Components")
+    return run_command(["python3", verify_script], "Verification: Check All Components")
 
 
 def main():
@@ -156,6 +150,7 @@ def main():
         except Exception as e:
             print(f"\n✗ Test '{name}' failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 
@@ -187,6 +182,6 @@ def main():
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)

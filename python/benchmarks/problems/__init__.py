@@ -7,12 +7,7 @@ with standardized attributes:
 - problem.size_metrics: Dict of problem dimensions
 """
 
-from . import lasso
-from . import logistic
-from . import portfolio
-from . import lp
-from . import qp
-from . import socp
-from . import sdp
+from problems import lasso, logistic, lp, portfolio, qp, sdp, socp
 
-__all__ = ['lasso', 'logistic', 'portfolio', 'lp', 'qp', 'socp', 'sdp']
+
+__all__ = ["lasso", "logistic", "lp", "portfolio", "qp", "sdp", "socp"]

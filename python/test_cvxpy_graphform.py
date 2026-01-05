@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Test CVXPY integration with graph-form detection."""
 
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+
 
 # Add parent to path for pogs imports
 sys.path.insert(0, os.path.dirname(__file__))
@@ -13,6 +15,7 @@ import cvxpy as cp
 
 # Import our POGS solver and helper function
 from pogs_cvxpy import pogs_solve
+
 
 def test_lasso():
     """Test Lasso problem detection and solving via CVXPY."""
@@ -46,15 +49,17 @@ def test_lasso():
     # Compare with CLARABEL
     print("\nSolving with CLARABEL...")
     t0 = time.time()
-    result_clarabel = problem.solve(solver='CLARABEL')
+    result_clarabel = problem.solve(solver="CLARABEL")
     t_clarabel = time.time() - t0
     x_clarabel = x.value.copy()
 
     print(f"CLARABEL: optval={result_clarabel:.6e}, time={t_clarabel:.4f}s")
-    print(f"          ||x||_1 = {np.abs(x_clarabel).sum():.4f}, nnz = {np.sum(np.abs(x_clarabel) > 1e-4)}")
+    print(
+        f"          ||x||_1 = {np.abs(x_clarabel).sum():.4f}, nnz = {np.sum(np.abs(x_clarabel) > 1e-4)}"
+    )
 
     # Compare solutions
-    print(f"\nSpeedup: {t_clarabel/t_pogs:.2f}x")
+    print(f"\nSpeedup: {t_clarabel / t_pogs:.2f}x")
     print(f"Optval diff: {abs(result_pogs - result_clarabel):.2e}")
     print(f"||x_pogs - x_clarabel||_2 = {np.linalg.norm(x_pogs - x_clarabel):.2e}")
 
@@ -84,19 +89,19 @@ def test_ridge():
     t0 = time.time()
     result_pogs = pogs_solve(problem, verbose=True)
     t_pogs = time.time() - t0
-    x_pogs = x.value.copy()
+    x.value.copy()
 
     print(f"\nPOGS: optval={result_pogs:.6e}, time={t_pogs:.4f}s")
 
     # Compare with CLARABEL
     print("\nSolving with CLARABEL...")
     t0 = time.time()
-    result_clarabel = problem.solve(solver='CLARABEL')
+    result_clarabel = problem.solve(solver="CLARABEL")
     t_clarabel = time.time() - t0
-    x_clarabel = x.value.copy()
+    x.value.copy()
 
     print(f"CLARABEL: optval={result_clarabel:.6e}, time={t_clarabel:.4f}s")
-    print(f"\nSpeedup: {t_clarabel/t_pogs:.2f}x")
+    print(f"\nSpeedup: {t_clarabel / t_pogs:.2f}x")
     print(f"Optval diff: {abs(result_pogs - result_clarabel):.2e}")
 
     return abs(result_pogs - result_clarabel) < 1e-2
@@ -131,11 +136,11 @@ def test_larger_lasso():
     # CLARABEL
     print("\nSolving with CLARABEL...")
     t0 = time.time()
-    result_clarabel = problem.solve(solver='CLARABEL')
+    result_clarabel = problem.solve(solver="CLARABEL")
     t_clarabel = time.time() - t0
 
     print(f"CLARABEL: optval={result_clarabel:.6e}, time={t_clarabel:.4f}s")
-    print(f"\nSpeedup: {t_clarabel/t_pogs:.2f}x")
+    print(f"\nSpeedup: {t_clarabel / t_pogs:.2f}x")
 
     # Allow up to 0.5% relative error or 0.02 absolute error
     rel_err = abs(result_pogs - result_clarabel) / max(abs(result_clarabel), 1e-10)
@@ -169,7 +174,7 @@ def test_fallback_to_cone():
         return True  # Fallback itself is the test
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Testing CVXPY + POGS Graph-Form Integration")
     print("=" * 60)
 
@@ -188,6 +193,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"\nTest {name} FAILED with exception: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((name, False))
 

@@ -11,35 +11,41 @@ POGS graph-form excels at:
 - Modest accuracy (1e-4)
 """
 
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
 
 try:
-    from pogs_graph import solve_lasso, solve_ridge, solve_logistic, solve_elastic_net
+    from pogs_graph import solve_elastic_net, solve_lasso, solve_logistic, solve_ridge
+
     HAS_POGS_GRAPH = True
 except ImportError:
     HAS_POGS_GRAPH = False
     print("Error: pogs_graph not available")
 
 try:
-    from sklearn.datasets import load_diabetes, load_wine, fetch_california_housing
+    from sklearn.datasets import fetch_california_housing, load_diabetes, load_wine
     from sklearn.preprocessing import StandardScaler
+
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
 
 try:
     import yfinance as yf
+
     HAS_YFINANCE = True
 except ImportError:
     HAS_YFINANCE = False
@@ -55,7 +61,7 @@ def load_uci_datasets():
             data = load_diabetes()
             X = StandardScaler().fit_transform(data.data)
             y = (data.target - data.target.mean()) / data.target.std()
-            datasets.append(('Diabetes', X, y))
+            datasets.append(("Diabetes", X, y))
         except:
             pass
 
@@ -64,29 +70,74 @@ def load_uci_datasets():
             data = load_wine()
             X = StandardScaler().fit_transform(data.data)
             y = (data.target - data.target.mean()) / (data.target.std() + 1e-8)
-            datasets.append(('Wine', X, y))
+            datasets.append(("Wine", X, y))
         except:
             pass
 
     return datasets
 
 
-def load_stock_data(n_stocks=50, period='2y'):
+def load_stock_data(n_stocks=50, period="2y"):
     """Load real S&P 500 stock returns."""
     if not HAS_YFINANCE:
         return None, None
 
     # Top S&P 500 stocks
     sp500_tickers = [
-        'AAPL', 'MSFT', 'AMZN', 'NVDA', 'GOOGL', 'META', 'TSLA', 'BRK-B', 'UNH', 'XOM',
-        'JNJ', 'JPM', 'V', 'PG', 'MA', 'HD', 'CVX', 'MRK', 'ABBV', 'LLY',
-        'PEP', 'KO', 'COST', 'AVGO', 'MCD', 'WMT', 'CSCO', 'TMO', 'ACN', 'ABT',
-        'DHR', 'NEE', 'DIS', 'PM', 'VZ', 'ADBE', 'CMCSA', 'NKE', 'TXN', 'CRM',
-        'WFC', 'BMY', 'RTX', 'UPS', 'HON', 'QCOM', 'COP', 'MS', 'AMGN', 'T'
+        "AAPL",
+        "MSFT",
+        "AMZN",
+        "NVDA",
+        "GOOGL",
+        "META",
+        "TSLA",
+        "BRK-B",
+        "UNH",
+        "XOM",
+        "JNJ",
+        "JPM",
+        "V",
+        "PG",
+        "MA",
+        "HD",
+        "CVX",
+        "MRK",
+        "ABBV",
+        "LLY",
+        "PEP",
+        "KO",
+        "COST",
+        "AVGO",
+        "MCD",
+        "WMT",
+        "CSCO",
+        "TMO",
+        "ACN",
+        "ABT",
+        "DHR",
+        "NEE",
+        "DIS",
+        "PM",
+        "VZ",
+        "ADBE",
+        "CMCSA",
+        "NKE",
+        "TXN",
+        "CRM",
+        "WFC",
+        "BMY",
+        "RTX",
+        "UPS",
+        "HON",
+        "QCOM",
+        "COP",
+        "MS",
+        "AMGN",
+        "T",
     ][:n_stocks]
 
     try:
-        data = yf.download(sp500_tickers, period=period, progress=False)['Adj Close']
+        data = yf.download(sp500_tickers, period=period, progress=False)["Adj Close"]
         returns = data.pct_change().dropna()
 
         if len(returns) < 100:
@@ -105,13 +156,13 @@ def load_stock_data(n_stocks=50, period='2y'):
 
 def solve_lasso_cvxpy(X, y, lambd, solver_name):
     """Solve Lasso with CVXPY."""
-    m, n = X.shape
+    _m, n = X.shape
     w = cp.Variable(n)
 
     objective = cp.Minimize(0.5 * cp.sum_squares(X @ w - y) + lambd * cp.norm1(w))
     problem = cp.Problem(objective)
 
-    solver_map = {'OSQP': cp.OSQP, 'SCS': cp.SCS, 'CLARABEL': cp.CLARABEL}
+    solver_map = {"OSQP": cp.OSQP, "SCS": cp.SCS, "CLARABEL": cp.CLARABEL}
     if solver_name not in solver_map:
         return None, None
 
@@ -120,7 +171,7 @@ def solve_lasso_cvxpy(X, y, lambd, solver_name):
         problem.solve(solver=solver_map[solver_name], verbose=False)
         t = time.perf_counter() - t0
 
-        if problem.status in ['optimal', 'optimal_inaccurate']:
+        if problem.status in ["optimal", "optimal_inaccurate"]:
             return problem.value, t
     except:
         pass
@@ -129,13 +180,13 @@ def solve_lasso_cvxpy(X, y, lambd, solver_name):
 
 def solve_ridge_cvxpy(X, y, lambd, solver_name):
     """Solve Ridge with CVXPY."""
-    m, n = X.shape
+    _m, n = X.shape
     w = cp.Variable(n)
 
     objective = cp.Minimize(0.5 * cp.sum_squares(X @ w - y) + 0.5 * lambd * cp.sum_squares(w))
     problem = cp.Problem(objective)
 
-    solver_map = {'OSQP': cp.OSQP, 'SCS': cp.SCS, 'CLARABEL': cp.CLARABEL}
+    solver_map = {"OSQP": cp.OSQP, "SCS": cp.SCS, "CLARABEL": cp.CLARABEL}
     if solver_name not in solver_map:
         return None, None
 
@@ -144,7 +195,7 @@ def solve_ridge_cvxpy(X, y, lambd, solver_name):
         problem.solve(solver=solver_map[solver_name], verbose=False)
         t = time.perf_counter() - t0
 
-        if problem.status in ['optimal', 'optimal_inaccurate']:
+        if problem.status in ["optimal", "optimal_inaccurate"]:
             return problem.value, t
     except:
         pass
@@ -160,7 +211,7 @@ def solve_portfolio_cvxpy(cov, lambd, solver_name):
     constraints = [cp.sum(w) == 1]
     problem = cp.Problem(objective, constraints)
 
-    solver_map = {'OSQP': cp.OSQP, 'SCS': cp.SCS, 'CLARABEL': cp.CLARABEL}
+    solver_map = {"OSQP": cp.OSQP, "SCS": cp.SCS, "CLARABEL": cp.CLARABEL}
     if solver_name not in solver_map:
         return None, None
 
@@ -169,7 +220,7 @@ def solve_portfolio_cvxpy(cov, lambd, solver_name):
         problem.solve(solver=solver_map[solver_name], verbose=False)
         t = time.perf_counter() - t0
 
-        if problem.status in ['optimal', 'optimal_inaccurate']:
+        if problem.status in ["optimal", "optimal_inaccurate"]:
             return problem.value, t
     except:
         pass
@@ -188,7 +239,7 @@ def run_benchmark():
         return
 
     results = []
-    solvers = ['POGS', 'OSQP', 'SCS', 'CLARABEL']
+    solvers = ["POGS", "OSQP", "SCS", "CLARABEL"]
 
     # === LASSO on UCI datasets ===
     print("=" * 75)
@@ -204,13 +255,13 @@ def run_benchmark():
 
         times = {}
         for solver in solvers:
-            if solver == 'POGS':
+            if solver == "POGS":
                 t0 = time.perf_counter()
                 result = solve_lasso(X, y, lambd, verbose=0)
                 t = time.perf_counter() - t0
-                if result['status'] == 0:
+                if result["status"] == 0:
                     times[solver] = t
-                    print(f"  {solver:12s}: {t*1000:8.1f}ms (iter={result['iterations']})")
+                    print(f"  {solver:12s}: {t * 1000:8.1f}ms (iter={result['iterations']})")
                 else:
                     print(f"  {solver:12s}: FAILED")
             else:
@@ -218,18 +269,14 @@ def run_benchmark():
                     _, t = solve_lasso_cvxpy(X, y, lambd, solver)
                     if t:
                         times[solver] = t
-                        print(f"  {solver:12s}: {t*1000:8.1f}ms")
+                        print(f"  {solver:12s}: {t * 1000:8.1f}ms")
                     else:
                         print(f"  {solver:12s}: FAILED")
 
         if times:
             winner = min(times, key=times.get)
             print(f"  Winner: {winner}")
-            results.append({
-                'problem': f'Lasso_{name}',
-                'times': times,
-                'winner': winner
-            })
+            results.append({"problem": f"Lasso_{name}", "times": times, "winner": winner})
 
     # === RIDGE on UCI datasets ===
     print("\n" + "=" * 75)
@@ -244,13 +291,13 @@ def run_benchmark():
 
         times = {}
         for solver in solvers:
-            if solver == 'POGS':
+            if solver == "POGS":
                 t0 = time.perf_counter()
                 result = solve_ridge(X, y, lambd, verbose=0)
                 t = time.perf_counter() - t0
-                if result['status'] == 0:
+                if result["status"] == 0:
                     times[solver] = t
-                    print(f"  {solver:12s}: {t*1000:8.1f}ms (iter={result['iterations']})")
+                    print(f"  {solver:12s}: {t * 1000:8.1f}ms (iter={result['iterations']})")
                 else:
                     print(f"  {solver:12s}: FAILED")
             else:
@@ -258,18 +305,14 @@ def run_benchmark():
                     _, t = solve_ridge_cvxpy(X, y, lambd, solver)
                     if t:
                         times[solver] = t
-                        print(f"  {solver:12s}: {t*1000:8.1f}ms")
+                        print(f"  {solver:12s}: {t * 1000:8.1f}ms")
                     else:
                         print(f"  {solver:12s}: FAILED")
 
         if times:
             winner = min(times, key=times.get)
             print(f"  Winner: {winner}")
-            results.append({
-                'problem': f'Ridge_{name}',
-                'times': times,
-                'winner': winner
-            })
+            results.append({"problem": f"Ridge_{name}", "times": times, "winner": winner})
 
     # === Portfolio optimization on S&P 500 ===
     print("\n" + "=" * 75)
@@ -277,7 +320,7 @@ def run_benchmark():
     print("=" * 75)
 
     for n_stocks in [20, 50]:
-        cov, _ = load_stock_data(n_stocks, '2y')
+        cov, _ = load_stock_data(n_stocks, "2y")
         if cov is None:
             continue
 
@@ -286,7 +329,7 @@ def run_benchmark():
 
             times = {}
             for solver in solvers:
-                if solver == 'POGS':
+                if solver == "POGS":
                     # For portfolio, we need to handle the constraint 1'w = 1
                     # This is harder with graph-form, skip for now
                     print(f"  {solver:12s}: (constrained, using CVXPY)")
@@ -296,7 +339,7 @@ def run_benchmark():
                         _, t = solve_portfolio_cvxpy(cov, lambd, solver)
                         if t:
                             times[solver] = t
-                            print(f"  {solver:12s}: {t*1000:8.1f}ms")
+                            print(f"  {solver:12s}: {t * 1000:8.1f}ms")
                         else:
                             print(f"  {solver:12s}: FAILED")
 
@@ -309,24 +352,28 @@ def run_benchmark():
     print("SUMMARY")
     print("=" * 75)
 
-    pogs_wins = sum(1 for r in results if r['winner'] == 'POGS')
+    pogs_wins = sum(1 for r in results if r["winner"] == "POGS")
     total = len(results)
 
-    print(f"\nPOGS wins: {pogs_wins}/{total} ({100*pogs_wins/total:.0f}%)" if total > 0 else "No results")
+    print(
+        f"\nPOGS wins: {pogs_wins}/{total} ({100 * pogs_wins / total:.0f}%)"
+        if total > 0
+        else "No results"
+    )
 
     # Show speedups
     print("\nPOGS speedups:")
     for r in results:
-        pogs_time = r['times'].get('POGS')
+        pogs_time = r["times"].get("POGS")
         if pogs_time:
-            for solver, t in r['times'].items():
-                if solver != 'POGS' and t:
+            for solver, t in r["times"].items():
+                if solver != "POGS" and t:
                     ratio = t / pogs_time
                     if ratio > 1:
                         print(f"  {r['problem']}: {ratio:.1f}x faster than {solver}")
                     else:
-                        print(f"  {r['problem']}: {1/ratio:.1f}x slower than {solver}")
+                        print(f"  {r['problem']}: {1 / ratio:.1f}x slower than {solver}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_benchmark()

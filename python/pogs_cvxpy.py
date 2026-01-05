@@ -6,13 +6,14 @@ Key feature: Detects graph-form problems (Lasso, Ridge, logistic, etc.)
 and routes them to the fast graph-form solver instead of cone form.
 """
 
-import numpy as np
-import time
-import subprocess
 import os
+import subprocess
 import sys
 import tempfile
-import warnings
+import time
+
+import numpy as np
+
 
 _pogs_dir = os.path.dirname(__file__)
 if _pogs_dir not in sys.path:
@@ -20,6 +21,7 @@ if _pogs_dir not in sys.path:
 
 try:
     from pogs_cone import solve_cone as solve_cone_ctypes
+
     _CTYPES_AVAILABLE = True
 except Exception:
     solve_cone_ctypes = None
@@ -27,10 +29,16 @@ except Exception:
 
 try:
     from pogs_graph import (
-        solve_lasso, solve_ridge, solve_elastic_net,
-        solve_logistic, solve_huber, solve_svm, solve_nonneg_ls,
-        FunctionObj, Function, _solve_graph_form
+        Function,
+        FunctionObj,
+        _solve_graph_form,
+        solve_elastic_net,
+        solve_huber,
+        solve_lasso,
+        solve_nonneg_ls,
+        solve_ridge,
     )
+
     _GRAPH_AVAILABLE = True
 except Exception:
     _GRAPH_AVAILABLE = False
@@ -38,6 +46,7 @@ except Exception:
 
 class PogsError(Exception):
     """Exception raised for POGS solver errors."""
+
     pass
 
 
@@ -64,11 +73,23 @@ def _compute_primal_residual(A, x, y, abs_tol, rel_tol):
     return nrm_r, eps_pri
 
 
-def solve_cone_problem(c, A, b, dims,
-                       rho=None, abs_tol=1e-4, rel_tol=1e-3,
-                       max_iter=10000, verbose=0, adaptive_rho=True,
-                       use_direct=None, prefer_ctypes=True, P=None,
-                       rho_mode=None, rho_scale=1.0):
+def solve_cone_problem(
+    c,
+    A,
+    b,
+    dims,
+    rho=None,
+    abs_tol=1e-4,
+    rel_tol=1e-3,
+    max_iter=10000,
+    verbose=0,
+    adaptive_rho=True,
+    use_direct=None,
+    prefer_ctypes=True,
+    P=None,
+    rho_mode=None,
+    rho_scale=1.0,
+):
     """
     Solve a cone problem using POGS.
 
@@ -128,6 +149,7 @@ def solve_cone_problem(c, A, b, dims,
     # Handle sparse matrices
     try:
         import scipy.sparse as sp
+
         if sp.issparse(A):
             A = A.toarray()
         if P is not None and sp.issparse(P):
@@ -138,13 +160,15 @@ def solve_cone_problem(c, A, b, dims,
     if P is not None:
         P = np.asarray(P, dtype=np.float64)
         # Check if P is actually used (non-zero)
-        if np.linalg.norm(P, ord='fro') > 1e-12:
+        if np.linalg.norm(P, ord="fro") > 1e-12:
             import warnings
+
             warnings.warn(
                 "POGS HSDE cone solver does not correctly handle quadratic objectives. "
                 "The QP will likely fail to converge. Use OSQP, SCS, or CLARABEL instead, "
                 "or use pogs_solve() for graph-form problems (Lasso, Ridge, etc.).",
-                RuntimeWarning
+                RuntimeWarning,
+                stacklevel=2,
             )
 
     m, n = A.shape
@@ -155,31 +179,36 @@ def solve_cone_problem(c, A, b, dims,
     if rho is None:
         norm_c = np.linalg.norm(c)
         norm_b = np.linalg.norm(b)
-        has_nonsep_cone = bool(dims.get('q')) or bool(dims.get('s')) \
-            or dims.get('ep', 0) > 0 or dims.get('ed', 0) > 0
+        has_nonsep_cone = (
+            bool(dims.get("q"))
+            or bool(dims.get("s"))
+            or dims.get("ep", 0) > 0
+            or dims.get("ed", 0) > 0
+        )
         has_quadratic = P is not None
-        mode = rho_mode or 'auto'
-        if mode == 'auto':
-            mode = 'ratio_normA' if (has_nonsep_cone or has_quadratic) else 'ratio'
-        if mode == 'ratio_normA':
-            norm_A = np.linalg.norm(A, 'fro')
+        mode = rho_mode or "auto"
+        if mode == "auto":
+            mode = "ratio_normA" if (has_nonsep_cone or has_quadratic) else "ratio"
+        if mode == "ratio_normA":
+            norm_A = np.linalg.norm(A, "fro")
             if norm_b > 1e-10 and norm_c > 1e-10 and norm_A > 1e-10:
                 rho = norm_c / (norm_b * norm_A)
                 rho = max(1e-4, min(1e1, rho))
             else:
                 rho = 1.0
             if verbose > 0:
-                print(f"Auto rho (ratio_normA): ||c||={norm_c:.2e}, "
-                      f"||b||={norm_b:.2e}, ||A||={norm_A:.2e} -> rho={rho:.2e}")
-        elif mode == 'ratio':
+                print(
+                    f"Auto rho (ratio_normA): ||c||={norm_c:.2e}, "
+                    f"||b||={norm_b:.2e}, ||A||={norm_A:.2e} -> rho={rho:.2e}"
+                )
+        elif mode == "ratio":
             if norm_b > 1e-10 and norm_c > 1e-10:
                 rho = norm_c / norm_b
                 rho = max(1e-3, min(1e3, rho))
             else:
                 rho = 1.0
             if verbose > 0:
-                print(f"Auto rho (ratio): ||c||={norm_c:.2e}, ||b||={norm_b:.2e} "
-                      f"-> rho={rho:.2e}")
+                print(f"Auto rho (ratio): ||c||={norm_c:.2e}, ||b||={norm_b:.2e} -> rho={rho:.2e}")
         else:
             raise ValueError(f"Unknown rho_mode: {rho_mode}")
         if rho_scale not in (None, 1.0):
@@ -193,7 +222,7 @@ def solve_cone_problem(c, A, b, dims,
 
     if use_direct is None:
         min_dim = min(m, n)
-        use_direct = (m * n <= 1_000_000 and min_dim <= 1000)
+        use_direct = m * n <= 1_000_000 and min_dim <= 1000
 
     # Build cone constraints for y (dual variables)
     # Format: list of (cone_type, [indices])
@@ -201,26 +230,26 @@ def solve_cone_problem(c, A, b, dims,
     offset = 0
 
     # Free variables (zero cone)
-    if dims.get('f', 0) > 0:
-        nf = dims['f']
+    if dims.get("f", 0) > 0:
+        nf = dims["f"]
         cones_y.append((CONE_ZERO, list(range(offset, offset + nf))))
         offset += nf
 
     # Non-negative cone
-    if dims.get('l', 0) > 0:
-        nl = dims['l']
+    if dims.get("l", 0) > 0:
+        nl = dims["l"]
         cones_y.append((CONE_NON_NEG, list(range(offset, offset + nl))))
         offset += nl
 
     # Second-order cones
-    if 'q' in dims and dims['q']:
-        for q_dim in dims['q']:
+    if dims.get("q"):
+        for q_dim in dims["q"]:
             cones_y.append((CONE_SOC, list(range(offset, offset + q_dim))))
             offset += q_dim
 
     # Semidefinite cones (vectorized)
-    if 's' in dims and dims['s']:
-        for s_dim in dims['s']:
+    if dims.get("s"):
+        for s_dim in dims["s"]:
             # SDP cone: symmetric matrix of size s_dim x s_dim
             # Vectorized as lower triangle: s_dim*(s_dim+1)/2 elements
             vec_dim = s_dim * (s_dim + 1) // 2
@@ -228,16 +257,16 @@ def solve_cone_problem(c, A, b, dims,
             offset += vec_dim
 
     # Exponential cones (primal)
-    if dims.get('ep', 0) > 0:
-        n_exp = dims['ep']
-        for i in range(n_exp):
+    if dims.get("ep", 0) > 0:
+        n_exp = dims["ep"]
+        for _i in range(n_exp):
             cones_y.append((CONE_EXP_PRIMAL, list(range(offset, offset + 3))))
             offset += 3
 
     # Exponential cones (dual)
-    if dims.get('ed', 0) > 0:
-        n_exp = dims['ed']
-        for i in range(n_exp):
+    if dims.get("ed", 0) > 0:
+        n_exp = dims["ed"]
+        for _i in range(n_exp):
             cones_y.append((CONE_EXP_DUAL, list(range(offset, offset + 3))))
             offset += 3
 
@@ -248,8 +277,11 @@ def solve_cone_problem(c, A, b, dims,
     if _CTYPES_AVAILABLE and prefer_ctypes:
         t0 = time.perf_counter()
         result = solve_cone_ctypes(
-            A, b, c,
-            cones_x, cones_y,
+            A,
+            b,
+            c,
+            cones_x,
+            cones_y,
             rho=rho,
             abs_tol=abs_tol,
             rel_tol=rel_tol,
@@ -262,57 +294,69 @@ def solve_cone_problem(c, A, b, dims,
         )
         solve_time = time.perf_counter() - t0
         parsed = {
-            'status': result.get('status', 0),
-            'num_iters': result.get('iterations', 0),
-            'optval': result.get('optval', 0),
-            'x': result.get('x'),
-            'y': result.get('y'),
-            'z': result.get('l'),
-            'solve_time': solve_time,
-            'abs_tol': abs_tol,
-            'rel_tol': rel_tol,
+            "status": result.get("status", 0),
+            "num_iters": result.get("iterations", 0),
+            "optval": result.get("optval", 0),
+            "x": result.get("x"),
+            "y": result.get("y"),
+            "z": result.get("l"),
+            "solve_time": solve_time,
+            "abs_tol": abs_tol,
+            "rel_tol": rel_tol,
         }
-        if parsed['y'] is not None:
-            parsed['s'] = b - parsed['y']
-        if parsed['x'] is not None and parsed['y'] is not None:
+        if parsed["y"] is not None:
+            parsed["s"] = b - parsed["y"]
+        if parsed["x"] is not None and parsed["y"] is not None:
             primal_res, eps_pri = _compute_primal_residual(
-                A, parsed['x'], parsed['y'], abs_tol, rel_tol
+                A, parsed["x"], parsed["y"], abs_tol, rel_tol
             )
-            parsed['primal_res'] = primal_res
-            parsed['eps_pri'] = eps_pri
+            parsed["primal_res"] = primal_res
+            parsed["eps_pri"] = eps_pri
             if eps_pri is not None and eps_pri > 0:
-                parsed['primal_res_ratio'] = primal_res / eps_pri
+                parsed["primal_res_ratio"] = primal_res / eps_pri
         return parsed
 
     # Generate C code to call POGS
-    c_code = _generate_c_code(c, A, b, cones_x, cones_y, P,
-                              rho, abs_tol, rel_tol, max_iter, verbose,
-                              adaptive_rho, use_direct)
+    c_code = _generate_c_code(
+        c,
+        A,
+        b,
+        cones_x,
+        cones_y,
+        P,
+        rho,
+        abs_tol,
+        rel_tol,
+        max_iter,
+        verbose,
+        adaptive_rho,
+        use_direct,
+    )
 
     # Compile and run
     t0 = time.perf_counter()
     result = _compile_and_run(c_code)
-    result['solve_time'] = time.perf_counter() - t0
-    result['abs_tol'] = abs_tol
-    result['rel_tol'] = rel_tol
-    if 'y' in result:
+    result["solve_time"] = time.perf_counter() - t0
+    result["abs_tol"] = abs_tol
+    result["rel_tol"] = rel_tol
+    if "y" in result:
         # Slack for conic form: b - y, where y ~ Ax
-        result['s'] = b - result['y']
-    if 'x' in result and 'y' in result:
+        result["s"] = b - result["y"]
+    if "x" in result and "y" in result:
         primal_res, eps_pri = _compute_primal_residual(
-            A, result['x'], result['y'], abs_tol, rel_tol
+            A, result["x"], result["y"], abs_tol, rel_tol
         )
-        result['primal_res'] = primal_res
-        result['eps_pri'] = eps_pri
+        result["primal_res"] = primal_res
+        result["eps_pri"] = eps_pri
         if eps_pri is not None and eps_pri > 0:
-            result['primal_res_ratio'] = primal_res / eps_pri
+            result["primal_res_ratio"] = primal_res / eps_pri
 
     return result
 
 
-def _generate_c_code(c, A, b, cones_x, cones_y, P,
-                     rho, abs_tol, rel_tol, max_iter, verbose, adaptive_rho,
-                     use_direct):
+def _generate_c_code(
+    c, A, b, cones_x, cones_y, P, rho, abs_tol, rel_tol, max_iter, verbose, adaptive_rho, use_direct
+):
     """Generate C code to solve the problem."""
 
     m, n = A.shape
@@ -363,13 +407,13 @@ int main() {
 
     # Add cone constraints for x
     if cones_x:
-        code += f"    // Cone constraints for x\n"
+        code += "    // Cone constraints for x\n"
         for i, (cone_type, indices) in enumerate(cones_x):
             code += f"    unsigned int x_indices_{i}[] = {{"
             code += ", ".join(map(str, indices))
             code += "};\n"
             code += f"    struct ConeConstraintC cone_x_{i} = {{{cone_type}, x_indices_{i}, {len(indices)}}};\n"
-        code += f"    struct ConeConstraintC cones_x[] = {{"
+        code += "    struct ConeConstraintC cones_x[] = {"
         code += ", ".join([f"cone_x_{i}" for i in range(len(cones_x))])
         code += "};\n\n"
     else:
@@ -377,23 +421,23 @@ int main() {
         code += "    struct ConeConstraintC *cones_x = NULL;\n\n"
 
     # Add cone constraints for y
-    code += f"    // Cone constraints for y\n"
+    code += "    // Cone constraints for y\n"
     for i, (cone_type, indices) in enumerate(cones_y):
         code += f"    unsigned int y_indices_{i}[] = {{"
         code += ", ".join(map(str, indices))
         code += "};\n"
         code += f"    struct ConeConstraintC cone_y_{i} = {{{cone_type}, y_indices_{i}, {len(indices)}}};\n"
-    code += f"    struct ConeConstraintC cones_y[] = {{"
+    code += "    struct ConeConstraintC cones_y[] = {"
     code += ", ".join([f"cone_y_{i}" for i in range(len(cones_y))])
     code += "};\n\n"
 
     # Allocate solution arrays
-    code += f"    // Allocate solution arrays\n"
+    code += "    // Allocate solution arrays\n"
     code += f"    double x[{n}];\n"
     code += f"    double y[{m}];\n"
     code += f"    double l[{m}];\n"
-    code += f"    double optval;\n"
-    code += f"    unsigned int final_iter;\n\n"
+    code += "    double optval;\n"
+    code += "    unsigned int final_iter;\n\n"
 
     # Call solver
     if use_direct:
@@ -408,8 +452,8 @@ int main() {
         code += f"        cones_y, {len(cones_y)},\n"
         code += f"        {rho}, {abs_tol}, {rel_tol}, {max_iter}, {verbose},\n"
         code += f"        {1 if adaptive_rho else 0}, 1,  // adaptive_rho, gap_stop\n"
-        code += f"        x, y, l, &optval, &final_iter\n"
-        code += f"    );\n\n"
+        code += "        x, y, l, &optval, &final_iter\n"
+        code += "    );\n\n"
     else:
         code += f"    int status = {solver_base}QD(\n"
         code += f"        ROW_MAJ, {m}, {n}, A, b, c, P,\n"
@@ -417,35 +461,35 @@ int main() {
         code += f"        cones_y, {len(cones_y)},\n"
         code += f"        {rho}, {abs_tol}, {rel_tol}, {max_iter}, {verbose},\n"
         code += f"        {1 if adaptive_rho else 0}, 1,  // adaptive_rho, gap_stop\n"
-        code += f"        x, y, l, &optval, &final_iter\n"
-        code += f"    );\n\n"
+        code += "        x, y, l, &optval, &final_iter\n"
+        code += "    );\n\n"
 
     # Output results
     code += "    // Output results in machine-readable format\n"
-    code += "    printf(\"STATUS=%d\\n\", status);\n"
-    code += "    printf(\"ITERS=%u\\n\", final_iter);\n"
-    code += "    printf(\"OPTVAL=%.16e\\n\", optval);\n"
+    code += '    printf("STATUS=%d\\n", status);\n'
+    code += '    printf("ITERS=%u\\n", final_iter);\n'
+    code += '    printf("OPTVAL=%.16e\\n", optval);\n'
     code += "    \n"
-    code += "    printf(\"X=\");\n"
+    code += '    printf("X=");\n'
     code += f"    for (int i = 0; i < {n}; i++) {{\n"
-    code += "        printf(\"%.16e\", x[i]);\n"
-    code += f"        if (i < {n - 1}) printf(\",\");\n"
+    code += '        printf("%.16e", x[i]);\n'
+    code += f'        if (i < {n - 1}) printf(",");\n'
     code += "    }\n"
-    code += "    printf(\"\\n\");\n"
+    code += '    printf("\\n");\n'
     code += "    \n"
-    code += "    printf(\"Y=\");\n"
+    code += '    printf("Y=");\n'
     code += f"    for (int i = 0; i < {m}; i++) {{\n"
-    code += "        printf(\"%.16e\", y[i]);\n"
-    code += f"        if (i < {m - 1}) printf(\",\");\n"
+    code += '        printf("%.16e", y[i]);\n'
+    code += f'        if (i < {m - 1}) printf(",");\n'
     code += "    }\n"
-    code += "    printf(\"\\n\");\n"
+    code += '    printf("\\n");\n'
     code += "    \n"
-    code += "    printf(\"L=\");\n"
+    code += '    printf("L=");\n'
     code += f"    for (int i = 0; i < {m}; i++) {{\n"
-    code += "        printf(\"%.16e\", l[i]);\n"
-    code += f"        if (i < {m - 1}) printf(\",\");\n"
+    code += '        printf("%.16e", l[i]);\n'
+    code += f'        if (i < {m - 1}) printf(",");\n'
     code += "    }\n"
-    code += "    printf(\"\\n\");\n"
+    code += '    printf("\\n");\n'
     code += "    \n"
     code += "    return status;\n"
     code += "}\n"
@@ -457,10 +501,10 @@ def _compile_and_run(c_code):
     """Compile and run the generated C code."""
 
     # Find POGS root directory
-    pogs_root = os.path.join(os.path.dirname(__file__), '..')
+    pogs_root = os.path.join(os.path.dirname(__file__), "..")
 
     # Create temporary files
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=False) as f:
         c_file = f.name
         f.write(c_code)
 
@@ -469,15 +513,20 @@ def _compile_and_run(c_code):
     try:
         # Compile
         compile_cmd = [
-            'gcc', '-O3',
-            f'-I{pogs_root}/src/include',
-            f'-I{pogs_root}/src/interface_c',
-            f'-I{pogs_root}/src/cpu/include',
-            '-std=c11',
-            '-o', exe_file,
+            "gcc",
+            "-O3",
+            f"-I{pogs_root}/src/include",
+            f"-I{pogs_root}/src/interface_c",
+            f"-I{pogs_root}/src/cpu/include",
+            "-std=c11",
+            "-o",
+            exe_file,
             c_file,
-            f'{pogs_root}/src/build/pogs.a',
-            '-lm', '-framework', 'Accelerate', '-lstdc++'
+            f"{pogs_root}/src/build/pogs.a",
+            "-lm",
+            "-framework",
+            "Accelerate",
+            "-lstdc++",
         ]
 
         result = subprocess.run(compile_cmd, capture_output=True, text=True)
@@ -488,23 +537,23 @@ def _compile_and_run(c_code):
         result = subprocess.run([exe_file], capture_output=True, text=True, timeout=60)
 
         # Parse output
-        output_lines = result.stdout.strip().split('\n')
+        output_lines = result.stdout.strip().split("\n")
         parsed = {}
         for line in output_lines:
-            if '=' in line:
-                key, value = line.split('=', 1)
-                if key == 'STATUS':
-                    parsed['status'] = int(value)
-                elif key == 'ITERS':
-                    parsed['num_iters'] = int(value)
-                elif key == 'OPTVAL':
-                    parsed['optval'] = float(value)
-                elif key == 'X':
-                    parsed['x'] = np.array([float(v) for v in value.split(',')])
-                elif key == 'Y':
-                    parsed['y'] = np.array([float(v) for v in value.split(',')])
-                elif key == 'L':
-                    parsed['z'] = np.array([float(v) for v in value.split(',')])  # dual variable
+            if "=" in line:
+                key, value = line.split("=", 1)
+                if key == "STATUS":
+                    parsed["status"] = int(value)
+                elif key == "ITERS":
+                    parsed["num_iters"] = int(value)
+                elif key == "OPTVAL":
+                    parsed["optval"] = float(value)
+                elif key == "X":
+                    parsed["x"] = np.array([float(v) for v in value.split(",")])
+                elif key == "Y":
+                    parsed["y"] = np.array([float(v) for v in value.split(",")])
+                elif key == "L":
+                    parsed["z"] = np.array([float(v) for v in value.split(",")])  # dual variable
 
         return parsed
 
@@ -519,6 +568,7 @@ def _compile_and_run(c_code):
 # =============================================================================
 # Graph-form pattern detection and direct solver for CVXPY problems
 # =============================================================================
+
 
 def pogs_solve(problem, verbose=False, **solver_opts):
     """
@@ -554,7 +604,7 @@ def pogs_solve(problem, verbose=False, **solver_opts):
     """
     if not _GRAPH_AVAILABLE:
         # Graph-form solver not available, use cone solver
-        return problem.solve(solver='POGS', verbose=verbose, **solver_opts)
+        return problem.solve(solver="POGS", verbose=verbose, **solver_opts)
 
     # Try to detect graph-form pattern
     detection = _detect_graph_form(problem)
@@ -566,22 +616,22 @@ def pogs_solve(problem, verbose=False, **solver_opts):
         # Solve with graph-form solver
         result = _solve_graph_form_detected(detection, solver_opts)
 
-        if result is not None and result.get('status', 3) in (0, 3):
+        if result is not None and result.get("status", 3) in (0, 3):
             # Set the variable value in the CVXPY problem
             variables = problem.variables()
             if len(variables) == 1:
-                variables[0].value = result['x']
+                variables[0].value = result["x"]
 
             # Apply optimal value scale to convert from POGS to CVXPY objective
             # POGS solves 0.5*||..||^2 + ..., CVXPY may have different scaling
-            optval_scale = detection['params'].get('optval_scale', 1.0)
-            cvxpy_optval = result['optval'] * optval_scale
+            optval_scale = detection["params"].get("optval_scale", 1.0)
+            cvxpy_optval = result["optval"] * optval_scale
 
             # Set problem status
-            if result.get('status', 3) == 0:
-                problem._status = 'optimal'
+            if result.get("status", 3) == 0:
+                problem._status = "optimal"
             else:
-                problem._status = 'optimal_inaccurate'
+                problem._status = "optimal_inaccurate"
 
             problem._value = cvxpy_optval
             return cvxpy_optval
@@ -594,7 +644,7 @@ def pogs_solve(problem, verbose=False, **solver_opts):
             print("POGS: No graph-form pattern detected, using cone solver")
 
     # Fall back to cone solver
-    return problem.solve(solver='POGS', verbose=verbose, **solver_opts)
+    return problem.solve(solver="POGS", verbose=verbose, **solver_opts)
 
 
 def _detect_graph_form(problem):
@@ -607,11 +657,11 @@ def _detect_graph_form(problem):
     Or None if graph-form not detected.
     """
     try:
-        import cvxpy as cp
+        import cvxpy as cp  # noqa: F401 (used in isinstance checks below)
     except ImportError:
         return None
 
-    if problem.objective.NAME != 'minimize':
+    if problem.objective.NAME != "minimize":
         return None
 
     obj_expr = problem.objective.expr
@@ -648,23 +698,22 @@ def _detect_graph_form(problem):
 def _detect_constraints(constraints, x):
     """Detect constraint type on variable x."""
     if not constraints:
-        return 'free'
+        return "free"
 
     try:
         import cvxpy as cp
     except ImportError:
-        return 'other'
+        return "other"
 
     for constr in constraints:
         # Check for x >= 0
         if isinstance(constr, cp.constraints.nonpos.NonNeg):
             # NonNeg constraint: expr >= 0
             # Check if it's our variable
-            if constr.args[0] is x or (hasattr(constr.args[0], 'value')
-                                        and constr.args[0] is x):
-                return 'nonneg'
+            if constr.args[0] is x or (hasattr(constr.args[0], "value") and constr.args[0] is x):
+                return "nonneg"
 
-    return 'other' if constraints else 'free'
+    return "other" if constraints else "free"
 
 
 def _extract_affine_transform(expr, x):
@@ -687,7 +736,7 @@ def _extract_affine_transform(expr, x):
 
         for arg in args:
             if arg.is_constant():
-                const_part = arg.value if hasattr(arg, 'value') else np.array(arg)
+                const_part = arg.value if hasattr(arg, "value") else np.array(arg)
             else:
                 if linear_part is not None:
                     return None  # Multiple non-constant terms
@@ -735,11 +784,11 @@ def _extract_linear_operator(expr, x):
                 return np.asarray(A), 1.0
 
     # cp.matmul or @ operator
-    if hasattr(expr, 'args') and len(expr.args) == 2:
+    if hasattr(expr, "args") and len(expr.args) == 2:
         A_expr, x_expr = expr.args
-        if x_expr is x and hasattr(A_expr, 'value') and A_expr.is_constant():
+        if x_expr is x and hasattr(A_expr, "value") and A_expr.is_constant():
             A = A_expr.value
-            if hasattr(sp, 'issparse') and sp.issparse(A):
+            if hasattr(sp, "issparse") and sp.issparse(A):
                 A = A.toarray()
             return np.asarray(A), 1.0
 
@@ -755,16 +804,16 @@ def _is_sum_squares(expr):
     """Check if expression is sum_squares or equivalent (quad_over_lin)."""
     type_name = type(expr).__name__
     # CVXPY may use sum_squares directly or quad_over_lin internally
-    return type_name in ('sum_squares', 'quad_over_lin')
+    return type_name in ("sum_squares", "quad_over_lin")
 
 
 def _is_norm1(expr):
     """Check if expression is norm1."""
     type_name = type(expr).__name__
-    if type_name == 'norm1':
+    if type_name == "norm1":
         return True
     # Check for Pnorm with p=1
-    if type_name == 'Pnorm' and hasattr(expr, 'p') and expr.p == 1:
+    if type_name == "Pnorm" and hasattr(expr, "p") and expr.p == 1:
         return True
     return False
 
@@ -777,7 +826,7 @@ def _unwrap_scaled(arg):
     type_name = type(arg).__name__
 
     # Handle multiply (element-wise): constant * expr
-    if type_name == 'multiply':
+    if type_name == "multiply":
         if len(arg.args) == 2:
             if arg.args[0].is_constant():
                 return arg.args[1], float(arg.args[0].value)
@@ -785,7 +834,7 @@ def _unwrap_scaled(arg):
                 return arg.args[0], float(arg.args[1].value)
 
     # Handle MulExpression: constant * expr (matrix mul)
-    if type_name == 'MulExpression':
+    if type_name == "MulExpression":
         if len(arg.args) == 2 and arg.args[0].is_constant():
             return arg.args[1], float(arg.args[0].value)
 
@@ -806,7 +855,7 @@ def _detect_lasso(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type not in ('free', None):
+    if constraints_type not in ("free", None):
         return None
 
     if not isinstance(obj_expr, cp.atoms.affine.add_expr.AddExpression):
@@ -854,17 +903,17 @@ def _detect_lasso(obj_expr, x, constraints_type):
     lambd = norm1_scale / (2 * sum_sq_scale) if sum_sq_scale != 0 else norm1_scale
 
     return {
-        'type': 'lasso',
-        'params': {
-            'A': np.asarray(A, dtype=np.float64),
-            'b': np.asarray(b, dtype=np.float64).flatten(),
-            'lambd': float(lambd),
+        "type": "lasso",
+        "params": {
+            "A": np.asarray(A, dtype=np.float64),
+            "b": np.asarray(b, dtype=np.float64).flatten(),
+            "lambd": float(lambd),
             # Store scale factor to convert POGS optval back to CVXPY optval
             # POGS minimizes 0.5*||Ax-b||^2 + lambda*||x||_1
             # CVXPY minimizes sum_sq_scale*||Ax-b||^2 + norm1_scale*||x||_1
             # So CVXPY_optval = 2 * sum_sq_scale * POGS_optval
-            'optval_scale': 2.0 * sum_sq_scale,
-        }
+            "optval_scale": 2.0 * sum_sq_scale,
+        },
     }
 
 
@@ -881,7 +930,7 @@ def _detect_ridge(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type not in ('free', None):
+    if constraints_type not in ("free", None):
         return None
 
     if not isinstance(obj_expr, cp.atoms.affine.add_expr.AddExpression):
@@ -924,13 +973,13 @@ def _detect_ridge(obj_expr, x, constraints_type):
     lambd = reg_scale / data_scale if data_scale != 0 else reg_scale
 
     return {
-        'type': 'ridge',
-        'params': {
-            'A': np.asarray(A, dtype=np.float64),
-            'b': np.asarray(b, dtype=np.float64).flatten(),
-            'lambd': float(lambd),
-            'optval_scale': 2.0 * data_scale,
-        }
+        "type": "ridge",
+        "params": {
+            "A": np.asarray(A, dtype=np.float64),
+            "b": np.asarray(b, dtype=np.float64).flatten(),
+            "lambd": float(lambd),
+            "optval_scale": 2.0 * data_scale,
+        },
     }
 
 
@@ -943,7 +992,7 @@ def _detect_elastic_net(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type not in ('free', None):
+    if constraints_type not in ("free", None):
         return None
 
     if not isinstance(obj_expr, cp.atoms.affine.add_expr.AddExpression):
@@ -974,8 +1023,9 @@ def _detect_elastic_net(obj_expr, x, constraints_type):
                     sum_sq_data = inner
                     data_scale = scale
 
-        elif isinstance(inner, (cp.atoms.norm1.norm1,)) or \
-             (isinstance(inner, cp.atoms.norm.Pnorm) and inner.p == 1):
+        elif isinstance(inner, (cp.atoms.norm1.norm1,)) or (
+            isinstance(inner, cp.atoms.norm.Pnorm) and inner.p == 1
+        ):
             if inner.args[0] is x:
                 norm1_term = inner
                 l1_scale = scale
@@ -996,13 +1046,13 @@ def _detect_elastic_net(obj_expr, x, constraints_type):
     lambda2 = l2_scale / (2 * data_scale) if data_scale != 0 else l2_scale
 
     return {
-        'type': 'elastic_net',
-        'params': {
-            'A': np.asarray(A, dtype=np.float64),
-            'b': np.asarray(b, dtype=np.float64).flatten(),
-            'lambda1': float(lambda1),
-            'lambda2': float(lambda2),
-        }
+        "type": "elastic_net",
+        "params": {
+            "A": np.asarray(A, dtype=np.float64),
+            "b": np.asarray(b, dtype=np.float64).flatten(),
+            "lambda1": float(lambda1),
+            "lambda2": float(lambda2),
+        },
     }
 
 
@@ -1025,7 +1075,7 @@ def _detect_huber(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type not in ('free', None):
+    if constraints_type not in ("free", None):
         return None
 
     # Look for sum(huber(...))
@@ -1035,15 +1085,15 @@ def _detect_huber(obj_expr, x, constraints_type):
             affine = _extract_affine_transform(inner.args[0], x)
             if affine is not None:
                 A, b, _ = affine
-                delta = inner.M if hasattr(inner, 'M') else 1.0
+                delta = inner.M if hasattr(inner, "M") else 1.0
                 return {
-                    'type': 'huber',
-                    'params': {
-                        'A': np.asarray(A, dtype=np.float64),
-                        'b': np.asarray(b, dtype=np.float64).flatten(),
-                        'delta': float(delta),
-                        'lambd': 0.0,
-                    }
+                    "type": "huber",
+                    "params": {
+                        "A": np.asarray(A, dtype=np.float64),
+                        "b": np.asarray(b, dtype=np.float64).flatten(),
+                        "delta": float(delta),
+                        "lambd": 0.0,
+                    },
                 }
 
     return None
@@ -1064,7 +1114,7 @@ def _detect_nonneg_ls(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type != 'nonneg':
+    if constraints_type != "nonneg":
         return None
 
     # Should be just sum_squares (no regularizer)
@@ -1073,11 +1123,11 @@ def _detect_nonneg_ls(obj_expr, x, constraints_type):
         if affine is not None:
             A, b, _ = affine
             return {
-                'type': 'nonneg_ls',
-                'params': {
-                    'A': np.asarray(A, dtype=np.float64),
-                    'b': np.asarray(b, dtype=np.float64).flatten(),
-                }
+                "type": "nonneg_ls",
+                "params": {
+                    "A": np.asarray(A, dtype=np.float64),
+                    "b": np.asarray(b, dtype=np.float64).flatten(),
+                },
             }
 
     # Also handle scaled: 0.5 * sum_squares(...)
@@ -1089,11 +1139,11 @@ def _detect_nonneg_ls(obj_expr, x, constraints_type):
                 if affine is not None:
                     A, b, _ = affine
                     return {
-                        'type': 'nonneg_ls',
-                        'params': {
-                            'A': np.asarray(A, dtype=np.float64),
-                            'b': np.asarray(b, dtype=np.float64).flatten(),
-                        }
+                        "type": "nonneg_ls",
+                        "params": {
+                            "A": np.asarray(A, dtype=np.float64),
+                            "b": np.asarray(b, dtype=np.float64).flatten(),
+                        },
                     }
 
     return None
@@ -1110,7 +1160,7 @@ def _detect_sum_squares_only(obj_expr, x, constraints_type):
     except ImportError:
         return None
 
-    if constraints_type not in ('free', None):
+    if constraints_type not in ("free", None):
         return None
 
     # Handle sum_squares directly or scaled
@@ -1124,11 +1174,11 @@ def _detect_sum_squares_only(obj_expr, x, constraints_type):
         if affine is not None:
             A, b, _ = affine
             return {
-                'type': 'least_squares',
-                'params': {
-                    'A': np.asarray(A, dtype=np.float64),
-                    'b': np.asarray(b, dtype=np.float64).flatten(),
-                }
+                "type": "least_squares",
+                "params": {
+                    "A": np.asarray(A, dtype=np.float64),
+                    "b": np.asarray(b, dtype=np.float64).flatten(),
+                },
             }
 
     return None
@@ -1139,53 +1189,78 @@ def _solve_graph_form_detected(detection_result, solver_opts):
     if not _GRAPH_AVAILABLE:
         return None
 
-    ptype = detection_result['type']
-    params = detection_result['params']
+    ptype = detection_result["type"]
+    params = detection_result["params"]
 
     opts = solver_opts or {}
-    abs_tol = opts.get('abs_tol', 1e-4)
-    rel_tol = opts.get('rel_tol', 1e-4)
-    max_iter = opts.get('max_iter', 2500)
-    verbose = opts.get('verbose', 0)
-    rho = opts.get('rho', 1.0)
+    abs_tol = opts.get("abs_tol", 1e-4)
+    rel_tol = opts.get("rel_tol", 1e-4)
+    max_iter = opts.get("max_iter", 2500)
+    verbose = opts.get("verbose", 0)
+    rho = opts.get("rho", 1.0)
 
     t0 = time.perf_counter()
 
-    if ptype == 'lasso':
+    if ptype == "lasso":
         result = solve_lasso(
-            params['A'], params['b'], params['lambd'],
-            abs_tol=abs_tol, rel_tol=rel_tol, max_iter=max_iter,
-            verbose=verbose, rho=rho
+            params["A"],
+            params["b"],
+            params["lambd"],
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            rho=rho,
         )
-    elif ptype == 'ridge':
+    elif ptype == "ridge":
         result = solve_ridge(
-            params['A'], params['b'], params['lambd'],
-            abs_tol=abs_tol, rel_tol=rel_tol, max_iter=max_iter,
-            verbose=verbose, rho=rho
+            params["A"],
+            params["b"],
+            params["lambd"],
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            rho=rho,
         )
-    elif ptype == 'elastic_net':
+    elif ptype == "elastic_net":
         result = solve_elastic_net(
-            params['A'], params['b'], params['lambda1'], params['lambda2'],
-            abs_tol=abs_tol, rel_tol=rel_tol, max_iter=max_iter,
-            verbose=verbose, rho=rho
+            params["A"],
+            params["b"],
+            params["lambda1"],
+            params["lambda2"],
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            rho=rho,
         )
-    elif ptype == 'huber':
+    elif ptype == "huber":
         result = solve_huber(
-            params['A'], params['b'], delta=params.get('delta', 1.0),
-            lambd=params.get('lambd', 0.0),
-            abs_tol=abs_tol, rel_tol=rel_tol, max_iter=max_iter,
-            verbose=verbose, rho=rho
+            params["A"],
+            params["b"],
+            delta=params.get("delta", 1.0),
+            lambd=params.get("lambd", 0.0),
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            rho=rho,
         )
-    elif ptype == 'nonneg_ls':
+    elif ptype == "nonneg_ls":
         result = solve_nonneg_ls(
-            params['A'], params['b'],
-            abs_tol=abs_tol, rel_tol=rel_tol, max_iter=max_iter,
-            verbose=verbose, rho=rho
+            params["A"],
+            params["b"],
+            abs_tol=abs_tol,
+            rel_tol=rel_tol,
+            max_iter=max_iter,
+            verbose=verbose,
+            rho=rho,
         )
-    elif ptype == 'least_squares':
+    elif ptype == "least_squares":
         # Plain least squares with graph-form (kSquare for f, kZero for g)
-        A = params['A']
-        b = params['b']
+        A = params["A"]
+        b = params["b"]
         m, n = A.shape
         f = [FunctionObj(Function.kSquare, 1.0, b[i], 1.0) for i in range(m)]
         g = [FunctionObj(Function.kZero) for _ in range(n)]
@@ -1193,7 +1268,7 @@ def _solve_graph_form_detected(detection_result, solver_opts):
     else:
         return None
 
-    result['solve_time'] = time.perf_counter() - t0
+    result["solve_time"] = time.perf_counter() - t0
     return result
 
 
@@ -1208,13 +1283,7 @@ try:
         """CVXPY interface for POGS solver."""
 
         MIP_CAPABLE = False
-        SUPPORTED_CONSTRAINTS = [
-            cvxpy.Zero,
-            cvxpy.NonNeg,
-            cvxpy.SOC,
-            cvxpy.PSD,
-            cvxpy.ExpCone
-        ]
+        SUPPORTED_CONSTRAINTS = [cvxpy.Zero, cvxpy.NonNeg, cvxpy.SOC, cvxpy.PSD, cvxpy.ExpCone]
 
         def name(self):
             return "POGS"
@@ -1230,8 +1299,8 @@ try:
 
         def import_solver(self):
             """Check that POGS is available."""
-            pogs_root = os.path.join(os.path.dirname(__file__), '..')
-            pogs_lib = os.path.join(pogs_root, 'src', 'build', 'pogs.a')
+            pogs_root = os.path.join(os.path.dirname(__file__), "..")
+            pogs_lib = os.path.join(pogs_root, "src", "build", "pogs.a")
             if not os.path.exists(pogs_lib):
                 raise ImportError("POGS library not found. Please build it first.")
 
@@ -1242,7 +1311,7 @@ try:
             Note: For graph-form patterns (Lasso, Ridge, etc.), use pogs_solve()
             instead of problem.solve(solver='POGS') for much better performance.
             """
-            return super(POGS, self).apply(problem)
+            return super().apply(problem)
 
         def solve_via_data(self, data, warm_start, verbose, solver_opts, solver_cache=None):
             """
@@ -1270,43 +1339,47 @@ try:
                 Solution data
             """
             opts = solver_opts.copy() if solver_opts else {}
-            verbose_level = opts.get('verbose', 5 if verbose else 0)
-            opts['verbose'] = verbose_level
+            verbose_level = opts.get("verbose", 5 if verbose else 0)
+            opts["verbose"] = verbose_level
 
             # Extract problem data
-            c = data['c']
-            A = data['A']
-            b = data['b']
+            c = data["c"]
+            A = data["A"]
+            b = data["b"]
             import cvxpy.settings as s
+
             P = data.get(s.P, None)
 
             # Convert ConeDims object to dict format expected by solve_cone_problem
             # CVXPY ConeDims has: zero, nonneg, exp, soc, psd, p3d
             # POGS expects: f, l, q, s, ep, ed
-            cvxpy_dims = data['dims']
+            cvxpy_dims = data["dims"]
             dims = {
-                'f': getattr(cvxpy_dims, 'zero', 0),      # zero cone
-                'l': getattr(cvxpy_dims, 'nonneg', 0),    # nonneg cone
-                'q': list(getattr(cvxpy_dims, 'soc', [])), # SOC cones
-                's': list(getattr(cvxpy_dims, 'psd', [])), # SDP cones
-                'ep': getattr(cvxpy_dims, 'exp', 0),       # exponential cones
-                'ed': 0,                                    # dual exponential cones
+                "f": getattr(cvxpy_dims, "zero", 0),  # zero cone
+                "l": getattr(cvxpy_dims, "nonneg", 0),  # nonneg cone
+                "q": list(getattr(cvxpy_dims, "soc", [])),  # SOC cones
+                "s": list(getattr(cvxpy_dims, "psd", [])),  # SDP cones
+                "ep": getattr(cvxpy_dims, "exp", 0),  # exponential cones
+                "ed": 0,  # dual exponential cones
             }
 
             # Get solver options
-            abs_tol = opts.get('abs_tol', 1e-4)
-            rel_tol = opts.get('rel_tol', 1e-3)
-            max_iter = opts.get('max_iter', 50000)  # Higher default for convergence
-            rho = opts.get('rho', None)  # Use automatic rho selection by default
-            adaptive_rho = opts.get('adaptive_rho', True)
-            rho_mode = opts.get('rho_mode', None)
-            rho_scale = opts.get('rho_scale', 1.0)
-            use_direct = opts.get('use_direct', None)
-            prefer_ctypes = opts.get('prefer_ctypes', True)
+            abs_tol = opts.get("abs_tol", 1e-4)
+            rel_tol = opts.get("rel_tol", 1e-3)
+            max_iter = opts.get("max_iter", 50000)  # Higher default for convergence
+            rho = opts.get("rho", None)  # Use automatic rho selection by default
+            adaptive_rho = opts.get("adaptive_rho", True)
+            rho_mode = opts.get("rho_mode", None)
+            rho_scale = opts.get("rho_scale", 1.0)
+            use_direct = opts.get("use_direct", None)
+            prefer_ctypes = opts.get("prefer_ctypes", True)
 
             # Solve
             result = solve_cone_problem(
-                c, A, b, dims,
+                c,
+                A,
+                b,
+                dims,
                 rho=rho,
                 abs_tol=abs_tol,
                 rel_tol=rel_tol,
@@ -1339,22 +1412,22 @@ try:
                 Solution in CVXPY format
             """
 
-            from cvxpy.reductions.solution import Solution, failure_solution
             import cvxpy.settings as s
+            from cvxpy.reductions.solution import Solution, failure_solution
 
             attr = {}
 
             # POGS status codes:
             # 0 = optimal, 1 = infeasible, 2 = unbounded, 3 = iteration limit
-            pogs_status = solution.get('status', 3)
-            primal_res = solution.get('primal_res')
-            eps_pri = solution.get('eps_pri')
+            pogs_status = solution.get("status", 3)
+            primal_res = solution.get("primal_res")
+            eps_pri = solution.get("eps_pri")
             res_ratio = None
             if primal_res is not None and eps_pri is not None and eps_pri > 0:
                 res_ratio = primal_res / eps_pri
-                attr['pogs_primal_res'] = primal_res
-                attr['pogs_primal_tol'] = eps_pri
-                attr['pogs_primal_ratio'] = res_ratio
+                attr["pogs_primal_res"] = primal_res
+                attr["pogs_primal_tol"] = eps_pri
+                attr["pogs_primal_ratio"] = res_ratio
 
             if pogs_status == 0:
                 if res_ratio is None or res_ratio <= 1.0:
@@ -1374,20 +1447,18 @@ try:
             else:
                 status = s.SOLVER_ERROR
 
-            attr[s.SOLVE_TIME] = solution.get('solve_time', 0)
-            attr[s.SETUP_TIME] = solution.get('setup_time', 0)
-            attr[s.NUM_ITERS] = solution.get('num_iters', 0)
+            attr[s.SOLVE_TIME] = solution.get("solve_time", 0)
+            attr[s.SETUP_TIME] = solution.get("setup_time", 0)
+            attr[s.NUM_ITERS] = solution.get("num_iters", 0)
 
             if status in [s.OPTIMAL, s.OPTIMAL_INACCURATE]:
                 # Extract optimal value with offset
-                opt_val = solution.get('optval', 0)
+                opt_val = solution.get("optval", 0)
                 if s.OFFSET in inverse_data:
                     opt_val += inverse_data[s.OFFSET]
 
                 # Cone-form solution
-                primal_vars = {
-                    inverse_data[self.VAR_ID]: solution['x']
-                }
+                primal_vars = {inverse_data[self.VAR_ID]: solution["x"]}
 
                 # Return None for dual variables to skip dual extraction
                 dual_vars = None
@@ -1399,6 +1470,7 @@ try:
     # Register the solver with CVXPY so "solver='POGS'" works.
     try:
         from cvxpy.reductions.solvers import defines as cvxpy_defines
+
         solver_name = "POGS"
         if solver_name not in cvxpy_defines.SOLVER_MAP_CONIC:
             cvxpy_defines.SOLVER_MAP_CONIC[solver_name] = POGS()
@@ -1406,8 +1478,7 @@ try:
             cvxpy_defines.CONIC_SOLVERS.append(solver_name)
         cvxpy_defines.INSTALLED_SOLVERS = cvxpy_defines.installed_solvers()
         cvxpy_defines.INSTALLED_CONIC_SOLVERS = [
-            slv for slv in cvxpy_defines.INSTALLED_SOLVERS
-            if slv in cvxpy_defines.CONIC_SOLVERS
+            slv for slv in cvxpy_defines.INSTALLED_SOLVERS if slv in cvxpy_defines.CONIC_SOLVERS
         ]
     except Exception:
         pass

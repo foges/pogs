@@ -12,18 +12,21 @@ Reference:
 Uses cvxbench to load the problems.
 """
 
-import numpy as np
-import time
+from __future__ import annotations
+
 import sys
-import os
+import time
 from dataclasses import dataclass
-from typing import Optional
+
+import numpy as np
+
 
 # Add cvxbench to path
 sys.path.insert(0, "/Users/chris/code/cvxbench/src")
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -31,6 +34,7 @@ except ImportError:
 
 try:
     from cvxbench.loaders.maros_meszaros import MarosMeszarosLoader
+
     HAS_CVXBENCH = True
 except ImportError as e:
     HAS_CVXBENCH = False
@@ -40,12 +44,13 @@ except ImportError as e:
 @dataclass
 class BenchmarkResult:
     """Result from solving a benchmark problem."""
+
     solver: str
     time_sec: float
     optval: float
     status: str
-    iterations: Optional[int] = None
-    error: Optional[str] = None
+    iterations: int | None = None
+    error: str | None = None
 
 
 def build_cvxpy_problem(problem):
@@ -63,8 +68,8 @@ def build_cvxpy_problem(problem):
     constraints = []
     row_offset = 0
     for cone_type, cone_dim in problem.cones:
-        A_block = problem.A[row_offset:row_offset + cone_dim, :]
-        b_block = problem.b[row_offset:row_offset + cone_dim]
+        A_block = problem.A[row_offset : row_offset + cone_dim, :]
+        b_block = problem.b[row_offset : row_offset + cone_dim]
 
         if cone_type == "zero":
             constraints.append(A_block @ x == b_block)
@@ -94,13 +99,13 @@ def solve_with_cvxpy(problem, solver_name: str, verbose: bool = False) -> Benchm
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error=f"Unknown solver: {solver_name}"
+            error=f"Unknown solver: {solver_name}",
         )
 
     try:
-        cvxpy_prob, x = build_cvxpy_problem(problem)
+        cvxpy_prob, _x = build_cvxpy_problem(problem)
 
         start = time.perf_counter()
         cvxpy_prob.solve(solver=solver_map[solver_name], verbose=verbose)
@@ -109,17 +114,15 @@ def solve_with_cvxpy(problem, solver_name: str, verbose: bool = False) -> Benchm
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=cvxpy_prob.value if cvxpy_prob.value is not None else float('nan'),
+            optval=cvxpy_prob.value if cvxpy_prob.value is not None else float("nan"),
             status=cvxpy_prob.status,
-            iterations=getattr(cvxpy_prob.solver_stats, 'num_iters', None) if cvxpy_prob.solver_stats else None
+            iterations=getattr(cvxpy_prob.solver_stats, "num_iters", None)
+            if cvxpy_prob.solver_stats
+            else None,
         )
     except Exception as e:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="error",
-            error=str(e)
+            solver=solver_name, time_sec=0, optval=float("nan"), status="error", error=str(e)
         )
 
 
@@ -145,22 +148,22 @@ def run_benchmark():
     # Select a representative subset (small to medium problems)
     # These are well-known benchmark problems
     selected = [
-        "QAFIRO",     # Small LP-like QP
-        "HS21",       # Hock-Schittkowski test
+        "QAFIRO",  # Small LP-like QP
+        "HS21",  # Hock-Schittkowski test
         "HS35",
         "HS51",
         "HS76",
-        "DUAL1",      # Dual formulation
+        "DUAL1",  # Dual formulation
         "DUAL2",
-        "PRIMALC1",   # Primal formulation
-        "LOTSCHD",    # Lot scheduling
-        "CVXQP1_S",   # Convex QP small
+        "PRIMALC1",  # Primal formulation
+        "LOTSCHD",  # Lot scheduling
+        "CVXQP1_S",  # Convex QP small
         "CVXQP2_S",
         "CVXQP3_S",
-        "QPCBLEND",   # Blending problem
-        "QPCSTAIR",   # Staircase structure
-        "VALUES",     # Value problem
-        "ZECEVIC2",   # Zecevic test
+        "QPCBLEND",  # Blending problem
+        "QPCSTAIR",  # Staircase structure
+        "VALUES",  # Value problem
+        "ZECEVIC2",  # Zecevic test
     ]
 
     solvers = ["osqp", "scs", "clarabel"]
@@ -191,7 +194,7 @@ def run_benchmark():
             for solver in solvers:
                 r = results[solver]
                 if r.status in ["optimal", "optimal_inaccurate"]:
-                    print(f" {r.time_sec*1000:>8.1f}ms", end="")
+                    print(f" {r.time_sec * 1000:>8.1f}ms", end="")
                     times[solver] = r.time_sec
                 else:
                     print(f" {'FAIL':>10}", end="")
@@ -211,10 +214,11 @@ def run_benchmark():
     print("SUMMARY (Maros-Mészáros QP Benchmark)")
     print("=" * 80)
 
-    wins = {s: 0 for s in solvers}
+    wins = dict.fromkeys(solvers, 0)
     times_by_solver = {s: [] for s in solvers}
 
     from collections import defaultdict
+
     probs_results = defaultdict(dict)
     for pname, n, m, result in all_results:
         probs_results[pname][result.solver] = result
@@ -222,8 +226,11 @@ def run_benchmark():
             times_by_solver[result.solver].append(result.time_sec)
 
     for pname, presults in probs_results.items():
-        valid_times = {s: r.time_sec for s, r in presults.items()
-                      if r.status in ["optimal", "optimal_inaccurate"]}
+        valid_times = {
+            s: r.time_sec
+            for s, r in presults.items()
+            if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if valid_times:
             winner = min(valid_times, key=valid_times.get)
             wins[winner] += 1

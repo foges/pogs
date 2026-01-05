@@ -2,9 +2,10 @@
 Simple test for POGS cone interface using Python (no dependencies).
 """
 
-import subprocess
 import os
+import subprocess
 import tempfile
+
 
 # Test problem: minimize x1 subject to x1 + x2 = 2, x >= 0
 # Expected: x = [0, 2], optimal value = 0
@@ -69,25 +70,31 @@ int main() {
 """
 
 # Write test program
-with tempfile.NamedTemporaryFile(mode='w', suffix='.c', delete=False) as f:
+with tempfile.NamedTemporaryFile(mode="w", suffix=".c", delete=False) as f:
     test_file = f.name
     f.write(test_program)
 
 try:
     # Compile and run
-    pogs_root = os.path.join(os.path.dirname(__file__), '..')
+    pogs_root = os.path.join(os.path.dirname(__file__), "..")
     output_file = tempfile.mktemp()
 
     compile_cmd = [
-        'gcc', '-g', '-O3',
-        f'-I{pogs_root}/src/include',
-        f'-I{pogs_root}/src/interface_c',
-        f'-I{pogs_root}/src/cpu/include',
-        '-std=c11',
-        '-o', output_file,
+        "gcc",
+        "-g",
+        "-O3",
+        f"-I{pogs_root}/src/include",
+        f"-I{pogs_root}/src/interface_c",
+        f"-I{pogs_root}/src/cpu/include",
+        "-std=c11",
+        "-o",
+        output_file,
         test_file,
-        f'{pogs_root}/src/build/pogs.a',
-        '-lm', '-framework', 'Accelerate', '-lstdc++'
+        f"{pogs_root}/src/build/pogs.a",
+        "-lm",
+        "-framework",
+        "Accelerate",
+        "-lstdc++",
     ]
 
     print("Compiling test program...")

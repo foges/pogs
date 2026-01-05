@@ -50,10 +50,7 @@ def generate(n_samples=100, n_features=20, seed=None):
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"Logistic (n={n_samples}, d={n_features})"
-    problem._custom_size_metrics = {
-        "n_samples": n_samples,
-        "n_features": n_features
-    }
+    problem._custom_size_metrics = {"n_samples": n_samples, "n_features": n_features}
 
     return problem
 

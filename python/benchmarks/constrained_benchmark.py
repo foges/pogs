@@ -10,15 +10,18 @@ Problems where graph-form structure + constraints matter:
 5. Basis pursuit with measurement noise bounds
 """
 
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -26,7 +29,8 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from pogs_graph import FunctionObj, Function, _solve_graph_form
+    from pogs_graph import Function, FunctionObj, _solve_graph_form
+
     HAS_POGS = True
 except ImportError:
     HAS_POGS = False
@@ -36,20 +40,20 @@ except ImportError:
 def solve_with_cvxpy(problem, solver_name):
     """Solve a CVXPY problem with given solver."""
     solver_map = {
-        'OSQP': cp.OSQP,
-        'SCS': cp.SCS,
-        'CLARABEL': cp.CLARABEL,
-        'ECOS': cp.ECOS,
+        "OSQP": cp.OSQP,
+        "SCS": cp.SCS,
+        "CLARABEL": cp.CLARABEL,
+        "ECOS": cp.ECOS,
     }
     if solver_name not in solver_map:
-        return None, None, 'unavailable'
+        return None, None, "unavailable"
 
     try:
         t0 = time.perf_counter()
         problem.solve(solver=solver_map[solver_name], verbose=False)
         t = time.perf_counter() - t0
-        if problem.status in ['optimal', 'optimal_inaccurate']:
-            return problem.value, t, 'optimal'
+        if problem.status in ["optimal", "optimal_inaccurate"]:
+            return problem.value, t, "optimal"
         return None, t, problem.status
     except Exception as e:
         return None, None, str(e)[:50]
@@ -64,7 +68,7 @@ def constrained_lasso_cvxpy(A, b, lambd, lb, ub, solver):
     s.t. lb <= x <= ub
          sum(x) = 1
     """
-    m, n = A.shape
+    _m, n = A.shape
     x = cp.Variable(n)
     obj = cp.Minimize(0.5 * cp.sum_squares(A @ x - b) + lambd * cp.norm1(x))
     constraints = [x >= lb, x <= ub, cp.sum(x) == 1]
@@ -87,7 +91,7 @@ def constrained_lasso_pogs(A, b, lambd, lb, ub):
     # Build stacked matrix [A; I; 1']
     ones_row = np.ones((1, n))
     A_stacked = np.vstack([A, np.eye(n), ones_row])
-    m_total = m + n + 1
+    m + n + 1
 
     # f functions:
     # - First m: 0.5*(y_i - b_i)^2  (kSquare)
@@ -110,12 +114,13 @@ def constrained_lasso_pogs(A, b, lambd, lb, ub):
         g.append(FunctionObj(Function.kIndBox01, scale, lb * scale, 1.0))
 
     t0 = time.perf_counter()
-    result = _solve_graph_form(A_stacked, f, g, abs_tol=1e-4, rel_tol=1e-4,
-                                max_iter=10000, verbose=0)
+    result = _solve_graph_form(
+        A_stacked, f, g, abs_tol=1e-4, rel_tol=1e-4, max_iter=10000, verbose=0
+    )
     t = time.perf_counter() - t0
 
-    if result['status'] == 0:
-        return result['optval'], t, 'optimal'
+    if result["status"] == 0:
+        return result["optval"], t, "optimal"
     return None, t, f"status={result['status']}"
 
 
@@ -127,7 +132,7 @@ def robust_regression_cvxpy(A, b, delta, max_resid, solver):
     min  sum huber(Ax - b, delta)
     s.t. ||Ax - b||_inf <= max_resid
     """
-    m, n = A.shape
+    _m, n = A.shape
     x = cp.Variable(n)
     obj = cp.Minimize(cp.sum(cp.huber(A @ x - b, delta)))
     constraints = [cp.norm_inf(A @ x - b) <= max_resid]
@@ -144,7 +149,7 @@ def robust_regression_pogs(A, b, delta, max_resid):
     This is tricky - need to handle offset b and bound constraints.
     Use: y = Ax, then huber(y - b) with bounds on y.
     """
-    m, n = A.shape
+    _m, _n = A.shape
 
     # f: huber(y_i - b_i) with |y_i - b_i| <= max_resid
     # The bound constraint can be encoded in the function if we're clever
@@ -154,7 +159,7 @@ def robust_regression_pogs(A, b, delta, max_resid):
     # [y; s] = [A; A] x, minimize huber(y-b) + I(|s-b| <= max_resid)
     # But this doubles the problem size...
 
-    return None, None, 'reformulation complex'
+    return None, None, "reformulation complex"
 
 
 # =============================================================================
@@ -170,11 +175,7 @@ def longshort_portfolio_cvxpy(Sigma, mu, w_prev, gamma, max_turnover, solver):
     n = len(mu)
     w = cp.Variable(n)
     obj = cp.Minimize(0.5 * cp.quad_form(w, Sigma) - gamma * mu @ w)
-    constraints = [
-        cp.sum(w) == 0,
-        cp.norm1(w) <= 2,
-        cp.norm1(w - w_prev) <= max_turnover
-    ]
+    constraints = [cp.sum(w) == 0, cp.norm1(w) <= 2, cp.norm1(w - w_prev) <= max_turnover]
     prob = cp.Problem(obj, constraints)
     return solve_with_cvxpy(prob, solver)
 
@@ -187,11 +188,11 @@ def quantile_regression_cvxpy(A, b, tau, solver):
     min  sum rho_tau(Ax - b)
     where rho_tau(u) = u*(tau - I(u<0)) = tau*max(u,0) + (1-tau)*max(-u,0)
     """
-    m, n = A.shape
+    _m, n = A.shape
     x = cp.Variable(n)
     residual = A @ x - b
     # Quantile loss: tau*pos(r) + (1-tau)*neg(r) = tau*max(r,0) + (1-tau)*max(-r,0)
-    obj = cp.Minimize(tau * cp.sum(cp.pos(residual)) + (1-tau) * cp.sum(cp.neg(residual)))
+    obj = cp.Minimize(tau * cp.sum(cp.pos(residual)) + (1 - tau) * cp.sum(cp.neg(residual)))
     prob = cp.Problem(obj)
     return solve_with_cvxpy(prob, solver)
 
@@ -221,17 +222,18 @@ def quantile_regression_pogs(A, b, tau):
     for i in range(m):
         # (1-tau) * max(b_i - z_i, 0) = (1-tau) * max(-z_i + b_i, 0)
         # kMaxPos0 with a=-1, b=-b_i, c=(1-tau)
-        f.append(FunctionObj(Function.kMaxPos0, -1.0, -b[i], 1-tau))
+        f.append(FunctionObj(Function.kMaxPos0, -1.0, -b[i], 1 - tau))
 
     g = [FunctionObj(Function.kZero) for _ in range(n)]
 
     t0 = time.perf_counter()
-    result = _solve_graph_form(A_stacked, f, g, abs_tol=1e-4, rel_tol=1e-4,
-                                max_iter=5000, verbose=0)
+    result = _solve_graph_form(
+        A_stacked, f, g, abs_tol=1e-4, rel_tol=1e-4, max_iter=5000, verbose=0
+    )
     t = time.perf_counter() - t0
 
-    if result['status'] == 0:
-        return result['optval'], t, 'optimal'
+    if result["status"] == 0:
+        return result["optval"], t, "optimal"
     return None, t, f"status={result['status']}"
 
 
@@ -243,7 +245,7 @@ def bpdn_cvxpy(A, b, epsilon, solver):
     min  ||x||_1
     s.t. ||Ax - b||_2 <= epsilon
     """
-    m, n = A.shape
+    _m, n = A.shape
     x = cp.Variable(n)
     obj = cp.Minimize(cp.norm1(x))
     constraints = [cp.norm2(A @ x - b) <= epsilon]
@@ -259,10 +261,11 @@ def nonneg_elastic_net_cvxpy(A, b, lambda1, lambda2, solver):
     min  0.5||Ax - b||^2 + λ1||x||_1 + 0.5*λ2||x||^2
     s.t. x >= 0
     """
-    m, n = A.shape
+    _m, n = A.shape
     x = cp.Variable(n)
-    obj = cp.Minimize(0.5 * cp.sum_squares(A @ x - b) +
-                      lambda1 * cp.norm1(x) + 0.5 * lambda2 * cp.sum_squares(x))
+    obj = cp.Minimize(
+        0.5 * cp.sum_squares(A @ x - b) + lambda1 * cp.norm1(x) + 0.5 * lambda2 * cp.sum_squares(x)
+    )
     constraints = [x >= 0]
     prob = cp.Problem(obj, constraints)
     return solve_with_cvxpy(prob, solver)
@@ -290,15 +293,14 @@ def nonneg_elastic_net_pogs(A, b, lambda1, lambda2):
 
     f = [FunctionObj(Function.kSquare, 1.0, b[i], 1.0) for i in range(m)]
     # kIndGe0 with linear term d and quadratic term e
-    g = [FunctionObj(Function.kIndGe0, 1.0, 0.0, 1.0, lambda1, lambda2/2) for _ in range(n)]
+    g = [FunctionObj(Function.kIndGe0, 1.0, 0.0, 1.0, lambda1, lambda2 / 2) for _ in range(n)]
 
     t0 = time.perf_counter()
-    result = _solve_graph_form(A, f, g, abs_tol=1e-4, rel_tol=1e-4,
-                                max_iter=5000, verbose=0)
+    result = _solve_graph_form(A, f, g, abs_tol=1e-4, rel_tol=1e-4, max_iter=5000, verbose=0)
     t = time.perf_counter() - t0
 
-    if result['status'] == 0:
-        return result['optval'], t, 'optimal'
+    if result["status"] == 0:
+        return result["optval"], t, "optimal"
     return None, t, f"status={result['status']}"
 
 
@@ -312,7 +314,7 @@ def run_benchmark():
     print()
 
     np.random.seed(42)
-    solvers = ['POGS', 'OSQP', 'SCS', 'CLARABEL']
+    solvers = ["POGS", "OSQP", "SCS", "CLARABEL"]
     results = []
 
     # Problem sizes
@@ -335,24 +337,24 @@ def run_benchmark():
         times = {}
 
         for solver in solvers:
-            if solver == 'POGS':
+            if solver == "POGS":
                 if HAS_POGS:
                     val, t, status = constrained_lasso_pogs(A, b, lambd, lb, ub)
                 else:
-                    val, t, status = None, None, 'unavailable'
+                    val, t, status = None, None, "unavailable"
             else:
                 val, t, status = constrained_lasso_cvxpy(A, b, lambd, lb, ub, solver)
 
             if t is not None:
                 times[solver] = t
-                print(f"    {solver:12s}: {t*1000:8.1f}ms  ({status})")
+                print(f"    {solver:12s}: {t * 1000:8.1f}ms  ({status})")
             else:
                 print(f"    {solver:12s}: FAILED ({status})")
 
         if times:
             winner = min(times, key=times.get)
             print(f"    Winner: {winner}")
-            results.append(('ConstrainedLasso', m, n, times, winner))
+            results.append(("ConstrainedLasso", m, n, times, winner))
 
     # === Problem 4: Quantile Regression ===
     print("\n" + "=" * 75)
@@ -369,24 +371,24 @@ def run_benchmark():
             times = {}
 
             for solver in solvers:
-                if solver == 'POGS':
+                if solver == "POGS":
                     if HAS_POGS:
                         val, t, status = quantile_regression_pogs(A, b, tau)
                     else:
-                        val, t, status = None, None, 'unavailable'
+                        val, t, status = None, None, "unavailable"
                 else:
                     val, t, status = quantile_regression_cvxpy(A, b, tau, solver)
 
                 if t is not None:
                     times[solver] = t
-                    print(f"    {solver:12s}: {t*1000:8.1f}ms  ({status})")
+                    print(f"    {solver:12s}: {t * 1000:8.1f}ms  ({status})")
                 else:
                     print(f"    {solver:12s}: FAILED ({status})")
 
             if times:
                 winner = min(times, key=times.get)
                 print(f"    Winner: {winner}")
-                results.append((f'Quantile_tau{tau}', m, n, times, winner))
+                results.append((f"Quantile_tau{tau}", m, n, times, winner))
 
     # === Problem 6: Non-negative Elastic Net ===
     print("\n" + "=" * 75)
@@ -404,48 +406,48 @@ def run_benchmark():
         times = {}
 
         for solver in solvers:
-            if solver == 'POGS':
+            if solver == "POGS":
                 if HAS_POGS:
                     val, t, status = nonneg_elastic_net_pogs(A, b, lambda1, lambda2)
                 else:
-                    val, t, status = None, None, 'unavailable'
+                    _val, t, status = None, None, "unavailable"
             else:
-                val, t, status = nonneg_elastic_net_cvxpy(A, b, lambda1, lambda2, solver)
+                _val, t, status = nonneg_elastic_net_cvxpy(A, b, lambda1, lambda2, solver)
 
             if t is not None:
                 times[solver] = t
-                print(f"    {solver:12s}: {t*1000:8.1f}ms  ({status})")
+                print(f"    {solver:12s}: {t * 1000:8.1f}ms  ({status})")
             else:
                 print(f"    {solver:12s}: FAILED ({status})")
 
         if times:
             winner = min(times, key=times.get)
             print(f"    Winner: {winner}")
-            results.append(('NonnegElasticNet', m, n, times, winner))
+            results.append(("NonnegElasticNet", m, n, times, winner))
 
     # === Summary ===
     print("\n" + "=" * 75)
     print("SUMMARY")
     print("=" * 75)
 
-    pogs_wins = sum(1 for r in results if r[4] == 'POGS')
+    pogs_wins = sum(1 for r in results if r[4] == "POGS")
     total = len(results)
 
     print(f"\nResults: {len(results)} benchmarks")
-    print(f"POGS wins: {pogs_wins}/{total} ({100*pogs_wins/total:.0f}%)" if total > 0 else "")
+    print(f"POGS wins: {pogs_wins}/{total} ({100 * pogs_wins / total:.0f}%)" if total > 0 else "")
 
     # Speedups
     print("\nPOGS performance:")
     for name, m, n, times, winner in results:
-        pogs_t = times.get('POGS')
+        pogs_t = times.get("POGS")
         if pogs_t:
-            best_other = min(t for s, t in times.items() if s != 'POGS')
+            best_other = min(t for s, t in times.items() if s != "POGS")
             ratio = best_other / pogs_t
             if ratio > 1:
                 print(f"  {name} ({m}x{n}): POGS {ratio:.1f}x faster")
             else:
-                print(f"  {name} ({m}x{n}): POGS {1/ratio:.1f}x slower")
+                print(f"  {name} ({m}x{n}): POGS {1 / ratio:.1f}x slower")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_benchmark()

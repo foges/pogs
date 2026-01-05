@@ -4,13 +4,15 @@ Test POGS cone solver without CVXPY dependency.
 This demonstrates the core solve_cone_problem function.
 """
 
-import sys
 import os
+import sys
+
 import numpy as np
+
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from pogs_cvxpy import solve_cone_problem, CONE_ZERO, CONE_NON_NEG, CONE_SOC
+from pogs_cvxpy import solve_cone_problem
 
 
 def test_lp_simple():
@@ -47,16 +49,18 @@ def test_lp_simple():
     #   K_y = {zero cone} x {R^2_+}
 
     c = np.array([1.0, 0.0])
-    A = np.array([
-        [1.0, 1.0],
-        [-1.0, 0.0],
-        [0.0, -1.0],
-    ])
+    A = np.array(
+        [
+            [1.0, 1.0],
+            [-1.0, 0.0],
+            [0.0, -1.0],
+        ]
+    )
     b = np.array([2.0, 0.0, 0.0])
 
     dims = {
-        'f': 1,  # One equality constraint (zero cone)
-        'l': 2,  # x >= 0 encoded via b - A x in non-negative cone
+        "f": 1,  # One equality constraint (zero cone)
+        "l": 2,  # x >= 0 encoded via b - A x in non-negative cone
     }
 
     # Note: In POGS cone form, we have:
@@ -74,11 +78,7 @@ def test_lp_simple():
     print()
 
     result = solve_cone_problem(
-        c, A, b, dims,
-        abs_tol=1e-6,
-        rel_tol=1e-6,
-        max_iter=50000,
-        verbose=5
+        c, A, b, dims, abs_tol=1e-6, rel_tol=1e-6, max_iter=50000, verbose=5
     )
 
     print()
@@ -90,8 +90,8 @@ def test_lp_simple():
     print()
 
     # Verify solution
-    if result['status'] == 0:
-        x_opt = result['x']
+    if result["status"] == 0:
+        x_opt = result["x"]
         print("Verification:")
         print(f"  x[0] + x[1] = {x_opt[0] + x_opt[1]:.6f} (should be 2.0)")
         print(f"  x[0] = {x_opt[0]:.6f} (should be ≥ 0)")
@@ -145,27 +145,19 @@ def test_lp_with_inequalities():
     #             x[1] <= 2  =>  2 - [ 0,  1]*x in R_+  =>  b[2] = 2, A[2] = [ 0,  1]
 
     c = np.array([1.0, 1.0])
-    A = np.array([
-        [-1.0, -1.0],
-        [ 1.0, -1.0],
-        [ 0.0,  1.0]
-    ])
+    A = np.array([[-1.0, -1.0], [1.0, -1.0], [0.0, 1.0]])
     b = np.array([0.0, 0.0, 2.0])
 
     dims = {
-        'f': 0,  # No equality constraints
-        'l': 3,  # Three inequality constraints (non-negative cone)
+        "f": 0,  # No equality constraints
+        "l": 3,  # Three inequality constraints (non-negative cone)
     }
 
     print("Solving with POGS...")
     print()
 
     result = solve_cone_problem(
-        c, A, b, dims,
-        abs_tol=1e-6,
-        rel_tol=1e-6,
-        max_iter=50000,
-        verbose=5
+        c, A, b, dims, abs_tol=1e-6, rel_tol=1e-6, max_iter=50000, verbose=5
     )
 
     print()
@@ -176,19 +168,19 @@ def test_lp_with_inequalities():
     print(f"  x = {result['x']}")
     print()
 
-    if result['status'] == 0:
-        x_opt = result['x']
+    if result["status"] == 0:
+        x_opt = result["x"]
         print("Verification:")
         print(f"  -x[0] - x[1] = {-x_opt[0] - x_opt[1]:.6f} (should be ≤ 0)")
-        print(f"   x[0] - x[1] = { x_opt[0] - x_opt[1]:.6f} (should be ≤ 0)")
-        print(f"          x[1] = { x_opt[1]:.6f} (should be ≤ 2)")
+        print(f"   x[0] - x[1] = {x_opt[0] - x_opt[1]:.6f} (should be ≤ 0)")
+        print(f"          x[1] = {x_opt[1]:.6f} (should be ≤ 2)")
         print(f"  Objective c^T*x = {np.dot(c, x_opt):.6f}")
         print()
 
         # Check constraints
         c1 = -x_opt[0] - x_opt[1] <= 1e-3
-        c2 =  x_opt[0] - x_opt[1] <= 1e-3
-        c3 =  x_opt[1] <= 2.0 + 1e-3
+        c2 = x_opt[0] - x_opt[1] <= 1e-3
+        c3 = x_opt[1] <= 2.0 + 1e-3
 
         if c1 and c2 and c3:
             print("✓ Test PASSED!")
@@ -229,6 +221,7 @@ def main():
         except Exception as e:
             print(f"\n✗ Test failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
         print()
@@ -240,7 +233,7 @@ def main():
     return failed == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         import numpy as np
     except ImportError:

@@ -15,28 +15,30 @@ Key insight: POGS excels at DENSE graph-form problems.
 For sparse problems, consider OSQP or Clarabel.
 """
 
-import numpy as np
-import time
-import sys
+from __future__ import annotations
+
 import os
-from dataclasses import dataclass
-from typing import Optional
-from pathlib import Path
 import pickle
-import urllib.request
-import gzip
-import io
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
 
 try:
-    from pogs_graph import solve_lasso, solve_ridge, solve_elastic_net
+    from pogs_graph import solve_elastic_net, solve_lasso, solve_ridge
+
     HAS_POGS = True
 except ImportError as e:
     HAS_POGS = False
@@ -44,12 +46,14 @@ except ImportError as e:
 
 try:
     import pandas as pd
+
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
 
 try:
     import yfinance as yf
+
     HAS_YFINANCE = True
 except ImportError:
     HAS_YFINANCE = False
@@ -61,7 +65,7 @@ class BenchmarkResult:
     time_sec: float
     optval: float
     status: str
-    iterations: Optional[int] = None
+    iterations: int | None = None
 
 
 @dataclass
@@ -83,6 +87,7 @@ def get_cache_dir() -> Path:
 # DATASET LOADERS - All REAL data
 # ============================================================================
 
+
 def load_california_housing() -> Dataset:
     """California Housing dataset from sklearn/StatLib.
 
@@ -94,7 +99,7 @@ def load_california_housing() -> Dataset:
     cache_file = get_cache_dir() / "california_housing.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     # Download from sklearn's source
@@ -108,6 +113,7 @@ def load_california_housing() -> Dataset:
     except:
         # Fallback: use sklearn if available
         from sklearn.datasets import fetch_california_housing
+
         housing = fetch_california_housing()
         X = housing.data
         y = housing.target
@@ -119,11 +125,12 @@ def load_california_housing() -> Dataset:
     dataset = Dataset(
         name="California Housing",
         source="StatLib/UCI",
-        X=X, y=y,
-        description="20,640 California census blocks, 8 features, median house value"
+        X=X,
+        y=y,
+        description="20,640 California census blocks, 8 features, median house value",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -140,11 +147,12 @@ def load_diabetes() -> Dataset:
     cache_file = get_cache_dir() / "diabetes.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     print("Loading Diabetes dataset...")
     from sklearn.datasets import load_diabetes as sklearn_diabetes
+
     data = sklearn_diabetes()
     X = data.data
     y = data.target
@@ -155,11 +163,12 @@ def load_diabetes() -> Dataset:
     dataset = Dataset(
         name="Diabetes",
         source="sklearn/Efron-Hastie",
-        X=X, y=y,
-        description="442 patients, 10 baseline features, disease progression"
+        X=X,
+        y=y,
+        description="442 patients, 10 baseline features, disease progression",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -178,7 +187,7 @@ def load_boston_housing() -> Dataset:
     cache_file = get_cache_dir() / "boston_housing.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     # Download from original source
@@ -203,11 +212,12 @@ def load_boston_housing() -> Dataset:
     dataset = Dataset(
         name="Boston Housing",
         source="UCI/Harrison-Rubinfeld",
-        X=X, y=y,
-        description="506 Boston census tracts, 13 features, median home value"
+        X=X,
+        y=y,
+        description="506 Boston census tracts, 13 features, median home value",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -224,7 +234,7 @@ def load_energy_efficiency() -> Dataset:
     cache_file = get_cache_dir() / "energy_efficiency.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00242/ENB2012_data.xlsx"
@@ -253,11 +263,12 @@ def load_energy_efficiency() -> Dataset:
     dataset = Dataset(
         name="Energy Efficiency",
         source="UCI/Tsanas-Xifara",
-        X=X, y=y,
-        description="768 building simulations, 8 features, heating load"
+        X=X,
+        y=y,
+        description="768 building simulations, 8 features, heating load",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -274,7 +285,7 @@ def load_wine_quality() -> Dataset:
     cache_file = get_cache_dir() / "wine_quality.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     print("Downloading Wine Quality dataset...")
@@ -282,11 +293,11 @@ def load_wine_quality() -> Dataset:
     try:
         # Red wine
         url_red = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
-        red = pd.read_csv(url_red, sep=';')
+        red = pd.read_csv(url_red, sep=";")
 
         # White wine
         url_white = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv"
-        white = pd.read_csv(url_white, sep=';')
+        white = pd.read_csv(url_white, sep=";")
 
         data = pd.concat([red, white], ignore_index=True)
         X = data.iloc[:, :-1].values
@@ -303,11 +314,12 @@ def load_wine_quality() -> Dataset:
     dataset = Dataset(
         name="Wine Quality",
         source="UCI/Cortez",
-        X=X, y=y,
-        description="6,497 wines (red+white), 11 chemical features, quality score"
+        X=X,
+        y=y,
+        description="6,497 wines (red+white), 11 chemical features, quality score",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -323,7 +335,7 @@ def load_concrete() -> Dataset:
     cache_file = get_cache_dir() / "concrete.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/concrete/compressive/Concrete_Data.xls"
@@ -345,11 +357,12 @@ def load_concrete() -> Dataset:
     dataset = Dataset(
         name="Concrete Strength",
         source="UCI/Yeh",
-        X=X, y=y,
-        description="1,030 concrete samples, 8 ingredients, compressive strength"
+        X=X,
+        y=y,
+        description="1,030 concrete samples, 8 ingredients, compressive strength",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -366,28 +379,82 @@ def load_sp500_returns(n_stocks: int = 50, period: str = "2y") -> Dataset:
     cache_file = get_cache_dir() / f"sp500_{n_stocks}_{period}.pkl"
 
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
+        with open(cache_file, "rb") as f:
             return pickle.load(f)
 
     # Major S&P 500 stocks
     tickers = [
-        "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "AMD", "INTC", "CRM",
-        "JPM", "BAC", "WFC", "GS", "MS", "C", "AXP", "BLK", "SCHW", "USB",
-        "JNJ", "UNH", "PFE", "MRK", "ABBV", "LLY", "TMO", "ABT", "DHR", "BMY",
-        "PG", "KO", "PEP", "WMT", "HD", "MCD", "NKE", "SBUX", "TGT", "COST",
-        "CAT", "DE", "BA", "HON", "UPS", "RTX", "LMT", "GE", "MMM", "EMR",
-        "XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "HAL",
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "META",
+        "NVDA",
+        "TSLA",
+        "AMD",
+        "INTC",
+        "CRM",
+        "JPM",
+        "BAC",
+        "WFC",
+        "GS",
+        "MS",
+        "C",
+        "AXP",
+        "BLK",
+        "SCHW",
+        "USB",
+        "JNJ",
+        "UNH",
+        "PFE",
+        "MRK",
+        "ABBV",
+        "LLY",
+        "TMO",
+        "ABT",
+        "DHR",
+        "BMY",
+        "PG",
+        "KO",
+        "PEP",
+        "WMT",
+        "HD",
+        "MCD",
+        "NKE",
+        "SBUX",
+        "TGT",
+        "COST",
+        "CAT",
+        "DE",
+        "BA",
+        "HON",
+        "UPS",
+        "RTX",
+        "LMT",
+        "GE",
+        "MMM",
+        "EMR",
+        "XOM",
+        "CVX",
+        "COP",
+        "EOG",
+        "SLB",
+        "MPC",
+        "PSX",
+        "VLO",
+        "OXY",
+        "HAL",
     ][:n_stocks]
 
     print(f"Downloading {n_stocks} S&P 500 stocks...")
     data = yf.download(tickers, period=period, progress=False, threads=False)
 
-    if 'Adj Close' in data.columns.get_level_values(0):
-        prices = data['Adj Close']
+    if "Adj Close" in data.columns.get_level_values(0):
+        prices = data["Adj Close"]
     else:
-        prices = data['Close']
+        prices = data["Close"]
 
-    prices = prices.dropna(axis=1, thresh=len(prices)*0.9).dropna()
+    prices = prices.dropna(axis=1, thresh=len(prices) * 0.9).dropna()
     returns = prices.pct_change().dropna()
 
     # For portfolio: X = Cholesky of covariance, y = expected returns
@@ -400,10 +467,10 @@ def load_sp500_returns(n_stocks: int = 50, period: str = "2y") -> Dataset:
         source="Yahoo Finance",
         X=L.T,  # Cholesky factor
         y=np.zeros(len(mu)),  # For min variance
-        description=f"{len(mu)} stocks, {len(returns)} trading days, covariance matrix"
+        description=f"{len(mu)} stocks, {len(returns)} trading days, covariance matrix",
     )
 
-    with open(cache_file, 'wb') as f:
+    with open(cache_file, "wb") as f:
         pickle.dump(dataset, f)
 
     return dataset
@@ -413,10 +480,12 @@ def load_sp500_returns(n_stocks: int = 50, period: str = "2y") -> Dataset:
 # SOLVERS
 # ============================================================================
 
-def solve_lasso_pogs(X: np.ndarray, y: np.ndarray, lambd: float,
-                     verbose: bool = False) -> BenchmarkResult:
+
+def solve_lasso_pogs(
+    X: np.ndarray, y: np.ndarray, lambd: float, verbose: bool = False
+) -> BenchmarkResult:
     if not HAS_POGS:
-        return BenchmarkResult("pogs", 0, float('nan'), "unavailable")
+        return BenchmarkResult("pogs", 0, float("nan"), "unavailable")
 
     try:
         start = time.perf_counter()
@@ -426,18 +495,19 @@ def solve_lasso_pogs(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver="pogs",
             time_sec=elapsed,
-            optval=result['optval'],
-            status="optimal" if result['status'] == 0 else "error",
-            iterations=result['num_iters']
+            optval=result["optval"],
+            status="optimal" if result["status"] == 0 else "error",
+            iterations=result["num_iters"],
         )
-    except Exception as e:
-        return BenchmarkResult("pogs", 0, float('nan'), "error")
+    except Exception:
+        return BenchmarkResult("pogs", 0, float("nan"), "error")
 
 
-def solve_lasso_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
-                      solver_name: str) -> BenchmarkResult:
+def solve_lasso_cvxpy(
+    X: np.ndarray, y: np.ndarray, lambd: float, solver_name: str
+) -> BenchmarkResult:
     if not HAS_CVXPY:
-        return BenchmarkResult(solver_name, 0, float('nan'), "unavailable")
+        return BenchmarkResult(solver_name, 0, float("nan"), "unavailable")
 
     solver_map = {"osqp": cp.OSQP, "scs": cp.SCS, "clarabel": cp.CLARABEL}
 
@@ -454,17 +524,17 @@ def solve_lasso_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=prob.value if prob.value else float('nan'),
+            optval=prob.value if prob.value else float("nan"),
             status=prob.status,
-            iterations=getattr(prob.solver_stats, 'num_iters', None) if prob.solver_stats else None
+            iterations=getattr(prob.solver_stats, "num_iters", None) if prob.solver_stats else None,
         )
-    except Exception as e:
-        return BenchmarkResult(solver_name, 0, float('nan'), "error")
+    except Exception:
+        return BenchmarkResult(solver_name, 0, float("nan"), "error")
 
 
 def solve_ridge_pogs(X: np.ndarray, y: np.ndarray, lambd: float) -> BenchmarkResult:
     if not HAS_POGS:
-        return BenchmarkResult("pogs", 0, float('nan'), "unavailable")
+        return BenchmarkResult("pogs", 0, float("nan"), "unavailable")
 
     try:
         start = time.perf_counter()
@@ -474,18 +544,19 @@ def solve_ridge_pogs(X: np.ndarray, y: np.ndarray, lambd: float) -> BenchmarkRes
         return BenchmarkResult(
             solver="pogs",
             time_sec=elapsed,
-            optval=result['optval'],
-            status="optimal" if result['status'] == 0 else "error",
-            iterations=result['num_iters']
+            optval=result["optval"],
+            status="optimal" if result["status"] == 0 else "error",
+            iterations=result["num_iters"],
         )
     except:
-        return BenchmarkResult("pogs", 0, float('nan'), "error")
+        return BenchmarkResult("pogs", 0, float("nan"), "error")
 
 
-def solve_ridge_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
-                      solver_name: str) -> BenchmarkResult:
+def solve_ridge_cvxpy(
+    X: np.ndarray, y: np.ndarray, lambd: float, solver_name: str
+) -> BenchmarkResult:
     if not HAS_CVXPY:
-        return BenchmarkResult(solver_name, 0, float('nan'), "unavailable")
+        return BenchmarkResult(solver_name, 0, float("nan"), "unavailable")
 
     solver_map = {"osqp": cp.OSQP, "scs": cp.SCS, "clarabel": cp.CLARABEL}
 
@@ -502,16 +573,17 @@ def solve_ridge_cvxpy(X: np.ndarray, y: np.ndarray, lambd: float,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=prob.value if prob.value else float('nan'),
-            status=prob.status
+            optval=prob.value if prob.value else float("nan"),
+            status=prob.status,
         )
     except:
-        return BenchmarkResult(solver_name, 0, float('nan'), "error")
+        return BenchmarkResult(solver_name, 0, float("nan"), "error")
 
 
 # ============================================================================
 # MAIN BENCHMARK
 # ============================================================================
+
 
 def run_benchmark():
     print("=" * 80)
@@ -592,7 +664,7 @@ def run_benchmark():
     for s in solvers:
         print(f" {s:>10}", end="")
     print(" | Winner")
-    print("-" * (25 + 13 + 11*len(solvers) + 10))
+    print("-" * (25 + 13 + 11 * len(solvers) + 10))
 
     for ds in datasets:
         m, n = ds.X.shape
@@ -611,7 +683,7 @@ def run_benchmark():
         for s in solvers:
             r = results[s]
             if r.status in ["optimal", "optimal_inaccurate"]:
-                print(f" {r.time_sec*1000:>8.1f}ms", end="")
+                print(f" {r.time_sec * 1000:>8.1f}ms", end="")
                 times[s] = r.time_sec
             else:
                 print(f" {'FAIL':>10}", end="")
@@ -619,7 +691,7 @@ def run_benchmark():
         if times:
             winner = min(times, key=times.get)
             if winner == "pogs" and len(times) > 1:
-                others = [t for s,t in times.items() if s != "pogs"]
+                others = [t for s, t in times.items() if s != "pogs"]
                 speedup = min(others) / times["pogs"] if others else 1
                 print(f" | {winner} ({speedup:.1f}x)")
             else:
@@ -638,7 +710,7 @@ def run_benchmark():
     for s in solvers:
         print(f" {s:>10}", end="")
     print(" | Winner")
-    print("-" * (25 + 13 + 11*len(solvers) + 10))
+    print("-" * (25 + 13 + 11 * len(solvers) + 10))
 
     for ds in datasets:
         m, n = ds.X.shape
@@ -657,7 +729,7 @@ def run_benchmark():
         for s in solvers:
             r = results[s]
             if r.status in ["optimal", "optimal_inaccurate"]:
-                print(f" {r.time_sec*1000:>8.1f}ms", end="")
+                print(f" {r.time_sec * 1000:>8.1f}ms", end="")
                 times[s] = r.time_sec
             else:
                 print(f" {'FAIL':>10}", end="")
@@ -665,7 +737,7 @@ def run_benchmark():
         if times:
             winner = min(times, key=times.get)
             if winner == "pogs" and len(times) > 1:
-                others = [t for s,t in times.items() if s != "pogs"]
+                others = [t for s, t in times.items() if s != "pogs"]
                 speedup = min(others) / times["pogs"] if others else 1
                 print(f" | {winner} ({speedup:.1f}x)")
             else:
@@ -679,10 +751,11 @@ def run_benchmark():
     print("SUMMARY")
     print("=" * 80)
 
-    wins = {s: 0 for s in solvers}
+    wins = dict.fromkeys(solvers, 0)
     times_by_solver = {s: [] for s in solvers}
 
     from collections import defaultdict
+
     grouped = defaultdict(dict)
     for name, ptype, result in all_results:
         key = (name, ptype)
@@ -691,8 +764,9 @@ def run_benchmark():
             times_by_solver[result.solver].append(result.time_sec)
 
     for key, res in grouped.items():
-        valid = {s: r.time_sec for s, r in res.items()
-                if r.status in ["optimal", "optimal_inaccurate"]}
+        valid = {
+            s: r.time_sec for s, r in res.items() if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if valid:
             winner = min(valid, key=valid.get)
             wins[winner] += 1
@@ -713,8 +787,9 @@ def run_benchmark():
     print("\nPOGS Performance:")
     pogs_speedups = []
     for key, res in grouped.items():
-        valid = {s: r.time_sec for s, r in res.items()
-                if r.status in ["optimal", "optimal_inaccurate"]}
+        valid = {
+            s: r.time_sec for s, r in res.items() if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if "pogs" in valid and len(valid) > 1:
             pogs_time = valid["pogs"]
             others = [t for s, t in valid.items() if s != "pogs"]
@@ -723,7 +798,9 @@ def run_benchmark():
                 pogs_speedups.append(speedup)
 
     if pogs_speedups:
-        print(f"  Benchmarks where POGS faster: {sum(1 for s in pogs_speedups if s > 1)}/{len(pogs_speedups)}")
+        print(
+            f"  Benchmarks where POGS faster: {sum(1 for s in pogs_speedups if s > 1)}/{len(pogs_speedups)}"
+        )
         print(f"  Min speedup: {min(pogs_speedups):.2f}x")
         print(f"  Max speedup: {max(pogs_speedups):.2f}x")
         print(f"  Geometric mean speedup: {np.exp(np.mean(np.log(pogs_speedups))):.2f}x")

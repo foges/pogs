@@ -37,17 +37,12 @@ def generate_robust_ls(m=100, n=50, seed=None):
     t = cp.Variable()
 
     objective = cp.Minimize(t + 0.1 * cp.norm(x, 1))
-    constraints = [
-        cp.norm(A @ x - b) <= t
-    ]
+    constraints = [cp.norm(A @ x - b) <= t]
     problem = cp.Problem(objective, constraints)
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SOCP-RobustLS (m={m}, n={n})"
-    problem._custom_size_metrics = {
-        "m": m,
-        "n": n
-    }
+    problem._custom_size_metrics = {"m": m, "n": n}
 
     return problem
 
@@ -79,20 +74,13 @@ def generate_portfolio_robust(n_assets=50, seed=None):
     w = cp.Variable(n_assets)
 
     # Robust objective: minimize worst-case risk - expected return
-    objective = cp.Minimize(
-        gamma * cp.norm(Sigma_sqrt.T @ w) - mu.T @ w
-    )
-    constraints = [
-        cp.sum(w) == 1,
-        w >= 0
-    ]
+    objective = cp.Minimize(gamma * cp.norm(Sigma_sqrt.T @ w) - mu.T @ w)
+    constraints = [cp.sum(w) == 1, w >= 0]
     problem = cp.Problem(objective, constraints)
 
     # Add metadata (use custom attribute since size_metrics is read-only in newer CVXPY)
     problem.name = f"SOCP-Portfolio (n={n_assets})"
-    problem._custom_size_metrics = {
-        "n_assets": n_assets
-    }
+    problem._custom_size_metrics = {"n_assets": n_assets}
 
     return problem
 

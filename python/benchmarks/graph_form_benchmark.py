@@ -16,18 +16,22 @@ This script compares POGS against standard solvers (OSQP, SCS, CLARABEL)
 on these problems.
 """
 
-import numpy as np
-import time
-import sys
+from __future__ import annotations
+
 import os
+import sys
+import time
 from dataclasses import dataclass
-from typing import Optional, Callable
+
+import numpy as np
+
 
 # Add pogs to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
@@ -35,7 +39,8 @@ except ImportError:
 
 try:
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from pogs_graph import solve_lasso, solve_ridge, solve_elastic_net
+    from pogs_graph import solve_elastic_net, solve_lasso, solve_ridge
+
     HAS_POGS = True
 except ImportError as e:
     HAS_POGS = False
@@ -45,17 +50,19 @@ except ImportError as e:
 @dataclass
 class BenchmarkResult:
     """Result from solving a benchmark problem."""
+
     solver: str
     time_sec: float
     optval: float
     status: str
-    iterations: Optional[int] = None
-    error: Optional[str] = None
+    iterations: int | None = None
+    error: str | None = None
 
 
 @dataclass
 class BenchmarkProblem:
     """A graph-form benchmark problem."""
+
     name: str
     m: int  # Number of rows in A
     n: int  # Number of columns in A
@@ -68,11 +75,12 @@ class BenchmarkProblem:
     lambda2: float = 0.0  # L2 regularization
 
     # Optional: true solution for validation
-    x_true: Optional[np.ndarray] = None
+    x_true: np.ndarray | None = None
 
 
-def generate_lasso_problem(m: int, n: int, sparsity: float = 0.1,
-                           noise: float = 0.01, seed: int = 42) -> BenchmarkProblem:
+def generate_lasso_problem(
+    m: int, n: int, sparsity: float = 0.1, noise: float = 0.01, seed: int = 42
+) -> BenchmarkProblem:
     """Generate a Lasso problem: min ||Ax - b||^2 + λ||x||_1"""
     np.random.seed(seed)
 
@@ -91,16 +99,17 @@ def generate_lasso_problem(m: int, n: int, sparsity: float = 0.1,
 
     return BenchmarkProblem(
         name=f"lasso_{m}x{n}",
-        m=m, n=n,
+        m=m,
+        n=n,
         problem_type="lasso",
-        A=A, b=b,
+        A=A,
+        b=b,
         lambda1=lambda1,
-        x_true=x_true
+        x_true=x_true,
     )
 
 
-def generate_ridge_problem(m: int, n: int, noise: float = 0.1,
-                          seed: int = 42) -> BenchmarkProblem:
+def generate_ridge_problem(m: int, n: int, noise: float = 0.1, seed: int = 42) -> BenchmarkProblem:
     """Generate a Ridge problem: min ||Ax - b||^2 + λ||x||^2"""
     np.random.seed(seed)
 
@@ -113,16 +122,19 @@ def generate_ridge_problem(m: int, n: int, noise: float = 0.1,
 
     return BenchmarkProblem(
         name=f"ridge_{m}x{n}",
-        m=m, n=n,
+        m=m,
+        n=n,
         problem_type="ridge",
-        A=A, b=b,
+        A=A,
+        b=b,
         lambda2=lambda2,
-        x_true=x_true
+        x_true=x_true,
     )
 
 
-def generate_elastic_net_problem(m: int, n: int, sparsity: float = 0.1,
-                                 noise: float = 0.01, seed: int = 42) -> BenchmarkProblem:
+def generate_elastic_net_problem(
+    m: int, n: int, sparsity: float = 0.1, noise: float = 0.01, seed: int = 42
+) -> BenchmarkProblem:
     """Generate an Elastic Net problem: min ||Ax - b||^2 + λ1||x||_1 + λ2||x||^2"""
     np.random.seed(seed)
 
@@ -137,12 +149,14 @@ def generate_elastic_net_problem(m: int, n: int, sparsity: float = 0.1,
 
     return BenchmarkProblem(
         name=f"elastic_net_{m}x{n}",
-        m=m, n=n,
+        m=m,
+        n=n,
         problem_type="elastic_net",
-        A=A, b=b,
+        A=A,
+        b=b,
         lambda1=lambda1,
         lambda2=lambda2,
-        x_true=x_true
+        x_true=x_true,
     )
 
 
@@ -152,24 +166,22 @@ def solve_with_pogs(problem: BenchmarkProblem, verbose: bool = False) -> Benchma
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="POGS not installed"
+            error="POGS not installed",
         )
 
     try:
         start = time.perf_counter()
 
         if problem.problem_type == "lasso":
-            result = solve_lasso(problem.A, problem.b, problem.lambda1,
-                                verbose=1 if verbose else 0)
+            result = solve_lasso(problem.A, problem.b, problem.lambda1, verbose=1 if verbose else 0)
         elif problem.problem_type == "ridge":
-            result = solve_ridge(problem.A, problem.b, problem.lambda2,
-                                verbose=1 if verbose else 0)
+            result = solve_ridge(problem.A, problem.b, problem.lambda2, verbose=1 if verbose else 0)
         elif problem.problem_type == "elastic_net":
-            result = solve_elastic_net(problem.A, problem.b,
-                                       problem.lambda1, problem.lambda2,
-                                       verbose=1 if verbose else 0)
+            result = solve_elastic_net(
+                problem.A, problem.b, problem.lambda1, problem.lambda2, verbose=1 if verbose else 0
+            )
         else:
             raise ValueError(f"Unknown problem type: {problem.problem_type}")
 
@@ -178,31 +190,33 @@ def solve_with_pogs(problem: BenchmarkProblem, verbose: bool = False) -> Benchma
         return BenchmarkResult(
             solver="pogs",
             time_sec=elapsed,
-            optval=result['optval'],
-            status="optimal" if result['status'] == 0 else "error",
-            iterations=result['num_iters']
+            optval=result["optval"],
+            status="optimal" if result["status"] == 0 else "error",
+            iterations=result["num_iters"],
         )
     except Exception as e:
         import traceback
+
         return BenchmarkResult(
             solver="pogs",
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="error",
-            error=str(e) + "\n" + traceback.format_exc()
+            error=str(e) + "\n" + traceback.format_exc(),
         )
 
 
-def solve_with_cvxpy(problem: BenchmarkProblem, solver_name: str,
-                     verbose: bool = False) -> BenchmarkResult:
+def solve_with_cvxpy(
+    problem: BenchmarkProblem, solver_name: str, verbose: bool = False
+) -> BenchmarkResult:
     """Solve using CVXPY with specified solver."""
     if not HAS_CVXPY:
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error="CVXPY not installed"
+            error="CVXPY not installed",
         )
 
     solver_map = {
@@ -216,9 +230,9 @@ def solve_with_cvxpy(problem: BenchmarkProblem, solver_name: str,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=0,
-            optval=float('nan'),
+            optval=float("nan"),
             status="unavailable",
-            error=f"Unknown solver: {solver_name}"
+            error=f"Unknown solver: {solver_name}",
         )
 
     try:
@@ -227,9 +241,9 @@ def solve_with_cvxpy(problem: BenchmarkProblem, solver_name: str,
             return BenchmarkResult(
                 solver=solver_name,
                 time_sec=0,
-                optval=float('nan'),
+                optval=float("nan"),
                 status="unavailable",
-                error=f"{solver_name} not installed"
+                error=f"{solver_name} not installed",
             )
 
         # Build CVXPY problem
@@ -238,11 +252,15 @@ def solve_with_cvxpy(problem: BenchmarkProblem, solver_name: str,
         if problem.problem_type == "lasso":
             objective = cp.sum_squares(problem.A @ x - problem.b) + problem.lambda1 * cp.norm1(x)
         elif problem.problem_type == "ridge":
-            objective = cp.sum_squares(problem.A @ x - problem.b) + problem.lambda2 * cp.sum_squares(x)
+            objective = cp.sum_squares(
+                problem.A @ x - problem.b
+            ) + problem.lambda2 * cp.sum_squares(x)
         elif problem.problem_type == "elastic_net":
-            objective = (cp.sum_squares(problem.A @ x - problem.b) +
-                        problem.lambda1 * cp.norm1(x) +
-                        problem.lambda2 * cp.sum_squares(x))
+            objective = (
+                cp.sum_squares(problem.A @ x - problem.b)
+                + problem.lambda1 * cp.norm1(x)
+                + problem.lambda2 * cp.sum_squares(x)
+            )
         else:
             raise ValueError(f"Unknown problem type: {problem.problem_type}")
 
@@ -255,17 +273,15 @@ def solve_with_cvxpy(problem: BenchmarkProblem, solver_name: str,
         return BenchmarkResult(
             solver=solver_name,
             time_sec=elapsed,
-            optval=cvxpy_prob.value if cvxpy_prob.value is not None else float('nan'),
+            optval=cvxpy_prob.value if cvxpy_prob.value is not None else float("nan"),
             status=cvxpy_prob.status,
-            iterations=getattr(cvxpy_prob.solver_stats, 'num_iters', None) if cvxpy_prob.solver_stats else None
+            iterations=getattr(cvxpy_prob.solver_stats, "num_iters", None)
+            if cvxpy_prob.solver_stats
+            else None,
         )
     except Exception as e:
         return BenchmarkResult(
-            solver=solver_name,
-            time_sec=0,
-            optval=float('nan'),
-            status="error",
-            error=str(e)
+            solver=solver_name, time_sec=0, optval=float("nan"), status="error", error=str(e)
         )
 
 
@@ -278,12 +294,12 @@ def run_benchmark_suite():
 
     # Problem sizes to test
     sizes = [
-        (100, 50),    # Small
-        (200, 100),   # Small-medium
-        (500, 200),   # Medium
+        (100, 50),  # Small
+        (200, 100),  # Small-medium
+        (500, 200),  # Medium
         (1000, 500),  # Medium-large
-        (2000, 1000), # Large
-        (5000, 2000), # Very large
+        (2000, 1000),  # Large
+        (5000, 2000),  # Very large
     ]
 
     problem_types = ["lasso", "ridge", "elastic_net"]
@@ -330,7 +346,7 @@ def run_benchmark_suite():
             for solver in solvers:
                 r = results[solver]
                 if r.status in ["optimal", "optimal_inaccurate"]:
-                    print(f" {r.time_sec*1000:>10.1f}ms", end="")
+                    print(f" {r.time_sec * 1000:>10.1f}ms", end="")
                     times[solver] = r.time_sec
                 else:
                     print(f" {'FAIL':>12}", end="")
@@ -354,7 +370,7 @@ def run_benchmark_suite():
     print("=" * 80)
 
     # Count wins and compute geometric mean
-    wins = {s: 0 for s in solvers}
+    wins = dict.fromkeys(solvers, 0)
     times_by_solver = {s: [] for s in solvers}
 
     for problem, result in all_results:
@@ -363,13 +379,17 @@ def run_benchmark_suite():
 
     # For each problem, find winner
     from collections import defaultdict
+
     problems_results = defaultdict(dict)
     for problem, result in all_results:
         problems_results[problem.name][result.solver] = result
 
-    for pname, presults in problems_results.items():
-        valid_times = {s: r.time_sec for s, r in presults.items()
-                      if r.status in ["optimal", "optimal_inaccurate"]}
+    for _pname, presults in problems_results.items():
+        valid_times = {
+            s: r.time_sec
+            for s, r in presults.items()
+            if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if valid_times:
             winner = min(valid_times, key=valid_times.get)
             wins[winner] += 1
@@ -387,9 +407,12 @@ def run_benchmark_suite():
     # POGS speedup summary
     print("\nPOGS Speedups (vs second-best solver):")
     pogs_speedups = []
-    for pname, presults in problems_results.items():
-        valid_times = {s: r.time_sec for s, r in presults.items()
-                      if r.status in ["optimal", "optimal_inaccurate"]}
+    for _pname, presults in problems_results.items():
+        valid_times = {
+            s: r.time_sec
+            for s, r in presults.items()
+            if r.status in ["optimal", "optimal_inaccurate"]
+        }
         if "pogs" in valid_times and len(valid_times) > 1:
             pogs_time = valid_times["pogs"]
             other_times = [t for s, t in valid_times.items() if s != "pogs"]

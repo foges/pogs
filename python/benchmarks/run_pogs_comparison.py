@@ -4,10 +4,12 @@ Direct comparison of POGS vs other solvers.
 Uses POGS C interface directly via ctypes instead of CVXPY integration.
 """
 
-import numpy as np
-import time
-import sys
 import os
+import sys
+import time
+
+import numpy as np
+
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,14 +17,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Try to import CVXPY for comparison solvers
 try:
     import cvxpy as cp
+
     HAS_CVXPY = True
 except ImportError:
     HAS_CVXPY = False
     print("Warning: CVXPY not installed, only POGS results will be shown")
 
 # Try to load POGS C library
-import ctypes
-from ctypes import c_int, c_uint, c_double, POINTER, byref
+
 
 def load_pogs_library():
     """Load the POGS shared library."""
@@ -30,8 +32,8 @@ def load_pogs_library():
 
     # Try different library paths
     lib_paths = [
-        os.path.join(pogs_root, 'build', 'lib', 'libpogs_cpu.a'),
-        os.path.join(pogs_root, 'src', 'build', 'pogs.a'),
+        os.path.join(pogs_root, "build", "lib", "libpogs_cpu.a"),
+        os.path.join(pogs_root, "src", "build", "pogs.a"),
     ]
 
     for path in lib_paths:
@@ -57,7 +59,7 @@ def solve_lasso_pogs(A, b, lambda_val, abs_tol=1e-4, rel_tol=1e-3, max_iter=2500
     pogs_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     # Generate C++ code for the problem
-    code = f'''
+    code = f"""
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -72,7 +74,7 @@ int main() {{
 
     // Matrix A (column-major for POGS)
     std::vector<double> A_data = {{
-'''
+"""
     # Write A in column-major order
     for j in range(n):
         for i in range(m):
@@ -81,18 +83,18 @@ int main() {{
                 code += ","
             code += "\n"
 
-    code += f'''    }};
+    code += """    };
 
     // Vector b
-    std::vector<double> b_data = {{
-'''
+    std::vector<double> b_data = {
+"""
     for i in range(m):
         code += f"        {b[i]:.16e}"
         if i < m - 1:
             code += ","
         code += "\n"
 
-    code += f'''    }};
+    code += f"""    }};
 
     double lambda_val = {lambda_val:.16e};
 
@@ -135,10 +137,10 @@ int main() {{
 
     return 0;
 }}
-'''
+"""
 
     # Write code to temp file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.cpp', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".cpp", delete=False) as f:
         cpp_file = f.name
         f.write(code)
 
@@ -147,17 +149,21 @@ int main() {{
     try:
         # Compile
         include_dirs = [
-            f'-I{pogs_root}/src/include',
-            f'-I{pogs_root}/src/cpu/include',
+            f"-I{pogs_root}/src/include",
+            f"-I{pogs_root}/src/cpu/include",
         ]
 
         compile_cmd = [
-            'g++', '-O3', '-std=c++20',
+            "g++",
+            "-O3",
+            "-std=c++20",
             *include_dirs,
-            '-o', exe_file,
+            "-o",
+            exe_file,
             cpp_file,
-            f'{pogs_root}/build/lib/libpogs_cpu.a',
-            '-framework', 'Accelerate',
+            f"{pogs_root}/build/lib/libpogs_cpu.a",
+            "-framework",
+            "Accelerate",
         ]
 
         result = subprocess.run(compile_cmd, capture_output=True, text=True)
@@ -169,10 +175,10 @@ int main() {{
 
         # Parse output
         output = {}
-        for line in result.stdout.strip().split('\n'):
-            if '=' in line:
-                key, value = line.split('=', 1)
-                if key in ['STATUS', 'ITERS']:
+        for line in result.stdout.strip().split("\n"):
+            if "=" in line:
+                key, value = line.split("=", 1)
+                if key in ["STATUS", "ITERS"]:
                     output[key] = int(float(value))
                 else:
                     output[key] = float(value)
@@ -186,23 +192,25 @@ int main() {{
             os.remove(exe_file)
 
 
-def solve_lasso_cvxpy(A, b, lambda_val, solver_name, abs_tol=1e-4, rel_tol=1e-3, max_iter=2500, verbose=False):
+def solve_lasso_cvxpy(
+    A, b, lambda_val, solver_name, abs_tol=1e-4, rel_tol=1e-3, max_iter=2500, verbose=False
+):
     """Solve Lasso using CVXPY with specified solver."""
-    m, n = A.shape
+    _m, n = A.shape
 
     x = cp.Variable(n)
     objective = cp.Minimize(0.5 * cp.sum_squares(A @ x - b) + lambda_val * cp.norm(x, 1))
     problem = cp.Problem(objective)
 
     solver_opts = {}
-    if solver_name == 'SCS':
-        solver_opts = {'eps_abs': abs_tol, 'eps_rel': rel_tol, 'max_iters': max_iter}
-    elif solver_name == 'ECOS':
-        solver_opts = {'abstol': abs_tol, 'reltol': rel_tol, 'max_iters': max_iter}
-    elif solver_name == 'OSQP':
-        solver_opts = {'eps_abs': abs_tol, 'eps_rel': rel_tol, 'max_iter': max_iter}
-    elif solver_name == 'CLARABEL':
-        solver_opts = {'tol_gap_abs': abs_tol, 'tol_gap_rel': rel_tol, 'max_iter': max_iter}
+    if solver_name == "SCS":
+        solver_opts = {"eps_abs": abs_tol, "eps_rel": rel_tol, "max_iters": max_iter}
+    elif solver_name == "ECOS":
+        solver_opts = {"abstol": abs_tol, "reltol": rel_tol, "max_iters": max_iter}
+    elif solver_name == "OSQP":
+        solver_opts = {"eps_abs": abs_tol, "eps_rel": rel_tol, "max_iter": max_iter}
+    elif solver_name == "CLARABEL":
+        solver_opts = {"tol_gap_abs": abs_tol, "tol_gap_rel": rel_tol, "max_iter": max_iter}
 
     start_time = time.time()
     try:
@@ -211,26 +219,26 @@ def solve_lasso_cvxpy(A, b, lambda_val, solver_name, abs_tol=1e-4, rel_tol=1e-3,
 
         # Get iteration count from solver stats
         iters = 0
-        if hasattr(problem, 'solver_stats') and problem.solver_stats:
+        if hasattr(problem, "solver_stats") and problem.solver_stats:
             stats = problem.solver_stats
-            if hasattr(stats, 'num_iters'):
+            if hasattr(stats, "num_iters"):
                 iters = stats.num_iters
-            elif hasattr(stats, 'iter'):
+            elif hasattr(stats, "iter"):
                 iters = stats.iter
 
         return {
-            'STATUS': 0 if problem.status == 'optimal' else 1,
-            'TIME': solve_time,
-            'ITERS': iters,
-            'OPTVAL': problem.value if problem.value is not None else float('nan'),
+            "STATUS": 0 if problem.status == "optimal" else 1,
+            "TIME": solve_time,
+            "ITERS": iters,
+            "OPTVAL": problem.value if problem.value is not None else float("nan"),
         }
     except Exception as e:
         return {
-            'STATUS': -1,
-            'TIME': time.time() - start_time,
-            'ITERS': 0,
-            'OPTVAL': float('nan'),
-            'ERROR': str(e),
+            "STATUS": -1,
+            "TIME": time.time() - start_time,
+            "ITERS": 0,
+            "OPTVAL": float("nan"),
+            "ERROR": str(e),
         }
 
 
@@ -250,6 +258,7 @@ def generate_lasso_problem(m, n, sparsity=0.1, condition_number=1.0, density=1.0
     # Generate matrix A (sparse or dense)
     if density < 1.0:
         from scipy import sparse
+
         nnz = int(m * n * density)
         rows = np.random.randint(0, m, nnz)
         cols = np.random.randint(0, n, nnz)
@@ -318,9 +327,9 @@ def run_lasso_benchmark(solvers, sizes, sparse=False):
     density = 0.05 if sparse else 1.0
     sparse_label = " (Sparse A, 5% density)" if sparse else ""
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"Lasso Regression Benchmark{sparse_label}")
-    print("="*80)
+    print("=" * 80)
 
     for m, n, size_name in sizes:
         print(f"\n{size_name} Problem (m={m}, n={n})")
@@ -330,41 +339,43 @@ def run_lasso_benchmark(solvers, sizes, sparse=False):
 
         results = {}
         for solver in solvers:
-            print(f"  {solver:12s} ... ", end='', flush=True)
+            print(f"  {solver:12s} ... ", end="", flush=True)
             try:
-                if solver == 'POGS':
+                if solver == "POGS":
                     result = solve_lasso_pogs(A, b, lambda_val)
                 else:
                     result = solve_lasso_cvxpy(A, b, lambda_val, solver)
 
-                if result['STATUS'] == 0:
-                    print(f"OK  {result['TIME']:.4f}s  {result['ITERS']:5d} iters  optval={result['OPTVAL']:.6e}")
+                if result["STATUS"] == 0:
+                    print(
+                        f"OK  {result['TIME']:.4f}s  {result['ITERS']:5d} iters  optval={result['OPTVAL']:.6e}"
+                    )
                 else:
                     print(f"FAIL (status={result['STATUS']})")
                 results[solver] = result
             except Exception as e:
                 print(f"ERROR: {e}")
-                results[solver] = {'STATUS': -1, 'ERROR': str(e)}
+                results[solver] = {"STATUS": -1, "ERROR": str(e)}
 
         # Print speedup comparison
-        if 'POGS' in results and results['POGS']['STATUS'] == 0:
-            pogs_time = results['POGS']['TIME']
-            print(f"\n  Speedup vs POGS:")
+        if "POGS" in results and results["POGS"]["STATUS"] == 0:
+            pogs_time = results["POGS"]["TIME"]
+            print("\n  Speedup vs POGS:")
             for solver, result in results.items():
-                if solver != 'POGS' and result['STATUS'] == 0:
-                    speedup = result['TIME'] / pogs_time
+                if solver != "POGS" and result["STATUS"] == 0:
+                    speedup = result["TIME"] / pogs_time
                     if speedup > 1:
                         print(f"    {solver}: POGS is {speedup:.1f}x faster")
                     else:
-                        print(f"    {solver}: POGS is {1/speedup:.1f}x slower")
+                        print(f"    {solver}: POGS is {1 / speedup:.1f}x slower")
 
 
 def run_basis_pursuit_benchmark(solvers, sizes):
     """Run Basis Pursuit benchmarks (compressed sensing)."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("Basis Pursuit Benchmark (Compressed Sensing)")
     print("minimize ||x||_1 subject to Ax = b")
-    print("="*80)
+    print("=" * 80)
 
     for m, n, size_name in sizes:
         print(f"\n{size_name} Problem (m={m}, n={n})")
@@ -374,9 +385,9 @@ def run_basis_pursuit_benchmark(solvers, sizes):
 
         results = {}
         for solver in solvers:
-            if solver == 'POGS':
+            if solver == "POGS":
                 continue  # Skip POGS for now - BP needs cone form
-            print(f"  {solver:12s} ... ", end='', flush=True)
+            print(f"  {solver:12s} ... ", end="", flush=True)
             try:
                 # Basis Pursuit via CVXPY
                 x = cp.Variable(n)
@@ -384,18 +395,18 @@ def run_basis_pursuit_benchmark(solvers, sizes):
                 constraints = [A @ x == b]
                 problem = cp.Problem(objective, constraints)
 
-                solver_opts = {'max_iters': 5000} if solver == 'SCS' else {}
+                solver_opts = {"max_iters": 5000} if solver == "SCS" else {}
                 start = time.time()
                 problem.solve(solver=solver, verbose=False, **solver_opts)
                 solve_time = time.time() - start
 
-                if problem.status == 'optimal':
+                if problem.status == "optimal":
                     # Check recovery quality
                     recovery_error = np.linalg.norm(x.value - x_true) / np.linalg.norm(x_true)
                     print(f"OK  {solve_time:.4f}s  recovery_err={recovery_error:.2e}")
                 else:
                     print(f"FAIL ({problem.status})")
-                results[solver] = {'TIME': solve_time, 'STATUS': problem.status}
+                results[solver] = {"TIME": solve_time, "STATUS": problem.status}
             except Exception as e:
                 print(f"ERROR: {e}")
 
@@ -408,10 +419,10 @@ def main():
     print("=" * 80)
 
     # Detect available solvers
-    solvers = ['POGS']
+    solvers = ["POGS"]
     if HAS_CVXPY:
         available = cp.installed_solvers()
-        for s in ['SCS', 'ECOS', 'CLARABEL']:
+        for s in ["SCS", "ECOS", "CLARABEL"]:
             if s in available:
                 solvers.append(s)
 
@@ -439,7 +450,7 @@ def main():
         (100, 500, "Medium"),
         (200, 1000, "Large"),
     ]
-    cvxpy_solvers = [s for s in solvers if s != 'POGS']
+    cvxpy_solvers = [s for s in solvers if s != "POGS"]
     if cvxpy_solvers:
         run_basis_pursuit_benchmark(cvxpy_solvers, bp_sizes)
 
@@ -448,5 +459,5 @@ def main():
     print("=" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

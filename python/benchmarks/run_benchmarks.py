@@ -12,9 +12,10 @@ Usage:
 """
 
 import argparse
-import sys
 import os
+import sys
 from pathlib import Path
+
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -29,63 +30,58 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    import pogs_cvxpy  # Register POGS with CVXPY
+    pass  # Register POGS with CVXPY
 except Exception:
     pass
 
-from benchmark_utils import (
-    benchmark_solver,
-    save_results,
-    print_summary,
-    BenchmarkResult
-)
-from problems import lasso, logistic, portfolio, lp, qp, socp, sdp
+from benchmark_utils import benchmark_solver, print_summary, save_results
+from problems import lasso, logistic, lp, portfolio, qp, sdp, socp
 
 
 # Problem configurations
 PROBLEM_CONFIGS = {
-    'lasso': [
-        ("Lasso Small", lasso.generate_small, ['POGS', 'ECOS', 'SCS', 'OSQP']),
-        ("Lasso Medium", lasso.generate_medium, ['POGS', 'ECOS', 'SCS', 'OSQP']),
-        ("Lasso Large", lasso.generate_large, ['POGS', 'SCS', 'OSQP']),
+    "lasso": [
+        ("Lasso Small", lasso.generate_small, ["POGS", "ECOS", "SCS", "OSQP"]),
+        ("Lasso Medium", lasso.generate_medium, ["POGS", "ECOS", "SCS", "OSQP"]),
+        ("Lasso Large", lasso.generate_large, ["POGS", "SCS", "OSQP"]),
     ],
-    'logistic': [
-        ("Logistic Small", logistic.generate_small, ['POGS', 'ECOS', 'SCS']),
-        ("Logistic Medium", logistic.generate_medium, ['POGS', 'SCS']),
+    "logistic": [
+        ("Logistic Small", logistic.generate_small, ["POGS", "ECOS", "SCS"]),
+        ("Logistic Medium", logistic.generate_medium, ["POGS", "SCS"]),
     ],
-    'portfolio': [
-        ("Portfolio Small", portfolio.generate_small, ['POGS', 'ECOS', 'SCS', 'OSQP']),
-        ("Portfolio Medium", portfolio.generate_medium, ['POGS', 'SCS', 'OSQP']),
+    "portfolio": [
+        ("Portfolio Small", portfolio.generate_small, ["POGS", "ECOS", "SCS", "OSQP"]),
+        ("Portfolio Medium", portfolio.generate_medium, ["POGS", "SCS", "OSQP"]),
     ],
-    'lp': [
-        ("LP Small", lp.generate_small, ['POGS', 'ECOS', 'SCS', 'OSQP']),
-        ("LP Medium", lp.generate_medium, ['POGS', 'SCS', 'OSQP']),
+    "lp": [
+        ("LP Small", lp.generate_small, ["POGS", "ECOS", "SCS", "OSQP"]),
+        ("LP Medium", lp.generate_medium, ["POGS", "SCS", "OSQP"]),
     ],
-    'qp': [
-        ("QP Small", qp.generate_small, ['POGS', 'ECOS', 'SCS', 'OSQP']),
-        ("QP Medium", qp.generate_medium, ['POGS', 'SCS', 'OSQP']),
+    "qp": [
+        ("QP Small", qp.generate_small, ["POGS", "ECOS", "SCS", "OSQP"]),
+        ("QP Medium", qp.generate_medium, ["POGS", "SCS", "OSQP"]),
     ],
-    'socp': [
-        ("SOCP Small", socp.generate_small, ['POGS', 'ECOS', 'SCS']),
-        ("SOCP Medium", socp.generate_medium, ['POGS', 'SCS']),
+    "socp": [
+        ("SOCP Small", socp.generate_small, ["POGS", "ECOS", "SCS"]),
+        ("SOCP Medium", socp.generate_medium, ["POGS", "SCS"]),
     ],
-    'sdp': [
-        ("SDP Small", sdp.generate_small, ['POGS', 'SCS']),
-        ("SDP Medium", sdp.generate_medium, ['POGS', 'SCS']),
+    "sdp": [
+        ("SDP Small", sdp.generate_small, ["POGS", "SCS"]),
+        ("SDP Medium", sdp.generate_medium, ["POGS", "SCS"]),
     ],
 }
 
 
 # Quick test configuration (smaller problems, fewer trials)
 QUICK_CONFIGS = {
-    'lasso': [
-        ("Lasso Small", lasso.generate_small, ['POGS', 'ECOS', 'SCS']),
+    "lasso": [
+        ("Lasso Small", lasso.generate_small, ["POGS", "ECOS", "SCS"]),
     ],
-    'portfolio': [
-        ("Portfolio Small", portfolio.generate_small, ['POGS', 'ECOS', 'SCS']),
+    "portfolio": [
+        ("Portfolio Small", portfolio.generate_small, ["POGS", "ECOS", "SCS"]),
     ],
-    'lp': [
-        ("LP Small", lp.generate_small, ['POGS', 'ECOS', 'SCS']),
+    "lp": [
+        ("LP Small", lp.generate_small, ["POGS", "ECOS", "SCS"]),
     ],
 }
 
@@ -129,12 +125,12 @@ def run_problem_benchmarks(problem_generator, solvers, n_trials=5, verbose=False
                 print(f"    {solver_name:<10} ... SKIPPED (not installed)")
                 continue
 
-            print(f"    {solver_name:<10} ... ", end='', flush=True)
+            print(f"    {solver_name:<10} ... ", end="", flush=True)
             result = benchmark_solver(problem, solver_name, verbose=verbose)
             results.append(result)
 
             # Print result
-            if result.status == 'optimal':
+            if result.status == "optimal":
                 print(f"✓ {result.solve_time:.3f}s ({result.iterations} iters)")
             elif result.error:
                 print(f"✗ ERROR: {result.error[:40]}")
@@ -147,7 +143,7 @@ def run_problem_benchmarks(problem_generator, solvers, n_trials=5, verbose=False
 def main():
     """Run benchmark suite."""
     parser = argparse.ArgumentParser(
-        description='POGS Benchmark Suite',
+        description="POGS Benchmark Suite",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -157,19 +153,25 @@ Examples:
   %(prog)s --solver POGS SCS        # Only test POGS and SCS
   %(prog)s --trials 3               # 3 trials per solver
   %(prog)s --verbose                # Show solver output
-        """
+        """,
     )
 
-    parser.add_argument('--quick', action='store_true',
-                       help='Quick test (small problems, 2 trials)')
-    parser.add_argument('--problem', type=str, choices=list(PROBLEM_CONFIGS.keys()),
-                       help='Run specific problem class only')
-    parser.add_argument('--solver', nargs='+',
-                       help='Test specific solvers only (e.g., POGS SCS ECOS)')
-    parser.add_argument('--trials', type=int, default=5,
-                       help='Number of trials per solver (default: 5)')
-    parser.add_argument('--verbose', action='store_true',
-                       help='Print solver output')
+    parser.add_argument(
+        "--quick", action="store_true", help="Quick test (small problems, 2 trials)"
+    )
+    parser.add_argument(
+        "--problem",
+        type=str,
+        choices=list(PROBLEM_CONFIGS.keys()),
+        help="Run specific problem class only",
+    )
+    parser.add_argument(
+        "--solver", nargs="+", help="Test specific solvers only (e.g., POGS SCS ECOS)"
+    )
+    parser.add_argument(
+        "--trials", type=int, default=5, help="Number of trials per solver (default: 5)"
+    )
+    parser.add_argument("--verbose", action="store_true", help="Print solver output")
 
     args = parser.parse_args()
 
@@ -188,45 +190,42 @@ Examples:
         configs = {args.problem: configs[args.problem]}
 
     # Create results directory
-    os.makedirs('results', exist_ok=True)
+    os.makedirs("results", exist_ok=True)
 
     # Run benchmarks
     all_results = []
 
     for problem_class, problem_list in configs.items():
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print(f"Problem Class: {problem_class.upper()}")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         for problem_name, generator, default_solvers in problem_list:
             # Use specified solvers or default
             solvers = args.solver if args.solver else default_solvers
 
             print(f"\n{problem_name}")
-            print(f"{'-'*80}")
+            print(f"{'-' * 80}")
 
             results = run_problem_benchmarks(
-                generator,
-                solvers,
-                n_trials=n_trials,
-                verbose=args.verbose
+                generator, solvers, n_trials=n_trials, verbose=args.verbose
             )
             all_results.extend(results)
 
     # Save results
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("Saving results...")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
-    save_results(all_results, 'results/latest.json')
-    print(f"✓ Saved to results/latest.json")
+    save_results(all_results, "results/latest.json")
+    print("✓ Saved to results/latest.json")
 
     # Generate and print summary
     print_summary(all_results)
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("Benchmark complete!")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     # Print recommendation
     print("Next steps:")
@@ -236,5 +235,5 @@ Examples:
     print("  - Quick test: python run_benchmarks.py --quick")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
