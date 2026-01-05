@@ -46,6 +46,13 @@ if(WIN32 AND POGS_USE_SCIPY_OPENBLAS)
       IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib"
       INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
     )
+    # Create LAPACK::LAPACK imported target (same library provides both)
+    add_library(LAPACK::LAPACK SHARED IMPORTED)
+    set_target_properties(LAPACK::LAPACK PROPERTIES
+      IMPORTED_LOCATION "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas64_.dll"
+      IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_DIR}/scipy_openblas.lib"
+      INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
+    )
     set(BLAS_FOUND TRUE)
     set(LAPACK_FOUND TRUE)
   else()
