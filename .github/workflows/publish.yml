@@ -18,8 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14]
-        # TODO: Add Linux/Windows after fixing shared library bundling
+        os: [ubuntu-22.04, macos-14, windows-2022]
         # macos-14 (arm64) cross-compiles both x86_64 and arm64 wheels
 
     steps:
@@ -49,12 +48,15 @@ jobs:
             yum install -y openblas-devel lapack-devel
           # Windows: download pre-built OpenBLAS
           CIBW_BEFORE_ALL_WINDOWS: >
-            curl -L -o openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
-            unzip -o openblas.zip -d C:/OpenBLAS
+            curl -L -o C:\openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
+            7z x C:\openblas.zip -oC:\OpenBLAS -y &&
+            move C:\OpenBLAS\OpenBLAS-0.3.28-x64\* C:\OpenBLAS\ || echo "Files moved"
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+          # Skip auditwheel - our ctypes library links to system BLAS
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: ""
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLA_VENDOR=OpenBLAS -DCMAKE_PREFIX_PATH=C:/OpenBLAS"
           # Windows: bundle DLLs into wheel
