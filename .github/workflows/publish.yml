@@ -46,16 +46,18 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: >
             yum install -y epel-release &&
             yum install -y openblas-devel lapack-devel
-          # Windows: install OpenBLAS via choco
-          CIBW_BEFORE_ALL_WINDOWS: choco install openblas -y
+          # Windows: download pre-built OpenBLAS
+          CIBW_BEFORE_ALL_WINDOWS: >
+            curl -L -o openblas.zip https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.28/OpenBLAS-0.3.28-x64.zip &&
+            unzip -o openblas.zip -d C:/OpenBLAS
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DBLA_VENDOR=OpenBLAS -DCMAKE_PREFIX_PATH=C:/OpenBLAS"
           # Windows: bundle DLLs into wheel
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path C:/OpenBLAS/bin -w {dest_dir} {wheel}"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
