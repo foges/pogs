@@ -54,6 +54,11 @@ if(POGS_USE_SCIPY_OPENBLAS)
   message(STATUS "  Library: ${SCIPY_OPENBLAS_LIB_FILE}")
   message(STATUS "  DLL: ${SCIPY_OPENBLAS_DLL_FILE}")
   message(STATUS "  Include: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
+  message(STATUS "  Python: ${Python_EXECUTABLE}")
+
+  # Verify the .lib file is an import library (not static)
+  file(SIZE "${SCIPY_OPENBLAS_LIB_FILE}" LIB_SIZE)
+  message(STATUS "  Library size: ${LIB_SIZE} bytes")
 
   # Store paths for direct linking in src/CMakeLists.txt
   # (Using direct linking instead of IMPORTED target for better MSVC compatibility)
