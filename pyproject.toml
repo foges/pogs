@@ -2,6 +2,7 @@
 requires = [
     "scikit-build-core>=0.10",
     "pybind11>=2.12",
+    "scipy-openblas32; platform_system == 'Windows'",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -23,7 +24,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: MacOS",
     "Operating System :: POSIX :: Linux",
-    # Note: Windows is not currently supported (scipy-openblas32 linking issues)
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: C++",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",

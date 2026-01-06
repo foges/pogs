@@ -92,14 +92,13 @@ jobs:
         run: uvx --with mkdocs-material mkdocs build --strict
 
   # Python wheel builds (test on every push)
-  # Note: Windows builds are disabled due to scipy-openblas32 linking issues
   wheels:
     name: Wheels (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-14]
+        os: [ubuntu-22.04, macos-14, windows-2022]
 
     steps:
       - uses: actions/checkout@v4

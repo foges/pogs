@@ -232,16 +232,45 @@ requires = [
 
 6. **Static linking**: Try statically linking OpenBLAS instead of using the DLL.
 
-## Current Status
+## Solution Implemented
 
-Windows builds are disabled in CI. Linux and macOS wheels build successfully.
+The root cause was that scipy-openblas32 exports **prefixed symbols** (e.g., `scipy_cblas_sdot` instead of `cblas_sdot`). The solution uses compile-time macro mapping to remap symbol names.
+
+### Key Changes
+
+1. **Symbol prefix header** (`src/include/openblas_prefix.h`):
+   ```c
+   #ifdef _WIN32
+   #define cblas_sdot scipy_cblas_sdot
+   #define cblas_ddot scipy_cblas_ddot
+   // ... all CBLAS and LAPACK symbols
+   #endif
+   ```
+
+2. **CMake changes** (`CMakeLists.txt`):
+   - Added `POGS_USE_SCIPY_OPENBLAS` option
+   - Created `pogs_openblas` imported target pointing to scipy-openblas32
+   - Skips `find_package(BLAS/LAPACK)` on Windows
+
+3. **Force-include** (`src/CMakeLists.txt`):
+   ```cmake
+   if(POGS_USE_SCIPY_OPENBLAS)
+     target_compile_options(pogs_cpu_shared PRIVATE "/FI${POGS_OPENBLAS_PREFIX_HEADER}")
+   endif()
+   ```
+
+4. **DLL bundling** (via delvewheel in CI):
+   - `delvewheel repair --add-path %OPENBLAS_PATH% ...`
+   - Creates self-contained wheel with OpenBLAS DLL included
+
+### Current Status
+
+Windows builds are now enabled in CI. Users can `pip install pogs` on Windows with zero extra steps - the wheel is self-contained with OpenBLAS bundled.
 
 ```yaml
 # .github/workflows/ci.yml
 wheels:
   strategy:
     matrix:
-      os: [ubuntu-22.04, macos-14]  # windows-2022 removed
+      os: [ubuntu-22.04, macos-14, windows-2022]
 ```
-
-The issue can be revisited when there's more time to investigate the MSVC linker behavior or alternative BLAS solutions for Windows.

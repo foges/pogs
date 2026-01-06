@@ -42,11 +42,13 @@ target_include_directories(pogs_cpu
 )
 
 # Link dependencies for CPU library
-target_link_libraries(pogs_cpu
-    PUBLIC
-        BLAS::BLAS
-        LAPACK::LAPACK
-)
+if(POGS_USE_SCIPY_OPENBLAS)
+  target_link_libraries(pogs_cpu PUBLIC pogs_openblas)
+  # Force-include the symbol prefix header to remap CBLAS/LAPACK symbols
+  target_compile_options(pogs_cpu PRIVATE "/FI${POGS_OPENBLAS_PREFIX_HEADER}")
+else()
+  target_link_libraries(pogs_cpu PUBLIC BLAS::BLAS LAPACK::LAPACK)
+endif()
 
 # Platform-specific libraries
 if(APPLE)
@@ -80,11 +82,12 @@ target_include_directories(pogs_cpu_shared
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(pogs_cpu_shared
-    PUBLIC
-        BLAS::BLAS
-        LAPACK::LAPACK
-)
+if(POGS_USE_SCIPY_OPENBLAS)
+  target_link_libraries(pogs_cpu_shared PUBLIC pogs_openblas)
+  target_compile_options(pogs_cpu_shared PRIVATE "/FI${POGS_OPENBLAS_PREFIX_HEADER}")
+else()
+  target_link_libraries(pogs_cpu_shared PUBLIC BLAS::BLAS LAPACK::LAPACK)
+endif()
 
 if(APPLE)
     if(ACCELERATE_LIBRARY)

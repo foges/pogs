@@ -19,9 +19,59 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Find dependencies
-# Note: Windows builds are not currently supported due to scipy-openblas32 linking issues
-find_package(BLAS REQUIRED)
-find_package(LAPACK REQUIRED)
+option(POGS_USE_SCIPY_OPENBLAS "Use scipy-openblas32 (Windows)" OFF)
+
+if(POGS_USE_SCIPY_OPENBLAS)
+  # Windows: Use scipy-openblas32 which provides MSVC-compatible OpenBLAS
+  # scipy-openblas32 exports prefixed symbols (scipy_cblas_*, scipy_*_)
+  # We use force-include of openblas_prefix.h to remap at compile time
+  find_package(Python COMPONENTS Interpreter REQUIRED)
+
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_LIB_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE SCIPY_OPENBLAS_RESULT
+  )
+  if(NOT SCIPY_OPENBLAS_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to find scipy-openblas32. Install with: pip install scipy-openblas32")
+  endif()
+
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import scipy_openblas32; print(scipy_openblas32.get_include_dir())"
+    OUTPUT_VARIABLE SCIPY_OPENBLAS_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  set(SCIPY_OPENBLAS_LIB_FILE "${SCIPY_OPENBLAS_LIB_DIR}/libscipy_openblas.lib")
+  set(SCIPY_OPENBLAS_DLL_FILE "${SCIPY_OPENBLAS_LIB_DIR}/libscipy_openblas.dll")
+
+  if(NOT EXISTS "${SCIPY_OPENBLAS_LIB_FILE}")
+    message(FATAL_ERROR "scipy-openblas32 library not found at: ${SCIPY_OPENBLAS_LIB_FILE}")
+  endif()
+
+  message(STATUS "Found scipy-openblas32:")
+  message(STATUS "  Library: ${SCIPY_OPENBLAS_LIB_FILE}")
+  message(STATUS "  Include: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
+
+  # Create imported target for scipy-openblas32
+  # This provides both BLAS and LAPACK functionality
+  add_library(pogs_openblas SHARED IMPORTED GLOBAL)
+  set_target_properties(pogs_openblas PROPERTIES
+    IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
+    IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
+    INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
+  )
+
+  # Store the prefix header path for force-include
+  set(POGS_OPENBLAS_PREFIX_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/include/openblas_prefix.h"
+      CACHE INTERNAL "Path to OpenBLAS symbol prefix header")
+
+else()
+  # Unix/macOS: Use system BLAS/LAPACK
+  find_package(BLAS REQUIRED)
+  find_package(LAPACK REQUIRED)
+endif()
 
 # GPU support
 if(POGS_BUILD_GPU)
