@@ -140,9 +140,7 @@ jobs:
             --exclude libquadmath.so.0
           # Windows: bundle scipy-openblas DLLs into wheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())" > openblas_path.txt &&
-            set /p OPENBLAS_PATH=<openblas_path.txt &&
-            delvewheel repair --add-path %OPENBLAS_PATH% -w {dest_dir} {wheel}
+            python -c "import scipy_openblas32, subprocess, sys; subprocess.run([sys.executable, '-m', 'delvewheel', 'repair', '--add-path', scipy_openblas32.get_lib_dir(), '-w', '{dest_dir}', '{wheel}'], check=True)"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
