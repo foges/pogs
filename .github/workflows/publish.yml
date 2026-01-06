@@ -49,9 +49,10 @@ jobs:
             dnf install -y epel-release &&
             dnf install -y openblas-devel lapack-devel
           # Windows: use scipy-openblas32 for MSVC-compatible OpenBLAS
+          # Copy DLL to vendor dir for delvewheel to find
           CIBW_BEFORE_BUILD_WINDOWS: >
             pip install scipy-openblas32 delvewheel &&
-            python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
+            python -c "import scipy_openblas32, shutil, os; d='C:/cibw/vendor'; os.makedirs(d, exist_ok=True); shutil.copy(scipy_openblas32.get_lib_dir()+'/libscipy_openblas.dll', d); print('Copied to:', d)"
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
@@ -67,11 +68,9 @@ jobs:
             --exclude libblas.so.3
             --exclude libgfortran.so.5
             --exclude libquadmath.so.0
-          # Windows: bundle scipy-openblas DLLs into wheel
+          # Windows: force-include OpenBLAS DLL even if not detected as dependency
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())" > openblas_path.txt &&
-            set /p OPENBLAS_PATH=<openblas_path.txt &&
-            delvewheel repair --add-path %OPENBLAS_PATH% -w {dest_dir} {wheel}
+            delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor --include libscipy_openblas.dll
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
