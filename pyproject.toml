@@ -65,7 +65,6 @@ Issues = "https://github.com/foges/pogs/issues"
 [tool.scikit-build]
 cmake.args = ["-DPOGS_BUILD_GPU=OFF", "-DPOGS_BUILD_TESTS=OFF", "-DPOGS_BUILD_PYTHON=ON"]
 cmake.verbose = true
-build.verbose = true
 wheel.packages = ["python/pogs"]
 build-dir = "build/{wheel_tag}"
 # Install shared library into the pogs package
@@ -83,8 +82,8 @@ before-build = [
     "pip install scipy-openblas32 delvewheel",
     "python -c \"import scipy_openblas32, shutil, os; d='C:/cibw/vendor'; os.makedirs(d, exist_ok=True); shutil.copy(scipy_openblas32.get_lib_dir()+'/libscipy_openblas.dll', d); print('Copied to:', d); print('Contents:', os.listdir(d))\"",
 ]
-# Use delvewheel show to diagnose dependencies, then repair
-repair-wheel-command = "delvewheel show {wheel} && delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor"
+# Force delvewheel to include OpenBLAS DLL even if not detected as dependency
+repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor --include libscipy_openblas"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "python"]

@@ -76,6 +76,35 @@ if not _lib_path:
         "  cmake --build build --target pogs_cpu_shared\n"
     )
 
+# On Windows, we need to add the DLL directory to the search path
+# and pre-load any bundled DLLs (like OpenBLAS) before loading pogs_cpu.dll
+import platform
+import sys
+
+if platform.system() == "Windows":
+    pkg_dir = os.path.dirname(__file__)
+    # Check for bundled DLLs in various locations delvewheel might use
+    dll_dirs = [
+        pkg_dir,
+        os.path.join(pkg_dir, ".libs"),
+        os.path.join(pkg_dir, "pogs.libs"),
+    ]
+    # Add DLL directories to search path (Python 3.8+)
+    if hasattr(os, "add_dll_directory"):
+        for dll_dir in dll_dirs:
+            if os.path.isdir(dll_dir):
+                os.add_dll_directory(dll_dir)
+    # Pre-load OpenBLAS DLL if bundled
+    openblas_names = ["libscipy_openblas.dll", "libopenblas.dll"]
+    for dll_dir in dll_dirs:
+        for openblas_name in openblas_names:
+            openblas_path = os.path.join(dll_dir, openblas_name)
+            if os.path.exists(openblas_path):
+                try:
+                    ctypes.CDLL(openblas_path)
+                except OSError:
+                    pass  # Might fail if already loaded or not needed
+
 _lib = ctypes.CDLL(_lib_path)
 
 
