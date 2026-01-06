@@ -57,9 +57,9 @@ jobs:
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
           CIBW_ENVIRONMENT_LINUX: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF"
-          # Windows: point CMake to scipy-openblas32
+          # Windows: point CMake to scipy-openblas32, disable examples (they don't have symbol remapping)
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DPOGS_USE_SCIPY_OPENBLAS=ON"
+            CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DPOGS_BUILD_EXAMPLES=OFF -DPOGS_USE_SCIPY_OPENBLAS=ON"
           # Repair wheel but exclude system BLAS libraries from bundling
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             auditwheel repair -w {dest_dir} {wheel}
