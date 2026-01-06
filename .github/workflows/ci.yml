@@ -122,9 +122,7 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: >
             dnf install -y epel-release &&
             dnf install -y openblas-devel lapack-devel
-          # Windows: scipy-openblas32 for MSVC-compatible OpenBLAS (also in build-system.requires for CMake)
-          CIBW_BEFORE_BUILD_WINDOWS: >
-            pip install scipy-openblas32 delvewheel
+          # Windows build/repair configured in pyproject.toml [tool.cibuildwheel.windows]
           CIBW_ENVIRONMENT_MACOS: >
             CMAKE_ARGS="-DPOGS_BUILD_GPU=OFF -DPOGS_BUILD_TESTS=OFF -DPOGS_BUILD_EXAMPLES=OFF"
           CIBW_ENVIRONMENT_LINUX: >
@@ -138,9 +136,6 @@ jobs:
             --exclude libblas.so.3
             --exclude libgfortran.so.5
             --exclude libquadmath.so.0
-          # Windows: bundle scipy-openblas DLLs into wheel
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            python -c "import scipy_openblas32, subprocess, sys; subprocess.run([sys.executable, '-m', 'delvewheel', 'repair', '--add-path', scipy_openblas32.get_lib_dir(), '-w', '{dest_dir}', '{wheel}'], check=True)"
           CIBW_TEST_REQUIRES: numpy
           CIBW_TEST_COMMAND: "python -c \"import pogs; print(pogs.__version__)\""
 
