@@ -52,18 +52,13 @@ if(POGS_USE_SCIPY_OPENBLAS)
 
   message(STATUS "Found scipy-openblas32:")
   message(STATUS "  Library: ${SCIPY_OPENBLAS_LIB_FILE}")
+  message(STATUS "  DLL: ${SCIPY_OPENBLAS_DLL_FILE}")
   message(STATUS "  Include: ${SCIPY_OPENBLAS_INCLUDE_DIR}")
 
-  # Create imported target for scipy-openblas32
-  # This provides both BLAS and LAPACK functionality
-  add_library(pogs_openblas SHARED IMPORTED GLOBAL)
-  set_target_properties(pogs_openblas PROPERTIES
-    IMPORTED_IMPLIB "${SCIPY_OPENBLAS_LIB_FILE}"
-    IMPORTED_LOCATION "${SCIPY_OPENBLAS_DLL_FILE}"
-    INTERFACE_INCLUDE_DIRECTORIES "${SCIPY_OPENBLAS_INCLUDE_DIR}"
-  )
-
-  # Store the prefix header path for force-include
+  # Store paths for direct linking in src/CMakeLists.txt
+  # (Using direct linking instead of IMPORTED target for better MSVC compatibility)
+  set(POGS_SCIPY_OPENBLAS_LIB "${SCIPY_OPENBLAS_LIB_FILE}" CACHE INTERNAL "scipy-openblas32 import library")
+  set(POGS_SCIPY_OPENBLAS_INCLUDE "${SCIPY_OPENBLAS_INCLUDE_DIR}" CACHE INTERNAL "scipy-openblas32 include dir")
   set(POGS_OPENBLAS_PREFIX_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/include/openblas_prefix.h"
       CACHE INTERNAL "Path to OpenBLAS symbol prefix header")
 

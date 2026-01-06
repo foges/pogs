@@ -43,7 +43,9 @@ target_include_directories(pogs_cpu
 
 # Link dependencies for CPU library
 if(POGS_USE_SCIPY_OPENBLAS)
-  target_link_libraries(pogs_cpu PUBLIC pogs_openblas)
+  # Direct linking to scipy-openblas32 (provides both BLAS and LAPACK)
+  target_link_libraries(pogs_cpu PUBLIC "${POGS_SCIPY_OPENBLAS_LIB}")
+  target_include_directories(pogs_cpu PUBLIC "${POGS_SCIPY_OPENBLAS_INCLUDE}")
   # Force-include the symbol prefix header to remap CBLAS/LAPACK symbols
   target_compile_options(pogs_cpu PRIVATE "/FI${POGS_OPENBLAS_PREFIX_HEADER}")
 else()
@@ -83,7 +85,8 @@ target_include_directories(pogs_cpu_shared
 )
 
 if(POGS_USE_SCIPY_OPENBLAS)
-  target_link_libraries(pogs_cpu_shared PUBLIC pogs_openblas)
+  target_link_libraries(pogs_cpu_shared PUBLIC "${POGS_SCIPY_OPENBLAS_LIB}")
+  target_include_directories(pogs_cpu_shared PUBLIC "${POGS_SCIPY_OPENBLAS_INCLUDE}")
   target_compile_options(pogs_cpu_shared PRIVATE "/FI${POGS_OPENBLAS_PREFIX_HEADER}")
 else()
   target_link_libraries(pogs_cpu_shared PUBLIC BLAS::BLAS LAPACK::LAPACK)
