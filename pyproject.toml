@@ -79,9 +79,9 @@ CMAKE_INSTALL_BINDIR = "."
 [tool.cibuildwheel.windows]
 before-build = [
     "pip install scipy-openblas32 delvewheel",
-    "python -c \"import scipy_openblas32, shutil, os; d='C:/cibw/vendor'; os.makedirs(d, exist_ok=True); shutil.copy(scipy_openblas32.get_lib_dir()+'/libscipy_openblas.dll', d)\"",
+    "python -c \"import scipy_openblas32, shutil, os; d='C:/cibw/vendor'; os.makedirs(d, exist_ok=True); shutil.copy(scipy_openblas32.get_lib_dir()+'/libscipy_openblas.dll', d); print('Copied to:', d); print('Contents:', os.listdir(d))\"",
 ]
-repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel} --add-path C:/cibw/vendor"
+repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "python"]
