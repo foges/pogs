@@ -3,6 +3,17 @@
 
 #include <stddef.h>
 
+// DLL export macro for Windows
+#ifdef _WIN32
+  #ifdef POGS_BUILDING_SHARED
+    #define POGS_API __declspec(dllexport)
+  #else
+    #define POGS_API __declspec(dllimport)
+  #endif
+#else
+  #define POGS_API
+#endif
+
 // Wrapper for POGS, a solver for convex problems in the form
 //   min. \sum_i f(y_i) + g(x_i)
 //   s.t.  y = Ax,
@@ -61,7 +72,7 @@ enum FUNCTION { ABS,       // f(x) = |x|
 extern "C" {
 #endif
 
-int PogsD(enum ORD ord, size_t m, size_t n, const double *A,
+POGS_API int PogsD(enum ORD ord, size_t m, size_t n, const double *A,
           const double *f_a, const double *f_b, const double *f_c,
           const double *f_d, const double *f_e, const enum FUNCTION *f_h,
           const double *g_a, const double *g_b, const double *g_c,
@@ -70,7 +81,7 @@ int PogsD(enum ORD ord, size_t m, size_t n, const double *A,
           unsigned int verbose, int adaptive_rho, int gap_stop,
           double *x, double *y, double *l, double *optval, unsigned int * final_iter);
 
-int PogsS(enum ORD ord, size_t m, size_t n, const float *A,
+POGS_API int PogsS(enum ORD ord, size_t m, size_t n, const float *A,
           const float *f_a, const float *f_b, const float *f_c,
           const float *f_d, const float *f_e, const enum FUNCTION *f_h,
           const float *g_a, const float *g_b, const float *g_c,
@@ -85,7 +96,7 @@ int PogsS(enum ORD ord, size_t m, size_t n, const float *A,
 // - data: Array of non-zero values (length nnz)
 // - ptr: Row/column pointer array (length m+1 for CSR, n+1 for CSC)
 // - ind: Column/row index array (length nnz)
-int PogsSparseD(enum ORD ord, size_t m, size_t n, size_t nnz,
+POGS_API int PogsSparseD(enum ORD ord, size_t m, size_t n, size_t nnz,
                 const double *data, const int *ptr, const int *ind,
                 const double *f_a, const double *f_b, const double *f_c,
                 const double *f_d, const double *f_e, const enum FUNCTION *f_h,
@@ -96,7 +107,7 @@ int PogsSparseD(enum ORD ord, size_t m, size_t n, size_t nnz,
                 double *x, double *y, double *l, double *optval,
                 unsigned int *final_iter);
 
-int PogsSparseS(enum ORD ord, size_t m, size_t n, size_t nnz,
+POGS_API int PogsSparseS(enum ORD ord, size_t m, size_t n, size_t nnz,
                 const float *data, const int *ptr, const int *ind,
                 const float *f_a, const float *f_b, const float *f_c,
                 const float *f_d, const float *f_e, const enum FUNCTION *f_h,
@@ -153,7 +164,7 @@ struct ConeConstraintC {
 // - optval: Optimal objective value
 // - final_iter: Number of iterations taken
 
-int PogsConeD(enum ORD ord, size_t m, size_t n, const double *A,
+POGS_API int PogsConeD(enum ORD ord, size_t m, size_t n, const double *A,
               const double *b, const double *c,
               const struct ConeConstraintC *cones_x, size_t num_cones_x,
               const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -164,7 +175,7 @@ int PogsConeD(enum ORD ord, size_t m, size_t n, const double *A,
 // Cone form solver interface with quadratic objective
 //   minimize    0.5 x^T P x + c^T x
 //   subject to  b - A*x ∈ K_y,  x ∈ K_x
-int PogsConeQD(enum ORD ord, size_t m, size_t n, const double *A,
+POGS_API int PogsConeQD(enum ORD ord, size_t m, size_t n, const double *A,
                const double *b, const double *c, const double *P,
                const struct ConeConstraintC *cones_x, size_t num_cones_x,
                const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -173,7 +184,7 @@ int PogsConeQD(enum ORD ord, size_t m, size_t n, const double *A,
                double *x, double *y, double *l, double *optval,
                unsigned int *final_iter);
 
-int PogsConeS(enum ORD ord, size_t m, size_t n, const float *A,
+POGS_API int PogsConeS(enum ORD ord, size_t m, size_t n, const float *A,
               const float *b, const float *c,
               const struct ConeConstraintC *cones_x, size_t num_cones_x,
               const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -181,7 +192,7 @@ int PogsConeS(enum ORD ord, size_t m, size_t n, const float *A,
               unsigned int verbose, int adaptive_rho, int gap_stop,
               float *x, float *y, float *l, float *optval, unsigned int *final_iter);
 
-int PogsConeQS(enum ORD ord, size_t m, size_t n, const float *A,
+POGS_API int PogsConeQS(enum ORD ord, size_t m, size_t n, const float *A,
                const float *b, const float *c, const float *P,
                const struct ConeConstraintC *cones_x, size_t num_cones_x,
                const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -191,7 +202,7 @@ int PogsConeQS(enum ORD ord, size_t m, size_t n, const float *A,
                unsigned int *final_iter);
 
 // Cone form solver interface using direct projection (dense A).
-int PogsConeDirectD(enum ORD ord, size_t m, size_t n, const double *A,
+POGS_API int PogsConeDirectD(enum ORD ord, size_t m, size_t n, const double *A,
                     const double *b, const double *c,
                     const struct ConeConstraintC *cones_x, size_t num_cones_x,
                     const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -201,7 +212,7 @@ int PogsConeDirectD(enum ORD ord, size_t m, size_t n, const double *A,
                     double *x, double *y, double *l, double *optval,
                     unsigned int *final_iter);
 
-int PogsConeDirectQD(enum ORD ord, size_t m, size_t n, const double *A,
+POGS_API int PogsConeDirectQD(enum ORD ord, size_t m, size_t n, const double *A,
                      const double *b, const double *c, const double *P,
                      const struct ConeConstraintC *cones_x, size_t num_cones_x,
                      const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -211,7 +222,7 @@ int PogsConeDirectQD(enum ORD ord, size_t m, size_t n, const double *A,
                      double *x, double *y, double *l, double *optval,
                      unsigned int *final_iter);
 
-int PogsConeDirectS(enum ORD ord, size_t m, size_t n, const float *A,
+POGS_API int PogsConeDirectS(enum ORD ord, size_t m, size_t n, const float *A,
                     const float *b, const float *c,
                     const struct ConeConstraintC *cones_x, size_t num_cones_x,
                     const struct ConeConstraintC *cones_y, size_t num_cones_y,
@@ -221,7 +232,7 @@ int PogsConeDirectS(enum ORD ord, size_t m, size_t n, const float *A,
                     float *x, float *y, float *l, float *optval,
                     unsigned int *final_iter);
 
-int PogsConeDirectQS(enum ORD ord, size_t m, size_t n, const float *A,
+POGS_API int PogsConeDirectQS(enum ORD ord, size_t m, size_t n, const float *A,
                      const float *b, const float *c, const float *P,
                      const struct ConeConstraintC *cones_x, size_t num_cones_x,
                      const struct ConeConstraintC *cones_y, size_t num_cones_y,

@@ -75,6 +75,9 @@ add_library(pogs_cpu_shared SHARED
     ${POGS_C_INTERFACE_SOURCES}
 )
 
+# Define POGS_BUILDING_SHARED to export symbols on Windows
+target_compile_definitions(pogs_cpu_shared PRIVATE POGS_BUILDING_SHARED)
+
 target_include_directories(pogs_cpu_shared
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
