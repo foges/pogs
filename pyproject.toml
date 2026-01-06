@@ -72,7 +72,9 @@ wheel.install-dir = "pogs"
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
 # Install library directly into package (not lib/ subdirectory)
+# On Windows, DLLs go to BINDIR (runtime), .lib goes to LIBDIR (archive)
 CMAKE_INSTALL_LIBDIR = "."
+CMAKE_INSTALL_BINDIR = "."
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "python"]
