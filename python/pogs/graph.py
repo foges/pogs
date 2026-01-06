@@ -12,6 +12,7 @@ Supports both dense and sparse matrices.
 
 import ctypes
 import os
+import platform
 from enum import IntEnum
 
 import numpy as np
@@ -27,8 +28,6 @@ except ImportError:
 
 def _find_shared_library():
     """Locate a shared POGS library built by CMake or installed via wheel."""
-    import platform
-
     pkg_dir = os.path.dirname(__file__)
     source_root = os.path.abspath(os.path.join(pkg_dir, "..", ".."))
 
@@ -78,9 +77,6 @@ if not _lib_path:
 
 # On Windows, we need to add the DLL directory to the search path
 # and pre-load any bundled DLLs (like OpenBLAS) before loading pogs_cpu.dll
-import platform
-import sys
-
 if platform.system() == "Windows":
     pkg_dir = os.path.dirname(__file__)
     # Check for bundled DLLs in various locations delvewheel might use
