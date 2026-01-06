@@ -83,7 +83,7 @@ before-build = [
     "python -c \"import scipy_openblas32, shutil, os; d='C:/cibw/vendor'; os.makedirs(d, exist_ok=True); shutil.copy(scipy_openblas32.get_lib_dir()+'/libscipy_openblas.dll', d); print('Copied to:', d); print('Contents:', os.listdir(d))\"",
 ]
 # Force delvewheel to include OpenBLAS DLL even if not detected as dependency
-repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor --include libscipy_openblas"
+repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --add-path C:/cibw/vendor --include libscipy_openblas.dll"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "python"]
