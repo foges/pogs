@@ -36,6 +36,7 @@ try:
         solve_huber,
         solve_lasso,
         solve_nonneg_ls,
+        solve_qp,
         solve_ridge,
     )
 
@@ -1299,9 +1300,8 @@ try:
 
         def import_solver(self):
             """Check that POGS is available."""
-            pogs_root = os.path.join(os.path.dirname(__file__), "..")
-            pogs_lib = os.path.join(pogs_root, "src", "build", "pogs.a")
-            if not os.path.exists(pogs_lib):
+            # POGS is available if we can import the graph solver
+            if not _GRAPH_AVAILABLE:
                 raise ImportError("POGS library not found. Please build it first.")
 
         def apply(self, problem):
@@ -1317,8 +1317,9 @@ try:
             """
             Solve a problem represented in CVXPY's conic format.
 
-            Note: For graph-form patterns (Lasso, Ridge, etc.), use pogs_solve()
-            instead of problem.solve(solver='POGS') for much better performance.
+            For LP/QP problems (only Zero and NonNeg cones), uses the efficient
+            graph-form solver. For problems with SOC, SDP, or ExpCone, falls back
+            to the cone solver.
 
             Parameters
             ----------
@@ -1373,8 +1374,33 @@ try:
             rho_scale = opts.get("rho_scale", 1.0)
             use_direct = opts.get("use_direct", None)
             prefer_ctypes = opts.get("prefer_ctypes", True)
+            use_graph_form = opts.get("use_graph_form", True)  # Enable by default
 
-            # Solve
+            # Check if we can use the graph-form QP/LP solver
+            # This is possible when there are only Zero (equality) and NonNeg (inequality) cones
+            has_complex_cones = (
+                len(dims["q"]) > 0 or  # SOC cones
+                len(dims["s"]) > 0 or  # SDP cones
+                dims["ep"] > 0         # Exponential cones
+            )
+
+            if _GRAPH_AVAILABLE and use_graph_form and not has_complex_cones:
+                result = self._solve_via_graph_form(
+                    c, A, b, dims, P,
+                    abs_tol=abs_tol,
+                    rel_tol=rel_tol,
+                    max_iter=max_iter,
+                    verbose=verbose_level,
+                    rho=rho if rho is not None else 1.0,
+                    adaptive_rho=adaptive_rho,
+                    use_dense=use_direct,
+                )
+                if result is not None and result.get("status", 1) == 0:
+                    return result
+                elif verbose_level > 0:
+                    print("POGS: Graph-form solver failed, falling back to cone solver")
+
+            # Fall back to cone solver
             result = solve_cone_problem(
                 c,
                 A,
@@ -1394,6 +1420,75 @@ try:
             )
 
             return result
+
+        def _solve_via_graph_form(self, c, A, b, dims, P,
+                                  abs_tol, rel_tol, max_iter, verbose, rho,
+                                  adaptive_rho, use_dense):
+            """
+            Solve LP/QP using the graph-form solver.
+
+            CVXPY cone format: b - A*x ∈ K
+            - Zero cone (dims['f'] rows): A*x == b (equality)
+            - NonNeg cone (dims['l'] rows): A*x <= b (inequality, since b - Ax >= 0)
+            """
+            import scipy.sparse as sp
+
+            try:
+                c = np.asarray(c, dtype=np.float64).flatten()
+                b = np.asarray(b, dtype=np.float64).flatten()
+                if sp.issparse(A):
+                    A = A.toarray()
+                A = np.asarray(A, dtype=np.float64)
+
+                n = len(c)
+                m_eq = dims["f"]  # Zero cone = equality constraints
+                m_ineq = dims["l"]  # NonNeg cone = inequality constraints
+
+                # Split A and b into equality and inequality parts
+                # CVXPY orders: zero cone first, then nonneg
+                A_eq = A[:m_eq, :] if m_eq > 0 else None
+                b_eq = b[:m_eq] if m_eq > 0 else None
+                A_ineq = A[m_eq:m_eq + m_ineq, :] if m_ineq > 0 else None
+                b_ineq = b[m_eq:m_eq + m_ineq] if m_ineq > 0 else None
+
+                # Process quadratic term
+                if P is not None:
+                    if sp.issparse(P):
+                        P = P.toarray()
+                    P = np.asarray(P, dtype=np.float64)
+
+                if verbose > 0:
+                    prob_type = "QP" if P is not None else "LP"
+                    print(f"POGS: Using graph-form solver for {prob_type} "
+                          f"(n={n}, m_eq={m_eq}, m_ineq={m_ineq})")
+
+                t0 = time.time()
+                result = solve_qp(
+                    c=c,
+                    P=P,
+                    A_ineq=A_ineq,
+                    b_ineq=b_ineq,
+                    A_eq=A_eq,
+                    b_eq=b_eq,
+                    lb=None,  # No variable bounds in cone form
+                    ub=None,
+                    abs_tol=abs_tol,
+                    rel_tol=rel_tol,
+                    max_iter=max_iter,
+                    verbose=verbose,
+                    rho=rho,
+                    adaptive_rho=adaptive_rho,
+                    use_dense=use_dense,
+                )
+                result["solve_time"] = time.time() - t0
+                result["num_iters"] = result.get("iterations", 0)
+
+                return result
+
+            except Exception as e:
+                if verbose > 0:
+                    print(f"POGS: Graph-form solver error: {e}")
+                return None
 
         def invert(self, solution, inverse_data):
             """
