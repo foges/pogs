@@ -2,6 +2,19 @@
 
 Comprehensive benchmarks comparing POGS against other CVXPY solvers (ECOS, SCS, OSQP, CVXOPT) on standard optimization problems.
 
+## ⚠️ IMPORTANT: Benchmarking Rules
+
+**NEVER use random matrices for benchmarks.** Random matrices are artificially well-conditioned and produce misleading results that do not reflect real-world performance.
+
+Always use:
+- **Real datasets** (LIBSVM, UCI, sklearn.datasets, etc.)
+- **Standard test suites** (Maros-Mészáros for QP, Netlib for LP)
+- **Application-specific problems** (portfolio data, signal processing, etc.)
+
+Random matrices have condition numbers ~1-2, while real data often has condition numbers of 100-10000+ or is rank-deficient. This difference dramatically affects solver performance.
+
+---
+
 ## Quick Start
 
 ```bash

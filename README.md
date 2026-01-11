@@ -21,19 +21,19 @@
 
 ## Performance
 
-POGS is **10-90x faster** than general-purpose solvers on ML optimization problems:
+POGS uses the **graph-form ADMM** algorithm with closed-form proximal operators, making it efficient for problems that fit this structure (Lasso, Ridge, Elastic Net, Logistic, SVM, Huber).
 
-| Problem | Size | POGS | OSQP | SCS | Speedup |
-|:--------|:-----|-----:|-----:|----:|--------:|
-| **Lasso** | 1000×500 | **72ms** | 2.7s | 1.1s | **15-37x** |
-| **Ridge** | 1000×500 | **41ms** | 1.0s | 655ms | **16-26x** |
-| **Elastic Net** | 1000×500 | **54ms** | 2.6s | 1.2s | **22-48x** |
-| **Logistic** | 1000×500 | **1.5s** | — | 51s | **33x** |
-| **SVM** | 1000×500 | **729ms** | 5.1s | 6.4s | **7-9x** |
+**Best for:**
+- Dense, well-conditioned design matrices
+- Signal processing, image reconstruction, compressed sensing
+- Problems where graph-form structure can be exploited
 
-Speedup increases with problem size. At 2000×1000: **45-92x faster**.
+**Consider alternatives (SCS, OSQP) for:**
+- Sparse or ill-conditioned matrices
+- Rank-deficient problems
+- General QPs without special structure
 
-<sup>Benchmarks on Linux, Python 3.11. POGS excels on dense, well-conditioned problems typical of signal processing, image reconstruction, and regression tasks.</sup>
+Run `python benchmarks/libsvm_benchmark.py` to compare on real datasets.
 
 ---
 
