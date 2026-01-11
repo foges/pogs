@@ -21,17 +21,27 @@
 
 ## Performance
 
-POGS is **4-14x faster** than general-purpose solvers on ML optimization problems:
+POGS is **10-90x faster** than general-purpose solvers on ML optimization problems, with speedups increasing at scale:
 
-| Problem | POGS | OSQP | SCS | Clarabel |
-|:--------|-----:|-----:|----:|---------:|
-| **Lasso** (500×300) | **51ms** | 399ms | 206ms | 186ms |
-| **Ridge** (500×300) | **8ms** | 89ms | 64ms | 51ms |
-| **Logistic** (500×300) | **34ms** | 312ms | 198ms | 167ms |
-| **Elastic Net** (500×300) | **45ms** | 380ms | 195ms | 175ms |
-| **SVM** (500×300) | **42ms** | 356ms | 188ms | 162ms |
+### Small Problems (500×300)
 
-<sup>Benchmarks on Apple M1, Python 3.12. All solvers configured with default tolerances.</sup>
+| Problem | POGS | OSQP | SCS | Speedup |
+|:--------|-----:|-----:|----:|--------:|
+| **Lasso** | **34ms** | 616ms | 303ms | 9-18x |
+| **Ridge** | **29ms** | 222ms | 149ms | 5-8x |
+| **Elastic Net** | **32ms** | 499ms | 296ms | 9-16x |
+| **Logistic** | **288ms** | — | 1601ms | 6x |
+| **SVM** | **241ms** | 545ms | 437ms | 2x |
+
+### Large Problems (2000×1000)
+
+| Problem | POGS | OSQP | SCS | Speedup |
+|:--------|-----:|-----:|----:|--------:|
+| **Lasso** | **289ms** | 23.3s | 13.1s | 45-81x |
+| **Ridge** | **206ms** | 8.6s | 5.5s | 27-42x |
+| **Elastic Net** | **247ms** | 22.7s | 13.1s | 53-92x |
+
+<sup>Benchmarks on Linux, Python 3.11. Run `python benchmarks/graph_form_benchmark.py` to reproduce.</sup>
 
 ---
 
