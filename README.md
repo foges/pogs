@@ -21,22 +21,20 @@
 
 ## Performance
 
-Benchmarks on **real sklearn datasets** (not random matrices):
+Benchmarks on **sklearn Diabetes dataset** (442×10, real clinical data):
 
-| Dataset | Size | POGS | SCS | OSQP | Speedup |
-|:--------|:-----|-----:|----:|-----:|--------:|
-| Diabetes (Lasso) | 442×10 | **4.3ms** | 12.6ms | 18.2ms | 2.9-4.2x |
-| Wine (Lasso) | 178×13 | **1.0ms** | 6.4ms | 9.4ms | 6.4-9.6x |
-| Diabetes (Ridge) | 442×10 | **4.2ms** | 11.2ms | 13.1ms | 2.7-3.1x |
-| Wine (Ridge) | 178×13 | **1.0ms** | 6.7ms | 9.5ms | 6.4-9.1x |
+| Problem | Constraints | POGS | SCS | OSQP | Speedup |
+|:--------|:------------|-----:|----:|-----:|--------:|
+| **NNLS** | x ≥ 0 | **3.5ms** | 18ms | 26ms | 5-7x |
+| **Huber** | robust loss | **3.2ms** | 15ms | — | 5x |
+| **SVM** | hinge loss | **12ms** | 172ms | 95ms | 8-14x |
+| **Logistic** | log loss + L1 | **15ms** | 96ms | — | 6x |
 
 POGS uses **graph-form ADMM** with closed-form proximal operators.
 
-**Best for:** Small-to-medium dense problems where graph-form structure applies (Lasso, Ridge, Elastic Net, Logistic, SVM).
+**Best for:** Problems with separable structure (NNLS, SVM, Logistic, Huber, Lasso, Ridge).
 
-**Consider SCS/OSQP for:** Large, sparse, or ill-conditioned problems.
-
-Run `python benchmarks/libsvm_benchmark.py` to compare on your data.
+**Consider SCS/OSQP for:** General QPs, SDPs, or ill-conditioned problems.
 
 ---
 
