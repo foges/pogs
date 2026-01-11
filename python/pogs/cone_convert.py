@@ -1,5 +1,8 @@
 """
-Conversion utilities for CVXPY cone problems to POGS cone format.
+Conversion utilities for CVXPY cone problems to POGS format.
+
+This module provides efficient conversion from CVXPY's cone format to POGS,
+using graph-form for LP/QP (which is faster) and cone-form for complex cones.
 
 CVXPY cone format:
     minimize    c^T x  (or 0.5 x^T P x + c^T x for QP)
@@ -20,6 +23,7 @@ where K_x and K_y are specified as lists of (Cone, indices) tuples.
 """
 
 import numpy as np
+
 
 try:
     import scipy.sparse as sp
@@ -212,17 +216,111 @@ def convert_cvxpy_to_pogs(c, A, b, dims, P=None, use_dense=None):
     }
 
 
+def _solve_qp_graph_form(c, A, b, dims, P=None,
+                         abs_tol=1e-4, rel_tol=1e-3, max_iter=10000,
+                         rho=1.0, adaptive_rho=True, verbose=0):
+    """
+    Solve LP/QP using POGS graph-form (faster than cone-form for LP/QP).
+
+    Converts QP: min 0.5 x'Px + c'x s.t. Ax <= b, Gx == h
+    to graph-form: min f(y) + g(x) s.t. y = [A; G; L]x
+    where P = L'L (Cholesky/eigendecomp).
+    """
+    import os
+    import sys
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from pogs_graph import Function, FunctionObj, _solve_graph_form
+
+    # Handle sparse matrices
+    if HAS_SCIPY:
+        import scipy.sparse as sp
+        if sp.issparse(A):
+            A = A.toarray()
+        if P is not None and sp.issparse(P):
+            P = P.toarray()
+
+    c = np.asarray(c, dtype=np.float64).flatten()
+    A = np.asarray(A, dtype=np.float64)
+    b = np.asarray(b, dtype=np.float64).flatten()
+
+    n = len(c)
+
+    # Parse dimensions
+    if isinstance(dims, dict):
+        n_zero = dims.get('f', dims.get('zero', 0))
+        n_nonneg = dims.get('l', dims.get('nonneg', 0))
+    else:
+        n_zero = getattr(dims, 'zero', 0)
+        n_nonneg = getattr(dims, 'nonneg', 0)
+
+    # Decompose P = L'L for quadratic objective
+    if P is not None:
+        P = np.asarray(P, dtype=np.float64)
+        reg = 1e-8 * max(np.abs(P).max(), 1.0)
+        P_reg = P + reg * np.eye(n)
+        try:
+            L = np.linalg.cholesky(P_reg).T
+        except np.linalg.LinAlgError:
+            eigvals, eigvecs = np.linalg.eigh(P_reg)
+            eigvals = np.maximum(eigvals, reg)
+            L = (eigvecs @ np.diag(np.sqrt(eigvals))).T
+    else:
+        L = None
+
+    # Scale A for better conditioning
+    A_norms = np.linalg.norm(A, axis=1)
+    A_norms[A_norms < 1e-10] = 1.0
+    D = 1.0 / A_norms
+    A_scaled = D[:, None] * A
+    b_scaled = b * D
+
+    # Build stacked matrix
+    if L is not None:
+        A_stack = np.vstack([A_scaled, L])
+    else:
+        A_stack = A_scaled
+
+    # Build f functions
+    f = []
+    row = 0
+
+    # Zero cone (equality): y == b
+    for _ in range(n_zero):
+        f.append(FunctionObj(Function.kIndEq0, 1.0, b_scaled[row], 1.0))
+        row += 1
+
+    # NonNeg cone (inequality): y <= b (since b - Ax >= 0 means Ax <= b)
+    for _ in range(n_nonneg):
+        f.append(FunctionObj(Function.kIndLe0, 1.0, b_scaled[row], 1.0))
+        row += 1
+
+    # Quadratic rows (from P decomposition)
+    if L is not None:
+        for _ in range(n):
+            f.append(FunctionObj(Function.kSquare, 1.0, 0.0, 1.0))
+
+    # Build g functions (linear objective)
+    g = [FunctionObj(Function.kZero, 1.0, 0.0, 1.0, c[j], 0.0) for j in range(n)]
+
+    # Solve
+    result = _solve_graph_form(A_stack, f, g,
+                               abs_tol=abs_tol, rel_tol=rel_tol,
+                               max_iter=max_iter, verbose=verbose,
+                               rho=rho, adaptive_rho=adaptive_rho)
+    return result
+
+
 def solve_cvxpy_cone_problem(c, A, b, dims, P=None,
                               abs_tol=1e-4, rel_tol=1e-3, max_iter=10000,
                               rho=1.0, adaptive_rho=True, verbose=0,
                               use_dense=None):
     """
-    Solve a CVXPY cone problem using POGS cone solver.
+    Solve a CVXPY cone problem using POGS.
 
-    This is the high-level interface that:
-    1. Converts CVXPY format to POGS format
-    2. Calls the POGS cone solver
-    3. Returns results in a standard format
+    For LP/QP (only Zero and NonNeg cones), uses the efficient graph-form solver.
+    For complex cones (SOC, SDP, Exp), falls back to the cone solver.
 
     Parameters
     ----------
@@ -252,27 +350,48 @@ def solve_cvxpy_cone_problem(c, A, b, dims, P=None,
     """
     import time
 
-    # Import cone solver
-    try:
-        import sys
-        import os
-        # Add parent directory to path for pogs_cone import
-        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if parent_dir not in sys.path:
-            sys.path.insert(0, parent_dir)
-        from pogs_cone import solve_cone
-    except ImportError as e:
-        raise ImportError(f"Cannot import pogs_cone solver: {e}")
+    # Parse dimensions to check for complex cones
+    if isinstance(dims, dict):
+        soc_sizes = list(dims.get('q', dims.get('soc', [])))
+        psd_sizes = list(dims.get('s', dims.get('psd', [])))
+        n_exp = dims.get('ep', dims.get('exp', 0))
+    else:
+        soc_sizes = list(getattr(dims, 'soc', []))
+        psd_sizes = list(getattr(dims, 'psd', []))
+        n_exp = getattr(dims, 'exp', 0)
 
-    # Convert problem
+    has_complex_cones = len(soc_sizes) > 0 or len(psd_sizes) > 0 or n_exp > 0
+
+    # Use graph-form for LP/QP (faster)
+    if not has_complex_cones:
+        if verbose > 0:
+            prob_type = "QP" if P is not None else "LP"
+            print(f"POGS: Using graph-form solver for {prob_type}")
+
+        t0 = time.time()
+        result = _solve_qp_graph_form(
+            c, A, b, dims, P,
+            abs_tol=abs_tol, rel_tol=rel_tol,
+            max_iter=max_iter, rho=rho,
+            adaptive_rho=adaptive_rho, verbose=verbose
+        )
+        result['solve_time'] = time.time() - t0
+        result['num_iters'] = result.get('iterations', 0)
+        return result
+
+    # Fall back to cone solver for complex cones
+    import os
+    import sys
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from pogs_cone import solve_cone
+
     problem = convert_cvxpy_to_pogs(c, A, b, dims, P, use_dense)
 
     if verbose > 0:
-        prob_type = "QP" if P is not None else "LP/Cone"
-        print(f"POGS: Solving {prob_type} problem (m={problem['m']}, n={problem['n']}, "
-              f"density={problem['density']:.1%}, {'dense' if problem['use_direct'] else 'sparse'} solver)")
+        print(f"POGS: Using cone solver (m={problem['m']}, n={problem['n']})")
 
-    # Solve
     t0 = time.time()
     result = solve_cone(
         A=problem['A'],
