@@ -252,7 +252,7 @@ def solve_lasso_pogs(
             time_sec=elapsed,
             optval=result["optval"],
             status="optimal" if result["status"] == 0 else "error",
-            iterations=result["num_iters"],
+            iterations=result.get("iterations", result.get("num_iters")),
         )
     except Exception as e:
         import traceback
