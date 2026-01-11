@@ -21,19 +21,22 @@
 
 ## Performance
 
-POGS uses the **graph-form ADMM** algorithm with closed-form proximal operators, making it efficient for problems that fit this structure (Lasso, Ridge, Elastic Net, Logistic, SVM, Huber).
+Benchmarks on **real sklearn datasets** (not random matrices):
 
-**Best for:**
-- Dense, well-conditioned design matrices
-- Signal processing, image reconstruction, compressed sensing
-- Problems where graph-form structure can be exploited
+| Dataset | Size | POGS | SCS | OSQP | Speedup |
+|:--------|:-----|-----:|----:|-----:|--------:|
+| Diabetes (Lasso) | 442×10 | **4.3ms** | 12.6ms | 18.2ms | 2.9-4.2x |
+| Wine (Lasso) | 178×13 | **1.0ms** | 6.4ms | 9.4ms | 6.4-9.6x |
+| Diabetes (Ridge) | 442×10 | **4.2ms** | 11.2ms | 13.1ms | 2.7-3.1x |
+| Wine (Ridge) | 178×13 | **1.0ms** | 6.7ms | 9.5ms | 6.4-9.1x |
 
-**Consider alternatives (SCS, OSQP) for:**
-- Sparse or ill-conditioned matrices
-- Rank-deficient problems
-- General QPs without special structure
+POGS uses **graph-form ADMM** with closed-form proximal operators.
 
-Run `python benchmarks/libsvm_benchmark.py` to compare on real datasets.
+**Best for:** Small-to-medium dense problems where graph-form structure applies (Lasso, Ridge, Elastic Net, Logistic, SVM).
+
+**Consider SCS/OSQP for:** Large, sparse, or ill-conditioned problems.
+
+Run `python benchmarks/libsvm_benchmark.py` to compare on your data.
 
 ---
 
